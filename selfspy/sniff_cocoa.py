@@ -26,10 +26,16 @@ from Cocoa import (NSEvent,
                    NSFlagsChanged, NSFlagsChangedMask,
                    NSAlternateKeyMask, NSCommandKeyMask, NSControlKeyMask,
                    NSShiftKeyMask, NSAlphaShiftKeyMask,
-                   NSApplicationActivationPolicyProhibited)
+                   NSApplicationActivationPolicyProhibited,
+                   NSURL, NSString)
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 from PyObjCTools import AppHelper
 import config as cfg
+
+import Quartz
+import LaunchServices
+import Quartz.CoreGraphics as CG
+
 
 class Sniffer:
     def __init__(self):
@@ -154,6 +160,56 @@ class Sniffer:
         except:
             AppHelper.stopEventLoop()
             raise
+
+    def screenshot(self, path, region = None):
+        """region should be a CGRect, something like:
+
+        >>> import Quartz.CoreGraphics as CG
+        >>> region = CG.CGRectMake(0, 0, 100, 100)
+        >>> sp = ScreenPixel()
+        >>> sp.capture(region=region)
+
+        The default region is CG.CGRectInfinite (captures the full screen)
+        """
+        try: 
+          if region is None:
+              region = CG.CGRectInfinite
+
+          # Create screenshot as CGImage
+          image = CG.CGWindowListCreateImage(
+              region,
+              CG.kCGWindowListOptionOnScreenOnly,
+              CG.kCGNullWindowID,
+              CG.kCGWindowImageDefault)
+
+          dpi = 72 # FIXME: Should query this from somewhere, e.g for retina displays
+
+          path = NSString.stringByExpandingTildeInPath(path)
+          url = NSURL.fileURLWithPath_(path)
+          # print url
+        
+          dest = Quartz.CGImageDestinationCreateWithURL(
+              url,
+              LaunchServices.kUTTypePNG, # file type
+              1, # 1 image in file
+              None
+              )
+
+          properties = {
+              Quartz.kCGImagePropertyDPIWidth: dpi,
+              Quartz.kCGImagePropertyDPIHeight: dpi,
+              }
+
+          # Add the image to the destination, characterizing the image with
+          # the properties dictionary.
+          Quartz.CGImageDestinationAddImage(dest, image, properties)
+
+          # When all the images (only 1 in this example) are added to the destination, 
+          # finalize the CGImageDestination object. 
+          Quartz.CGImageDestinationFinalize(dest)
+        except:
+            print "couldn't save image"
+
 
 # Cocoa does not provide a good api to get the keycodes, therefore we
 # have to provide our own.

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import time
 from datetime import datetime
 NOW = datetime.now
@@ -31,6 +32,7 @@ else:
 
 from selfspy import models
 from selfspy.models import Process, Window, Geometry, Click, Keys
+from selfspy import config as cfg
 
 
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
@@ -131,6 +133,16 @@ class ActivityStore:
             self.current_window.proc_id = cur_process.id
             self.current_window.win_id = cur_window.id
             self.current_window.geo_id = cur_geometry.id
+            try:
+                folder = os.path.join(cfg.DATA_DIR,"screenshots")
+                # print folder
+                path = os.path.join(folder,""+str(NOW())+".png")
+                print path
+                self.sniffer.screenshot(path)
+            except:
+               print "error with image backup"
+                        
+
 
     def filter_many(self):
         specials_in_row = 0
