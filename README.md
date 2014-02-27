@@ -1,6 +1,7 @@
 ### What is this?
-This is a fork from [selfspy](https://github.com/gurgeh/selfspy) the changes will mostly involve capturing extra invasive information such as screenshots, webcam pics, document names...
+This is a fork of [selfspy](https://github.com/gurgeh/selfspy). The changes will mostly involve capturing extra invasive information such as screenshots, webcam pics, document names, for research purposes.
 
+Since every screenshot takes between 1 and 2MB, your hard drive is going to be filled pretty quickly.
 
 Selfspy is a daemon for Unix/X11, (thanks to @ljos!) Mac OS X and (thanks to @Foxboron) Windows, that continuously monitors and stores what you are doing on your computer. This way, you can get all sorts of nifty statistics and reminders on what you have been up to. It is inspired by the [Quantified Self](http://en.wikipedia.org/wiki/Quantified_Self)-movement and [Stephen Wolfram's personal key logging](http://blog.stephenwolfram.com/2012/03/the-personal-analytics-of-my-life/).
 
@@ -59,6 +60,17 @@ In OS X you also need to enable access for assistive devices.
 To do that in &lt;10.9 there is a checkbox in `System Preferences > Accessibility`,
 in 10.9 you have to add the correct application in
 `System Preferences > Privacy > Accessability`.
+
+With 10.9 you should do the following: 
+
+```
+git clone git://github.com/aurelient/selfspy
+cd selfspy
+sudo easy_install -U pyobjc-core
+sudo python setup.py install
+```
+
+The logs are stored in ~/.selfspy/ 
 
 ### Running Selfspy
 You run selfspy with `selfspy`. You should probably start with `selfspy --help` to get to know the command line arguments. As of this writing, it should look like this:
