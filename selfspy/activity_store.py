@@ -138,19 +138,19 @@ class ActivityStore:
             self.current_window.win_id = cur_window.id
             self.current_window.geo_id = cur_geometry.id
             
-            if (self.take_screenshots):
-                print time.time()
-                print self.last_screenshot
-                print (time.time() - self.last_screenshot)
-                try:
-                    folder = os.path.join(cfg.DATA_DIR,"screenshots")
-                    # print folder
-                    path = os.path.join(folder,""+str(NOW())+".png")
-                    print path
-                    self.sniffer.screenshot(path)
-                    self.last_screenshot = time.time()
-                except:
-                   print "error with image backup"
+        # We check whether the screenshot option is on and then 
+        # limit the screenshot taking rate to 10 screenshots per second.
+        if (self.take_screenshots 
+          and (time.time() - self.last_screenshot) > 0.1): 
+            try:
+                folder = os.path.join(cfg.DATA_DIR,"screenshots")
+                # print folder
+                path = os.path.join(folder,""+str(NOW())+".png")
+                print path
+                self.sniffer.screenshot(path)
+                self.last_screenshot = time.time()
+            except:
+               print "error with image backup"
                         
 
 
