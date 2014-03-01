@@ -130,6 +130,8 @@ class ActivityStore:
             cur_window = Window(window_name, cur_process.id)
             self.session.add(cur_window)
 
+        # print self.current_window.proc_id, cur_process.id, self.current_window.win_id, cur_window.id
+        # print process_name, window_name, win_x, win_y, win_width, win_height
         if not (self.current_window.proc_id == cur_process.id
                 and self.current_window.win_id == cur_window.id):
             self.trycommit()
