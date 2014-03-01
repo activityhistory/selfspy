@@ -74,7 +74,7 @@ class ActivityStore:
         self.last_key_time = time.time()
         self.last_commit = time.time()
         
-        self.take_screenshots = screenshots
+        self.screenshots_active = screenshots
         self.last_screenshot = time.time()
         
         self.started = NOW()
@@ -137,22 +137,8 @@ class ActivityStore:
             self.current_window.proc_id = cur_process.id
             self.current_window.win_id = cur_window.id
             self.current_window.geo_id = cur_geometry.id
-            
-        # We check whether the screenshot option is on and then 
-        # limit the screenshot taking rate to 10 screenshots per second.
-        if (self.take_screenshots 
-          and (time.time() - self.last_screenshot) > 0.1): 
-            try:
-                folder = os.path.join(cfg.DATA_DIR,"screenshots")
-                # print folder
-                path = os.path.join(folder,""+str(NOW())+".png")
-                print path
-                self.sniffer.screenshot(path)
-                self.last_screenshot = time.time()
-            except:
-               print "error with image backup"
-                        
 
+            self.take_screenshot()
 
     def filter_many(self):
         specials_in_row = 0
@@ -231,6 +217,8 @@ class ActivityStore:
 
         self.key_presses.append(KeyPress(string, now - self.last_key_time, is_repeat))
         self.last_key_time = now
+        
+        self.take_screenshot()
 
     def store_click(self, button, x, y):
         """ Stores incoming mouse-clicks """
@@ -253,12 +241,14 @@ class ActivityStore:
             if time.time() - self.last_scroll[button] < SCROLL_COOLOFF:
                 return
             self.last_scroll[button] = time.time()
-
+        # it seems that the macpro trackpad triggers fake clicks when touched
+        elif button == 1: #if a "real" click happens we take a screenshot
+          self.take_screenshot()
         self.store_click(button, x, y)
 
     def got_mouse_move(self, x, y):
         """ Queues mouse movements.
-            x,y are the new coorinates on moving the mouse"""
+            x,y are the new coordinates on moving the mouse"""
         self.mouse_path.append([x, y])
 
     def close(self):
@@ -275,3 +265,18 @@ class ActivityStore:
             k.encrypt_text(dtext, new_encrypter)
             k.encrypt_keys(dkeys, new_encrypter)
         self.session.commit()
+
+    def take_screenshot(self):
+      # We check whether the screenshot option is on and then 
+      # limit the screenshot taking rate to 10 screenshots per second.
+      if (self.screenshots_active 
+        and (time.time() - self.last_screenshot) > 0.1): 
+          try:
+              folder = os.path.join(cfg.DATA_DIR,"screenshots")
+              # print folder
+              path = os.path.join(folder,""+str(NOW())+".png")
+              print path
+              self.sniffer.screenshot(path)
+              self.last_screenshot = time.time()
+          except:
+             print "error with image backup"

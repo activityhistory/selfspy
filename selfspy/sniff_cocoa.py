@@ -111,8 +111,8 @@ class Sniffer:
             loc = NSEvent.mouseLocation()
             if event.type() == NSLeftMouseDown:
                 self.mouse_button_hook(1, loc.x, loc.y)
-#           elif event.type() == NSLeftMouseUp:
-#               self.mouse_button_hook(1, loc.x, loc.y)
+            # elif event.type() == NSLeftMouseUp:
+            #     self.mouse_button_hook(1, loc.x, loc.y)
             elif event.type() == NSRightMouseDown:
                 self.mouse_button_hook(3, loc.x, loc.y)
 #           elif event.type() == NSRightMouseUp:
