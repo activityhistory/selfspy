@@ -56,7 +56,7 @@ class KeyPress:
 
 
 class ActivityStore:
-    def __init__(self, db_name, encrypter=None, store_text=True):
+    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=False):
         self.session_maker = models.initialize(db_name)
 
         models.ENCRYPTER = encrypter
@@ -73,8 +73,12 @@ class ActivityStore:
 
         self.last_key_time = time.time()
         self.last_commit = time.time()
-
+        
+        self.take_screenshots = screenshots
+        self.last_screenshot = time.time()
+        
         self.started = NOW()
+
 
     def trycommit(self):
         self.last_commit = time.time()
@@ -133,14 +137,20 @@ class ActivityStore:
             self.current_window.proc_id = cur_process.id
             self.current_window.win_id = cur_window.id
             self.current_window.geo_id = cur_geometry.id
-            try:
-                folder = os.path.join(cfg.DATA_DIR,"screenshots")
-                # print folder
-                path = os.path.join(folder,""+str(NOW())+".png")
-                print path
-                self.sniffer.screenshot(path)
-            except:
-               print "error with image backup"
+            
+            if (self.take_screenshots):
+                print time.time()
+                print self.last_screenshot
+                print (time.time() - self.last_screenshot)
+                try:
+                    folder = os.path.join(cfg.DATA_DIR,"screenshots")
+                    # print folder
+                    path = os.path.join(folder,""+str(NOW())+".png")
+                    print path
+                    self.sniffer.screenshot(path)
+                    self.last_screenshot = time.time()
+                except:
+                   print "error with image backup"
                         
 
 

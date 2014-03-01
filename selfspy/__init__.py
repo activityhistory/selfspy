@@ -51,10 +51,9 @@ def parse_config():
     parser.set_defaults(**defaults)
     parser.add_argument('-p', '--password', help='Encryption password. If you want to keep your database unencrypted, specify -p "" here. If you don\'t specify a password in the command line arguments or in a config file, a dialog will pop up, asking for the password. The most secure is to not use either command line or config file but instead type it in on startup.')
     parser.add_argument('-d', '--data-dir', help='Data directory for selfspy, where the database is stored. Remember that Selfspy must have read/write access. Default is %s' % cfg.DATA_DIR, default=cfg.DATA_DIR)
-
     parser.add_argument('-n', '--no-text', action='store_true', help='Do not store what you type. This will make your database smaller and less sensitive to security breaches. Process name, window titles, window geometry, mouse clicks, number of keys pressed and key timings will still be stored, but not the actual letters. Key timings are stored to enable activity calculation in selfstats. If this switch is used, you will never be asked for password.')
-
     parser.add_argument('--change-password', action="store_true", help='Change the password used to encrypt the keys columns and exit.')
+    parser.add_argument('-s', '--screenshots', action='store_true', help='Enable screenshot capture.')
 
     return parser.parse_args()
 
@@ -68,6 +67,7 @@ def make_encrypter(password):
 
 
 def main():
+    print "Selfspy started"
     args = vars(parse_config())
 
     args['data_dir'] = os.path.expanduser(args['data_dir'])
@@ -80,6 +80,10 @@ def main():
         os.makedirs(args['data_dir'])
     except OSError:
         pass
+
+    take_screenshots = False;
+    if args['screenshots']:
+      take_screenshots = True;
 
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
     cfg.LOCK  = LockFile(lockname)
@@ -107,7 +111,8 @@ def main():
         print 'Re-encrypting your keys...'
         astore = ActivityStore(os.path.join(args['data_dir'], cfg.DBNAME),
                                encrypter,
-                               store_text=(not args['no_text']))
+                               store_text=(not args['no_text']),
+                               screenshots=take_screenshots)
         astore.change_password(new_encrypter)
         # delete the old password.digest
         os.remove(os.path.join(args['data_dir'], check_password.DIGEST_NAME))
@@ -118,7 +123,8 @@ def main():
 
     astore = ActivityStore(os.path.join(args['data_dir'], cfg.DBNAME),
                            encrypter,
-                           store_text=(not args['no_text']))
+                           store_text=(not args['no_text']),
+                           screenshots=take_screenshots)
     cfg.LOCK.acquire()
     try:
         astore.run()

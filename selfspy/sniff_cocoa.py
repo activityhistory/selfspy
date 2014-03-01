@@ -31,7 +31,8 @@ from Cocoa import (NSEvent,
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 from PyObjCTools import AppHelper
 import config as cfg
-
+from PIL import Image
+import string 
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
@@ -186,7 +187,7 @@ class Sniffer:
 
           path = NSString.stringByExpandingTildeInPath(path)
           url = NSURL.fileURLWithPath_(path)
-          # print url
+          print path
         
           dest = Quartz.CGImageDestinationCreateWithURL(
               url,
@@ -198,6 +199,7 @@ class Sniffer:
           properties = {
               Quartz.kCGImagePropertyDPIWidth: dpi,
               Quartz.kCGImagePropertyDPIHeight: dpi,
+              Quartz.kCGImageDestinationLossyCompressionQuality: 0.6,
               }
 
           # Add the image to the destination, characterizing the image with
@@ -207,6 +209,18 @@ class Sniffer:
           # When all the images (only 1 in this example) are added to the destination, 
           # finalize the CGImageDestination object. 
           Quartz.CGImageDestinationFinalize(dest)
+          
+          # Dirty way to reduce file size, we open the file we just saved, 
+          # then reduce its size, compress it and save it back.
+          img = Image.open(path)
+          # print "The size of the Image is: "
+          # print(img.format, img.size, img.mode)
+          # I downsize the image with an ANTIALIAS filter (gives the highest quality)
+          img = img.resize((1440,900))
+          smallpath = path #string.replace(path, ".png", "-s.png")
+          # print smallpath
+          img.save(smallpath, optimize=True, quality=95)
+          # foo.save("path\\to\\save\\image_scaled_opt.jpg",optimize=True,quality=95)
         except:
             print "couldn't save image"
 
