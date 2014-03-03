@@ -68,6 +68,7 @@ def make_encrypter(password):
 
 def main():
     print "Selfspy started"
+    print(sys.version)
     args = vars(parse_config())
 
     args['data_dir'] = os.path.expanduser(args['data_dir'])
@@ -78,6 +79,12 @@ def main():
 
     try:
         os.makedirs(args['data_dir'])
+    except OSError:
+        pass
+
+    try: 
+      if not(os.path.exists(os.path.join(args['data_dir'], 'screenshots'))):
+        os.makedirs(os.path.join(args['data_dir'], 'screenshots'))
     except OSError:
         pass
 
