@@ -281,4 +281,4 @@ class ActivityStore:
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
           except:
-             print "error with image backup"
+              print "error with image backup"
