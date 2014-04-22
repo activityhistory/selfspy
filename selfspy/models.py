@@ -93,6 +93,8 @@ class Click(SpookMixin, Base):
     x = Column(Integer, nullable=False)
     y = Column(Integer, nullable=False)
     nrmoves = Column(Integer, nullable=False)
+    path = Column(Binary)
+    timings = Column(Binary)
 
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('clicks'))
@@ -103,12 +105,17 @@ class Click(SpookMixin, Base):
     geometry_id = Column(Integer, ForeignKey('geometry.id'), nullable=False)
     geometry = relationship("Geometry", backref=backref('clicks'))
 
-    def __init__(self, button, press, x, y, nrmoves, process_id, window_id, geometry_id):
+    def __init__(self, button, press, x, y, nrmoves, path, timings, process_id, window_id, geometry_id):
+        zpath = zlib.compress(json.dumps(path))
+        ztimings = zlib.compress(json.dumps(timings))
+        
         self.button = button
         self.press = press
         self.x = x
         self.y = y
         self.nrmoves = nrmoves
+        self.path = zpath
+        self.timings = ztimings
 
         self.process_id = process_id
         self.window_id = window_id
