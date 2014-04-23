@@ -33,9 +33,13 @@ from PyObjCTools import AppHelper
 import config as cfg
 from PIL import Image
 import string 
+import os
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
+
+from datetime import datetime
+NOW = datetime.now
 
 
 class Sniffer:
@@ -172,10 +176,13 @@ class Sniffer:
 
         The default region is CG.CGRectInfinite (captures the full screen)
         """
+        print "start screenshot"
+        print str(datetime.now().isoformat())
         try: 
           if region is None:
               region = CG.CGRectInfinite
 
+          print str(datetime.now().isoformat())
           # Create screenshot as CGImage
           image = CG.CGWindowListCreateImage(
               region,
@@ -183,15 +190,21 @@ class Sniffer:
               CG.kCGNullWindowID,
               CG.kCGWindowImageDefault)
 
+          print str(datetime.now().isoformat())
           dpi = 72 # FIXME: Should query this from somewhere, e.g for retina displays
+
+          width = CG.CGImageGetWidth(image)
+          height = CG.CGImageGetHeight(image)
+          # print(width, height)
 
           path = NSString.stringByExpandingTildeInPath(path)
           url = NSURL.fileURLWithPath_(path)
-          print path
-        
+          # print path
+
+          print str(datetime.now().isoformat())        
           dest = Quartz.CGImageDestinationCreateWithURL(
               url,
-              LaunchServices.kUTTypePNG, # file type
+              LaunchServices.kUTTypeJPEG, # LaunchServices.kUTTypePNG, # file type
               1, # 1 image in file
               None
               )
@@ -205,24 +218,35 @@ class Sniffer:
           # Add the image to the destination, characterizing the image with
           # the properties dictionary.
           Quartz.CGImageDestinationAddImage(dest, image, properties)
-
+          print str(datetime.now().isoformat())
           # When all the images (only 1 in this example) are added to the destination, 
           # finalize the CGImageDestination object. 
           Quartz.CGImageDestinationFinalize(dest)
-          
+          print str(datetime.now().isoformat())
+
+          print "end screenshot"
           # Dirty way to reduce file size, we open the file we just saved, 
           # then reduce its size, compress it and save it back.
-          img = Image.open(path)
-          # print "The size of the Image is: "
+          # img = Image.open(path)
+          # # print "The size of the Image is: "
           # print(img.format, img.size, img.mode)
-          # I downsize the image with an ANTIALIAS filter (gives the highest quality)
-          img = img.resize((1440,900))
-          smallpath = path #string.replace(path, ".png", "-s.png")
-          # print smallpath
-          img.save(smallpath, optimize=True, quality=95)
-          # foo.save("path\\to\\save\\image_scaled_opt.jpg",optimize=True,quality=95)
+          # # I downsize the image with an ANTIALIAS filter (gives the highest quality)
+          # img = img.resize((1440,900))
+          # smallpath = path #string.replace(path, ".png", "-s.png")
+          # # print smallpath
+          # img.save(smallpath, optimize=True, quality=95)
+          # # foo.save("path\\to\\save\\image_scaled_opt.jpg",optimize=True,quality=95)
         except:
             print "couldn't save image"
+
+    def screenshot2(self, path, region = None):
+        # -t tiff saves to tiff format, should be faster
+        # -C captures the mouse cursor.
+        # -x removes the screenshot sound
+        command = "screencapture -C -x " + path
+        print command
+        os.system(command)
+
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we
