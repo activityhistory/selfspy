@@ -78,9 +78,9 @@ class ActivityStore:
         
         self.screenshots_active = screenshots
         self.last_screenshot = time.time()
-        if (screenshots) :
-			t = Thread(target=self.take_screenshots_every, args=(.1,))
-			t.start()
+        # if (screenshots) :
+        #   t = Thread(target=self.take_screenshots_every, args=(.1,))
+        #   t.start()
         
         self.started = NOW()
 
@@ -145,7 +145,7 @@ class ActivityStore:
             self.current_window.win_id = cur_window.id
             self.current_window.geo_id = cur_geometry.id
 
-            # self.take_screenshot()
+            self.take_screenshot()
 
     def filter_many(self):
         specials_in_row = 0
@@ -225,7 +225,7 @@ class ActivityStore:
         self.key_presses.append(KeyPress(string, now - self.last_key_time, is_repeat))
         self.last_key_time = now
         
-        # self.take_screenshot()
+        self.take_screenshot()
 
     def store_click(self, button, x, y):
         """ Stores incoming mouse-clicks """
@@ -250,7 +250,7 @@ class ActivityStore:
             self.last_scroll[button] = time.time()
         # it seems that the macpro trackpad triggers fake clicks when touched
         # elif button == 1: #if a "real" click happens we take a screenshot
-        #   self.take_screenshot()
+        self.take_screenshot()
         self.store_click(button, x, y)
 
     def got_mouse_move(self, x, y):
@@ -289,7 +289,9 @@ class ActivityStore:
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
-              path = os.path.join(folder,""+str(datetime.now().isoformat())+".jpg")
+              # filename = str(datetime.now().isoformat())
+              filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
+              path = os.path.join(folder,""+filename+".jpg")
               print path
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()

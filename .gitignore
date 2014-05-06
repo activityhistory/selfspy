@@ -8,3 +8,4 @@ tests/
 bin/
 lib/
 include/
+selfspy.spec
