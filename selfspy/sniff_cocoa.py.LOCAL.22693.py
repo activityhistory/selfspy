@@ -33,14 +33,10 @@ from PyObjCTools import AppHelper
 import config as cfg
 from PIL import Image
 import string 
-import os
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
 import time
-
-from datetime import datetime
-NOW = datetime.now
 
 
 class Sniffer:
@@ -72,10 +68,10 @@ class Sniffer:
                 # application terminates it does not run the rest the
                 # original main, only the code that has crossed the
                 # pyobc bridge.
+                print "Exiting ..."
                 if cfg.LOCK.is_locked():
                     cfg.LOCK.release()
-                print "Exiting ..."
-
+                
         return AppDelegate
 
     def run(self):

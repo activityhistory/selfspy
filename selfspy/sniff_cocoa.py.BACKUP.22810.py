@@ -72,10 +72,10 @@ class Sniffer:
                 # application terminates it does not run the rest the
                 # original main, only the code that has crossed the
                 # pyobc bridge.
+                print "Exiting ..."
                 if cfg.LOCK.is_locked():
                     cfg.LOCK.release()
-                print "Exiting ..."
-
+                
         return AppDelegate
 
     def run(self):
@@ -178,6 +178,7 @@ class Sniffer:
 			if region is None:  
 				region = CG.CGRectInfinite
 
+<<<<<<< HEAD
 			# Create CGImage, composite image of windows in region
 			image = CG.CGWindowListCreateImage(
 				region,
@@ -206,10 +207,47 @@ class Sniffer:
 			#Draw image on context at new scale
 			rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
 			Quartz.CGContextDrawImage(bitmapContext, rect, image)
+=======
+        The default region is CG.CGRectInfinite (captures the full screen)
+        """
+        print "start screenshot"
+        print str(datetime.now().isoformat())
+        try: 
+          if region is None:
+              region = CG.CGRectInfinite
+
+          print str(datetime.now().isoformat())
+          # Create screenshot as CGImage
+          image = CG.CGWindowListCreateImage(
+              region,
+              CG.kCGWindowListOptionOnScreenOnly,
+              CG.kCGNullWindowID,
+              CG.kCGWindowImageDefault)
+
+          print str(datetime.now().isoformat())
+          dpi = 72 # FIXME: Should query this from somewhere, e.g for retina displays
+
+          width = CG.CGImageGetWidth(image)
+          height = CG.CGImageGetHeight(image)
+          # print(width, height)
+
+          path = NSString.stringByExpandingTildeInPath(path)
+          url = NSURL.fileURLWithPath_(path)
+          # print path
+
+          print str(datetime.now().isoformat())        
+          dest = Quartz.CGImageDestinationCreateWithURL(
+              url,
+              LaunchServices.kUTTypeJPEG, # LaunchServices.kUTTypePNG, # file type
+              1, # 1 image in file
+              None
+              )
+>>>>>>> 6322fc952d1cfa73f5063741a2510d7a8291f365
 
 			#Recreate image from context
 			imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
 
+<<<<<<< HEAD
 			#Image properties dictionary
 			dpi = 72 # FIXME: Should query this from somewhere, e.g for retina display
 			properties = {
@@ -244,6 +282,40 @@ class Sniffer:
 			AppHelper.stopEventLoop()
 		except:
 			print "couldn't save image"
+=======
+          # Add the image to the destination, characterizing the image with
+          # the properties dictionary.
+          Quartz.CGImageDestinationAddImage(dest, image, properties)
+          print str(datetime.now().isoformat())
+          # When all the images (only 1 in this example) are added to the destination, 
+          # finalize the CGImageDestination object. 
+          Quartz.CGImageDestinationFinalize(dest)
+          print str(datetime.now().isoformat())
+
+          print "end screenshot"
+          # Dirty way to reduce file size, we open the file we just saved, 
+          # then reduce its size, compress it and save it back.
+          # img = Image.open(path)
+          # # print "The size of the Image is: "
+          # print(img.format, img.size, img.mode)
+          # # I downsize the image with an ANTIALIAS filter (gives the highest quality)
+          # img = img.resize((1440,900))
+          # smallpath = path #string.replace(path, ".png", "-s.png")
+          # # print smallpath
+          # img.save(smallpath, optimize=True, quality=95)
+          # # foo.save("path\\to\\save\\image_scaled_opt.jpg",optimize=True,quality=95)
+        except:
+            print "couldn't save image"
+>>>>>>> 6322fc952d1cfa73f5063741a2510d7a8291f365
+
+    def screenshot2(self, path, region = None):
+        # -t tiff saves to tiff format, should be faster
+        # -C captures the mouse cursor.
+        # -x removes the screenshot sound
+        command = "screencapture -C -x " + path
+        print command
+        os.system(command)
+
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we

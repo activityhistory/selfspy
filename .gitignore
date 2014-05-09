@@ -4,7 +4,7 @@ dist/
 build/
 
 .Python
-
+tests/
 bin/
 lib/
 include/

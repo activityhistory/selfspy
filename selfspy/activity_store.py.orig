@@ -305,7 +305,11 @@ class ActivityStore:
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
+<<<<<<< HEAD
               path = os.path.join(folder,""+str(NOW())+".jpg")
+=======
+              path = os.path.join(folder,""+str(datetime.now().isoformat())+".jpg")
+>>>>>>> 6322fc952d1cfa73f5063741a2510d7a8291f365
               print path
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()

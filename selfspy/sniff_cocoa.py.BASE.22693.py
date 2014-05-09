@@ -33,14 +33,9 @@ from PyObjCTools import AppHelper
 import config as cfg
 from PIL import Image
 import string 
-import os
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
-import time
-
-from datetime import datetime
-NOW = datetime.now
 
 
 class Sniffer:
@@ -168,82 +163,66 @@ class Sniffer:
             raise
 
     def screenshot(self, path, region = None):
-    #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
-		try:
-			#For testing how long it takes to take screenshot
-			start = time.time()
-			scale = 0.5
+        """region should be a CGRect, something like:
 
-			#Set to capture entire screen, including multiple monitors
-			if region is None:  
-				region = CG.CGRectInfinite
+        >>> import Quartz.CoreGraphics as CG
+        >>> region = CG.CGRectMake(0, 0, 100, 100)
+        >>> sp = ScreenPixel()
+        >>> sp.capture(region=region)
 
-			# Create CGImage, composite image of windows in region
-			image = CG.CGWindowListCreateImage(
-				region,
-				CG.kCGWindowListOptionOnScreenOnly,
-				CG.kCGNullWindowID,
-				CG.kCGWindowImageDefault
-			)
+        The default region is CG.CGRectInfinite (captures the full screen)
+        """
+        try: 
+          if region is None:
+              region = CG.CGRectInfinite
 
-			#Get size of image    
-			width = CG.CGImageGetWidth(image)
-			height = CG.CGImageGetHeight(image)
-			
-			#Allocate image data and create context for drawing image
-			imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
+          # Create screenshot as CGImage
+          image = CG.CGWindowListCreateImage(
+              region,
+              CG.kCGWindowListOptionOnScreenOnly,
+              CG.kCGNullWindowID,
+              CG.kCGWindowImageDefault)
 
-			bitmapContext = Quartz.CGBitmapContextCreate(
-				imageData, # image data we just allocated...
-				width*scale, 
-				height*scale, 
-				8, # 8 bits per component
-				4 * width, # bytes per pixel times number of pixels wide
-				Quartz.CGImageGetColorSpace(image), # use the same colorspace as the original image
-				Quartz.kCGImageAlphaPremultipliedFirst # use premultiplied alpha
-			) 
+          dpi = 72 # FIXME: Should query this from somewhere, e.g for retina displays
 
-			#Draw image on context at new scale
-			rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
-			Quartz.CGContextDrawImage(bitmapContext, rect, image)
+          path = NSString.stringByExpandingTildeInPath(path)
+          url = NSURL.fileURLWithPath_(path)
+          print path
+        
+          dest = Quartz.CGImageDestinationCreateWithURL(
+              url,
+              LaunchServices.kUTTypePNG, # file type
+              1, # 1 image in file
+              None
+              )
 
-			#Recreate image from context
-			imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
+          properties = {
+              Quartz.kCGImagePropertyDPIWidth: dpi,
+              Quartz.kCGImagePropertyDPIHeight: dpi,
+              Quartz.kCGImageDestinationLossyCompressionQuality: 0.6,
+              }
 
-			#Image properties dictionary
-			dpi = 72 # FIXME: Should query this from somewhere, e.g for retina display
-			properties = {
-				Quartz.kCGImagePropertyDPIWidth: dpi,
-				Quartz.kCGImagePropertyDPIHeight: dpi,
-				Quartz.kCGImageDestinationLossyCompressionQuality: 0.6,
-			}
+          # Add the image to the destination, characterizing the image with
+          # the properties dictionary.
+          Quartz.CGImageDestinationAddImage(dest, image, properties)
 
-			#Convert path to url for saving image
-			pathStr = NSString.stringByExpandingTildeInPath(path)
-			url = NSURL.fileURLWithPath_(pathStr)
-
-			#Set image destination (where it will be saved)
-			dest = Quartz.CGImageDestinationCreateWithURL(
-				url,
-				LaunchServices.kUTTypeJPEG, # file type
-				1, # 1 image in file
-				None
-			)
-
-			# Add the image to the destination, with certain properties
-			Quartz.CGImageDestinationAddImage(dest, imageOut, properties)
-
-			# finalize the CGImageDestination object. 
-			Quartz.CGImageDestinationFinalize(dest)
-
-			#For testing how long it takes to take screenshot
-			stop = time.time()
-			print str(stop-start)[:5] + ' seconds to save image'
-
-		except KeyboardInterrupt:
-			AppHelper.stopEventLoop()
-		except:
-			print "couldn't save image"
+          # When all the images (only 1 in this example) are added to the destination, 
+          # finalize the CGImageDestination object. 
+          Quartz.CGImageDestinationFinalize(dest)
+          
+          # Dirty way to reduce file size, we open the file we just saved, 
+          # then reduce its size, compress it and save it back.
+          img = Image.open(path)
+          # print "The size of the Image is: "
+          # print(img.format, img.size, img.mode)
+          # I downsize the image with an ANTIALIAS filter (gives the highest quality)
+          img = img.resize((1440,900))
+          smallpath = path #string.replace(path, ".png", "-s.png")
+          # print smallpath
+          img.save(smallpath, optimize=True, quality=95)
+          # foo.save("path\\to\\save\\image_scaled_opt.jpg",optimize=True,quality=95)
+        except:
+            print "couldn't save image"
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we
