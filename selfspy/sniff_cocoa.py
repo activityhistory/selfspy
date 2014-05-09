@@ -166,7 +166,7 @@ class Sniffer:
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
 		try:
-			#For testing how long it takes to snap screenshot
+			#For testing how long it takes to take screenshot
 			start = time.time()
 			scale = 0.5
 
@@ -217,12 +217,11 @@ class Sniffer:
 			#Convert path to url for saving image
 			pathStr = NSString.stringByExpandingTildeInPath(path)
 			url = NSURL.fileURLWithPath_(pathStr)
-			print pathStr
 
 			#Set image destination (where it will be saved)
 			dest = Quartz.CGImageDestinationCreateWithURL(
 				url,
-				LaunchServices.kUTTypePNG, # file type
+				LaunchServices.kUTTypeJPEG, # file type
 				1, # 1 image in file
 				None
 			)
@@ -233,7 +232,7 @@ class Sniffer:
 			# finalize the CGImageDestination object. 
 			Quartz.CGImageDestinationFinalize(dest)
 
-			#For testing how long it takes to snap image
+			#For testing how long it takes to take screenshot
 			stop = time.time()
 			print str(stop-start)[:5] + ' seconds to save image'
 

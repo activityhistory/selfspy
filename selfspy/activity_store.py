@@ -47,7 +47,6 @@ class Display:
         self.win_id = None
         self.geo_id = None
 
-
 class KeyPress:
     def __init__(self, key, time, is_repeat):
         self.key = key
@@ -230,6 +229,7 @@ class ActivityStore:
     def store_click(self, button, x, y):
         """ Stores incoming mouse-clicks """
         
+        #Put mouse locations and timings in arrays
         locs = [loc.xy for loc in self.mouse_path]
         timings = [loc.time for loc in self.mouse_path]
         
@@ -292,7 +292,7 @@ class ActivityStore:
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
-              path = os.path.join(folder,""+str(NOW())+".png")
+              path = os.path.join(folder,""+str(NOW())+".jpg")
               print path
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
