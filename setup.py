@@ -52,6 +52,7 @@ OPTIONS = {#'argv_emulation': True,
 setup(
   name="selfspy",
   app=['selfspy/__init__.py'],
+  version='0.3.1',
   # setup_requires=['py2app', ],
   options={'py2app': OPTIONS},
   data_files=['./eye-32.png'],

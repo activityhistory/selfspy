@@ -1,7 +1,7 @@
 *.pyc
 *.egg-info
-dist/
 build/
+dist/selfspy.app*
 
 .Python
 tests/
@@ -12,3 +12,4 @@ selfspy.spec
 
 selfspy/*18942.py
 selfspy/*orig
+*.egg
