@@ -49,13 +49,16 @@ class Display:
         self.win_id = None
         self.geo_id = None
 
-
 class KeyPress:
     def __init__(self, key, time, is_repeat):
         self.key = key
         self.time = time
         self.is_repeat = is_repeat
 
+class MouseMove:
+    def __init__(self, xy, time):
+        self.xy = xy
+        self.time = time
 
 class ActivityStore:
     def __init__(self, db_name, encrypter=None, store_text=True, screenshots=False):
@@ -74,6 +77,7 @@ class ActivityStore:
         self.last_scroll = {button: 0 for button in SCROLL_BUTTONS}
 
         self.last_key_time = time.time()
+        self.last_move_time = time.time()
         self.last_commit = time.time()
         
         self.screenshots_active = screenshots
@@ -229,10 +233,17 @@ class ActivityStore:
 
     def store_click(self, button, x, y):
         """ Stores incoming mouse-clicks """
+        
+        #Put mouse locations and timings in arrays
+        locs = [loc.xy for loc in self.mouse_path]
+        timings = [loc.time for loc in self.mouse_path]
+        
         self.session.add(Click(button,
                                True,
                                x, y,
                                len(self.mouse_path),
+                               locs,
+                               timings,
                                self.current_window.proc_id,
                                self.current_window.win_id,
                                self.current_window.geo_id))
@@ -256,7 +267,12 @@ class ActivityStore:
     def got_mouse_move(self, x, y):
         """ Queues mouse movements.
             x,y are the new coordinates on moving the mouse"""
-        self.mouse_path.append([x, y])
+        frequency = 10.0
+        now = time.time()
+        
+        if now-self.last_move_time > 1/frequency:
+        	self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
+        	self.last_move_time = now
 
     def close(self):
         """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
@@ -292,10 +308,12 @@ class ActivityStore:
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
+
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
+
               print path
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
           except:
-             print "error with image backup"
+              print "error with image backup"
