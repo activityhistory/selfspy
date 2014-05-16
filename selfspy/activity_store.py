@@ -84,7 +84,6 @@ class ActivityStore:
         
         self.started = NOW()
 
-
     def trycommit(self):
         self.last_commit = time.time()
         for _ in xrange(1000):
@@ -116,6 +115,7 @@ class ActivityStore:
             win_y is the y position of the window
             win_width is the width of the window
             win_height is the height of the window """
+        # print "got_screen_change"
         cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
         if not cur_process:
             cur_process = Process(process_name)
@@ -284,12 +284,14 @@ class ActivityStore:
     def take_screenshot(self):
       # We check whether the screenshot option is on and then 
       # limit the screenshot taking rate to 10 screenshots per second.
-      if (self.screenshots_active):
-        # and (time.time() - self.last_screenshot) > 0.1): 
+
+      self.screenshots_active = self.sniffer.isScreenshotActive()
+      
+      if (self.screenshots_active
+        and (time.time() - self.last_screenshot) > 0.1): 
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
-              # filename = str(datetime.now().isoformat())
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
               print path

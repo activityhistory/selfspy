@@ -45,21 +45,23 @@ from setuptools import setup
 #       entry_points=dict(console_scripts=['selfspy=selfspy:main'])
 #       )
 
-OPTIONS = {'argv_emulation': True,
-           'includes' : ['sqlalchemy.dialects.sqlite'] }
+OPTIONS = {#'argv_emulation': True,
+          'includes' : ['sqlalchemy.dialects.sqlite'],
+          'iconfile':'eye.icns',
+          }
 setup(
   name="selfspy",
   app=['selfspy/__init__.py'],
-  setup_requires=['py2app', ],
+  # setup_requires=['py2app', ],
   options={'py2app': OPTIONS},
-  data_files=[],
-  packages=['selfspy'],
+  data_files=['./eye-32.png'],
+  # packages=['selfspy'],
   author="David Fendrich",
   description=''.join("""
       Log everything you do on the computer, for statistics,
       future reference and all-around fun!
   """.strip().split('\n')),
-  entry_points=dict(console_scripts=['selfspy=selfspy:main']),
+  # entry_points=dict(console_scripts=['selfspy=selfspy:main']),
   install_requires=["SQLAlchemy",
       "lockfile",
       "pycrypto",

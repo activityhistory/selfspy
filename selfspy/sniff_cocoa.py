@@ -15,8 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
 
-from Foundation import NSObject
-from AppKit import NSApplication, NSApp, NSWorkspace
+
+import string 
+import objc, re, os
+
+from Foundation import *
+from AppKit import *
+from PyObjCTools import NibClassBuilder, AppHelper
+
 from Cocoa import (NSEvent,
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
@@ -29,11 +35,9 @@ from Cocoa import (NSEvent,
                    NSApplicationActivationPolicyProhibited,
                    NSURL, NSString)
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
-from PyObjCTools import AppHelper
+
 import config as cfg
 from PIL import Image
-import string 
-import os
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
@@ -42,6 +46,8 @@ import Quartz.CoreGraphics as CG
 import time
 from datetime import datetime
 NOW = datetime.now
+
+start_time = NSDate.date()
 
 
 class Sniffer:
@@ -55,8 +61,15 @@ class Sniffer:
         sc = self
 
         class AppDelegate(NSObject):
+            statusbar = None
+            state = 'pause'
+            screenshot = True
 
             def applicationDidFinishLaunching_(self, notification):
+                NSLog("Application did finish launching.")
+
+                self.createStatusMenu()
+
                 mask = (NSKeyDownMask
                         | NSKeyUpMask
                         | NSLeftMouseDownMask
@@ -68,6 +81,12 @@ class Sniffer:
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
+                # self.statusItem = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
+                # self.statusItem.setTitle_(u"Selfspy")
+                # self.statusItem.setHighlightMode_(TRUE)
+                # self.statusItem.setEnabled_(TRUE)
+                # self.statusItem.retain()
+
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
                 # application terminates it does not run the rest the
@@ -77,13 +96,71 @@ class Sniffer:
                     cfg.LOCK.release()
                 print "Exiting ..."
 
+            def toggleLogging_(self, notification):
+                NSLog("todo : pause logging")
+
+            def toggleScreenshots_(self, notification):
+                print "toggleScreenshots"
+                if self.screenshot:
+                  self.menu.itemWithTitle_("Pause screenshots").setTitle_("Record screenshots")
+                else :
+                  self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
+                self.screenshot = not self.screenshot
+
+            def createStatusMenu(self):
+                NSLog("Creating app menu")
+                statusbar = NSStatusBar.systemStatusBar()
+
+                # Create the statusbar item
+                self.statusitem = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
+                # self.statusitem.setTitle_(u"Selfspy")
+
+                # Load all images
+                self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye-32.png')
+                self.icon.setScalesWhenResized_(True)
+                self.icon.setSize_((20, 20))
+                self.statusitem.setImage_(self.icon)
+
+                # Let it highlight upon clicking
+                self.statusitem.setHighlightMode_(1)
+                # Set a tooltip
+                self.statusitem.setToolTip_('Selfspy')
+
+                # Build a very simple menu
+                self.menu = NSMenu.alloc().init()
+                self.menu.setAutoenablesItems_(False)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Logging', 'toggleLogging:', '')
+                menuitem.setEnabled_(False)
+                self.menu.addItem_(menuitem)
+
+                if self.screenshot:
+                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause screenshots', 'toggleScreenshots:', '')
+                  self.menu.addItem_(menuitem)
+                else :
+                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record screenshots', 'toggleScreenshots:', '')
+                  self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
+                self.menu.addItem_(menuitem)
+
+                # Bind it to the status item
+                self.statusitem.setMenu_(self.menu)
+
+                self.statusitem.setEnabled_(TRUE)                
+                self.statusitem.retain()
+
+            def isScreenshotActive(self):
+              # print "state", self.state
+              return self.screenshot
+
         return AppDelegate
 
     def run(self):
-        NSApplication.sharedApplication()
-        delegate = self.createAppDelegate().alloc().init()
-        NSApp().setDelegate_(delegate)
-        NSApp().setActivationPolicy_(NSApplicationActivationPolicyProhibited)
+        app = NSApplication.sharedApplication()
+        self.delegate = self.createAppDelegate().alloc().init()
+        app.setDelegate_(self.delegate)
+        app.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
         self.workspace = NSWorkspace.sharedWorkspace()
         AppHelper.runEventLoop()
 
@@ -168,20 +245,24 @@ class Sniffer:
             AppHelper.stopEventLoop()
             raise
 
+
+    def isScreenshotActive(self):
+      return self.delegate.isScreenshotActive()
+
     def screenshot(self, path, region = None):
-      print "screenshot-start"
+      print "screenshot"
       try:
         #For testing how long it takes to snap screenshot
         start = time.time()
         scale = 0.5
 
-        print str(start)[:5]
+        # print str(start)[:5]
 
         #Set to capture entire screen, including multiple monitors
         if region is None: 
           region = CG.CGRectInfinite
 
-        print "region"
+        # print "region"
 
         # Create CGImage, composite image of windows in region
         image = CG.CGWindowListCreateImage(
@@ -191,13 +272,13 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        print "image"
+        # print "image"
 
         #Get size of image
         width = CG.CGImageGetWidth(image)
         height = CG.CGImageGetHeight(image)
 
-        print width
+        # print width
 
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
@@ -216,7 +297,7 @@ class Sniffer:
         rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
 
-        print "Woot"
+        # print "placeholder created"
 
         #Recreate image from context
         imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
@@ -232,7 +313,7 @@ class Sniffer:
         #Convert path to url for saving image
         pathStr = NSString.stringByExpandingTildeInPath(path)
         url = NSURL.fileURLWithPath_(pathStr)
-        print pathStr
+        # print pathStr
 
         #Set image destination (where it will be saved)
         dest = Quartz.CGImageDestinationCreateWithURL(
@@ -242,7 +323,7 @@ class Sniffer:
           None
         )
 
-        print "dest"
+        # print "image destination"
 
         # Add the image to the destination, with certain properties
         Quartz.CGImageDestinationAddImage(dest, imageOut, properties)
@@ -250,11 +331,11 @@ class Sniffer:
         # finalize the CGImageDestination object.
         Quartz.CGImageDestinationFinalize(dest)
 
-        print "finalize"
+        # print "finalize"
 
         #For testing how long it takes to snap image
         stop = time.time()
-        print str(stop-start)[:5] + ' seconds to save image'
+        # print str(stop-start)[:5] + ' seconds to save image'
 
       except KeyboardInterrupt:
         AppHelper.stopEventLoop()
