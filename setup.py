@@ -47,7 +47,7 @@ from setuptools import setup
 
 OPTIONS = {#'argv_emulation': True,
           'includes' : ['sqlalchemy.dialects.sqlite'],
-          'iconfile':'eye.icns',
+          'iconfile':'assets/eye.icns',
           }
 setup(
   name="selfspy",
@@ -55,7 +55,7 @@ setup(
   version='0.3.1',
   # setup_requires=['py2app', ],
   options={'py2app': OPTIONS},
-  data_files=['./eye-32.png'],
+  data_files=['./assets/eye-32.png'],
   # packages=['selfspy'],
   author="David Fendrich",
   description=''.join("""

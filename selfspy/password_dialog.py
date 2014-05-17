@@ -35,10 +35,10 @@ def get_password(verify=None, message=None):
 
 
 def get_user_password(verify, message=None, force_save=False):
-    if sys.stdin.isatty():
-        pw = get_tty_password(verify, message, force_save)
-    else:
-        pw = get_tk_password(verify, message, force_save)
+    # if sys.stdin.isatty():
+    #     pw = get_tty_password(verify, message, force_save)
+    # else:
+    pw = get_tk_password(verify, message, force_save)
 
     return pw
 
