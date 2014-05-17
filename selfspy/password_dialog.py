@@ -20,7 +20,32 @@ import getpass
 
 from Tkinter import Tk
 from tkSimpleDialog import Dialog
+# from Cocoa import *
+# from Foundation import NSObject
 
+# class SimpleXibDemoController(NSWindowController):
+#     counterTextField = objc.IBOutlet()
+     
+#     def windowDidLoad(self):
+#         NSWindowController.windowDidLoad(self)
+         
+#         # Start the counter
+#         self.password = 0
+     
+#     @objc.IBAction
+#     def increment_(self, sender):
+#         self.count += 1
+#         self.updateDisplay()
+     
+#     @objc.IBAction
+#     def decrement_(self, sender):
+#         self.count -= 1
+#         self.updateDisplay()
+     
+#     def getPassword(self):
+#         self.password = self.passwordField.getStringValue_()
+#         return self.password
+         
 
 def get_password(verify=None, message=None):
     if (not verify):
@@ -39,6 +64,7 @@ def get_user_password(verify, message=None, force_save=False):
     #     pw = get_tty_password(verify, message, force_save)
     # else:
     pw = get_tk_password(verify, message, force_save)
+    # pw = get_cocoa_password(verify, message, force_save)
 
     return pw
 
@@ -72,6 +98,21 @@ def set_keyring_password(password):
         pass
     except:
         print 'Unable to save password to keyring'
+
+
+def get_cocoa_password(verify, message=None, force_save=False):
+    app = NSApplication.sharedApplication()
+    # Initiate the contrller with a XIB
+    viewController = SimpleXibDemoController.alloc().initWithWindowNibName_("SimpleXibDemo")
+     
+    # Show the window
+    viewController.showWindow_(viewController)
+     
+    # Bring app to top
+    # NSApp.activateIgnoringOtherApps_(True)
+    # from PyObjCTools import AppHelper
+    # AppHelper.runEventLoop()
+
 
 
 def get_tty_password(verify, message=None, force_save=False):
@@ -111,19 +152,25 @@ def get_tk_password(verify, message=None, force_save=False):
         message = 'Password'
 
     while True:
-        pw, save_to_keychain = PasswordDialog(title='Selfspy encryption password',
+        # pw, save_to_keychain = PasswordDialog(title='Selfspy encryption password',
+        #                     prompt=message,
+        #                     parent=root)
+        pw = PasswordDialog(title='Selfspy encryption password',
                             prompt=message,
                             parent=root)
-        if pw is None:
+
+        if pw.result is None:
             return ""
 
         if (not verify) or verify(pw):
             break
 
-    if save_to_keychain or force_save:
-        set_keyring_password(pw)
+    print pw.result
 
-    return pw
+    # if save_to_keychain or force_save:
+    set_keyring_password(pw.result)
+
+    return pw.result
 
 
 class PasswordDialog(Dialog):
@@ -147,13 +194,14 @@ class PasswordDialog(Dialog):
 
         self.e1.grid(row=0, column=1)
 
-        self.cb = Checkbutton(master, text="Save to keychain", variable=self.checkVar)
-        self.cb.pack()
-        self.cb.grid(row=1, columnspan=2, sticky=W)
-        self.configure(show='*')
+        # self.cb = Checkbutton(master, text="Save to keychain", variable=self.checkVar)
+        # self.cb.pack()
+        # self.cb.grid(row=1, columnspan=2, sticky=W)
+        # self.configure(show='*')
 
     def apply(self):
-        self.result = (self.e1.get(), self.checkVar.get() == 1)
+        self.result = self.e1.get()# , self.checkVar.get() == 1)
+        print "result", self.result
 
 
 if __name__ == '__main__':

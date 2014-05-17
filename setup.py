@@ -49,13 +49,15 @@ OPTIONS = {#'argv_emulation': True,
           'includes' : ['sqlalchemy.dialects.sqlite'],
           'iconfile':'assets/eye.icns',
           }
+DATA_FILES = ['./assets/eye-32.png','selfspy/SimpleXibDemo.xib']
+
 setup(
   name="selfspy",
   app=['selfspy/__init__.py'],
   version='0.3.1',
-  # setup_requires=['py2app', ],
+  setup_requires=["py2app"],
   options={'py2app': OPTIONS},
-  data_files=['./assets/eye-32.png'],
+  data_files=DATA_FILES,
   # packages=['selfspy'],
   author="David Fendrich",
   description=''.join("""

@@ -13,3 +13,7 @@ selfspy.spec
 selfspy/*18942.py
 selfspy/*orig
 *.egg
+
+SimpleXibDemo.xib
+
+selfspy.xcode*
