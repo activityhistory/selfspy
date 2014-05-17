@@ -60,10 +60,10 @@ def get_password(verify=None, message=None):
 
 
 def get_user_password(verify, message=None, force_save=False):
-    # if sys.stdin.isatty():
-    #     pw = get_tty_password(verify, message, force_save)
-    # else:
-    pw = get_tk_password(verify, message, force_save)
+    if sys.stdin.isatty():
+        pw = get_tty_password(verify, message, force_save)
+    else:
+        pw = get_tk_password(verify, message, force_save)
     # pw = get_cocoa_password(verify, message, force_save)
 
     return pw
@@ -100,18 +100,18 @@ def set_keyring_password(password):
         print 'Unable to save password to keyring'
 
 
-def get_cocoa_password(verify, message=None, force_save=False):
-    app = NSApplication.sharedApplication()
-    # Initiate the contrller with a XIB
-    viewController = SimpleXibDemoController.alloc().initWithWindowNibName_("SimpleXibDemo")
+# def get_cocoa_password(verify, message=None, force_save=False):
+#     app = NSApplication.sharedApplication()
+#     # Initiate the contrller with a XIB
+#     viewController = SimpleXibDemoController.alloc().initWithWindowNibName_("SimpleXibDemo")
      
-    # Show the window
-    viewController.showWindow_(viewController)
+#     # Show the window
+#     viewController.showWindow_(viewController)
      
-    # Bring app to top
-    # NSApp.activateIgnoringOtherApps_(True)
-    # from PyObjCTools import AppHelper
-    # AppHelper.runEventLoop()
+#     # Bring app to top
+#     # NSApp.activateIgnoringOtherApps_(True)
+#     # from PyObjCTools import AppHelper
+#     # AppHelper.runEventLoop()
 
 
 
@@ -152,6 +152,10 @@ def get_tk_password(verify, message=None, force_save=False):
         message = 'Password'
 
     while True:
+        # 
+        # Buggy behavior so only returning the password 
+        # and setting the keyring password silently
+        # 
         # pw, save_to_keychain = PasswordDialog(title='Selfspy encryption password',
         #                     prompt=message,
         #                     parent=root)
