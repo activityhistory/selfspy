@@ -37,7 +37,6 @@ from Cocoa import (NSEvent,
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 
 import config as cfg
-#from PIL import Image
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG

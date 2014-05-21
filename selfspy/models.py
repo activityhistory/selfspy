@@ -21,7 +21,7 @@ import json
 import datetime
 
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy import Index, Column, Boolean, Integer, Unicode, DateTime, Binary, ForeignKey, create_engine
+from sqlalchemy import Index, Column, Boolean, Integer, Unicode, Binary, ForeignKey, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
 
@@ -42,7 +42,7 @@ class SpookMixin(object):
         return cls.__name__.lower()
 
     id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, default=datetime.datetime.now, index=True)
+    created_at = Column(Unicode, default=datetime.datetime.now, index=True)
 
 
 class Process(SpookMixin, Base):
@@ -152,7 +152,7 @@ def maybe_decrypt(s, other_encrypter=None):
 
 class Keys(SpookMixin, Base):
     text = Column(Binary, nullable=False)
-    started = Column(DateTime, nullable=False)
+    started = Column(Unicode, nullable=False)
 
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('keys'))
