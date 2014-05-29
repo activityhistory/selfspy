@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
 
+#Modified in 2014 by Aurélien Tabard and Adam Rule
 
 import string 
 import objc, re, os
