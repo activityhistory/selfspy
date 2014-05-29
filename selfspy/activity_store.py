@@ -82,9 +82,11 @@ class ActivityStore:
         
         self.screenshots_active = screenshots
         self.last_screenshot = time.time()
-        # if (screenshots) :
-        #   t = Thread(target=self.take_screenshots_every, args=(.1,))
-        #   t.start()
+
+        if (screenshots) :
+          # If there is no activity we take a screenshot every 60 seconds
+          t = Thread(target=self.take_screenshots_every, args=(60,))
+          t.start()
         
         self.started = NOW()
 
@@ -294,17 +296,15 @@ class ActivityStore:
         while True:
             self.take_screenshot()
             time.sleep(n)
-            print str(datetime.now().isoformat())
+            # print str(datetime.now().isoformat())
 
 
     def take_screenshot(self):
       # We check whether the screenshot option is on and then 
-      # limit the screenshot taking rate to 10 screenshots per second.
-
-      self.screenshots_active = self.sniffer.isScreenshotActive()
-      
+      # limit the screenshot taking rate to 5 screenshots per second.
+      self.screenshots_active = self.sniffer.isScreenshotActive()      
       if (self.screenshots_active
-        and (time.time() - self.last_screenshot) > 0.1): 
+        and (time.time() - self.last_screenshot) > 0.2): 
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               # print folder
