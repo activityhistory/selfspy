@@ -23,7 +23,7 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import NibClassBuilder, AppHelper
 
-from Cocoa import (NSEvent,
+from Cocoa import (NSEvent, 
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
                    NSRightMouseUp, NSRightMouseDown, NSRightMouseUpMask, NSRightMouseDownMask,
@@ -304,6 +304,21 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
+        # NSImage *overlay    =   [[[NSCursor arrowCursor] image] copy]
+        # currentSystemCursor
+        overlay = NSCursor.arrowCursor().image().copy()
+        mouseLoc = NSEvent.mouseLocation()
+
+        # Get cursor information
+        x = mouseLoc.x
+        y = mouseLoc.y
+        w = overlay.size().width
+        h = overlay.size().height
+        org_x = x
+        org_y = y
+
+        print "cursor :", x, y, w, h
+
         #Get size of image    
         width = self.screenshotSize[0]
         height = self.screenshotSize[1]
@@ -324,6 +339,19 @@ class Sniffer:
         #Draw image on context at new scale
         rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
+
+        # then mouse cursor 
+        # objc : [overlay CGImageForProposedRect: NULL context: NULL hints: NULL]
+        # pyobjc : overlay(CGImageForProposedRect: NULL context: NULL hints: NULL]
+        # TODO convert NSImage into CGImage
+        # print "overlay start"
+        # overlay2 = overlay.CGImageForProposedRect(None,None,None)
+        # print "overlay test"
+
+        # Quartz.CGContextDrawImage(bitmapContext,
+        #   CG.CGRectMake(org_x, org_y, w, h), 
+        #   overlay2)
+        # print "cursor drawn"
 
         #Recreate image from context
         imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
