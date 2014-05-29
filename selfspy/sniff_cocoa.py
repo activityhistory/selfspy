@@ -55,6 +55,9 @@ class Sniffer:
         self.mouse_button_hook = lambda x: True
         self.mouse_move_hook = lambda x: True
         self.screen_hook = lambda x: True
+        self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
+        self.screenRatio = self.screenSize[0]/self.screenSize[1]
+        self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
 
     def createAppDelegate(self):
         sc = self
@@ -63,7 +66,7 @@ class Sniffer:
             statusbar = None
             state = 'pause'
             screenshot = True
-
+            
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching.")
 
@@ -106,6 +109,14 @@ class Sniffer:
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
 
+            def setScreenshotSize_(self, notification):
+            	height = notification.tag()
+            	sc.screenshotSize[0] = height*sc.screenRatio
+            	sc.screenshotSize[1] = height
+            	notification.setState_(1)
+            	print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
+            	
+
             def createStatusMenu(self):
                 NSLog("Creating app menu")
                 statusbar = NSStatusBar.systemStatusBar()
@@ -139,6 +150,25 @@ class Sniffer:
                 else :
                   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record screenshots', 'toggleScreenshots:', '')
                   self.menu.addItem_(menuitem)
+                  
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Screenshot size','','')
+                self.menu.addItem_(menuitem)
+                
+            	self.resolutionSubmenu = NSMenu.alloc().init()
+            	self.resolutionSubmenu.setAutoenablesItems_(False)
+            	
+            	submenuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(int(sc.screenSize[1])) + ' x ' + str(int(sc.screenSize[0])) ,'setScreenshotSize:','')
+            	submenuitem.setState_(1)
+            	submenuitem.setTag_(int(sc.screenSize[1]))
+            	self.resolutionSubmenu.addItem_(submenuitem)
+            	
+            	for x in [1080,720,480]:
+            		if sc.screenSize[1]>x:
+            			submenuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(x) + ' x ' + str(int(x*sc.screenRatio)), 'setScreenshotSize:','')
+            			submenuitem.setTag_(x)
+            			self.resolutionSubmenu.addItem_(submenuitem)
+            	
+            	menuitem.setSubmenu_(self.resolutionSubmenu)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
                 self.menu.addItem_(menuitem)
@@ -260,7 +290,7 @@ class Sniffer:
       try:
         #For testing how long it takes to take screenshot
         start = time.time()
-        scale = 0.5
+        scale = 1.0
 
         #Set to capture entire screen, including multiple monitors
         if region is None:  
@@ -275,8 +305,8 @@ class Sniffer:
         )
 
         #Get size of image    
-        width = CG.CGImageGetWidth(image)
-        height = CG.CGImageGetHeight(image)
+        width = self.screenshotSize[0]
+        height = self.screenshotSize[1]
         
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))

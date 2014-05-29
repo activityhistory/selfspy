@@ -49,11 +49,8 @@ OPTIONS = {#'argv_emulation': True,
           'includes' : ['sqlalchemy.dialects.sqlite'],
           'iconfile':'assets/eye.icns',
           }
-<<<<<<< HEAD
+          
 DATA_FILES = ['./assets/eye-32.png']
-=======
-DATA_FILES = ['./assets/eye-32.png','selfspy/SimpleXibDemo.xib']
->>>>>>> abe225ce9b2e6aa1c52da95babffe9ca1511ae1c
 
 setup(
   name="selfspy",
