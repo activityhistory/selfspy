@@ -305,16 +305,13 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        # NSImage *overlay    =   [[[NSCursor arrowCursor] image] copy]
-        # currentSystemCursor
-        overlay = NSCursor.arrowCursor().image().copy()
-        mouseLoc = NSEvent.mouseLocation()
 
+        mouseLoc = NSEvent.mouseLocation()
         # Get cursor information
-        x = mouseLoc.x
-        y = mouseLoc.y
-        w = overlay.size().width
-        h = overlay.size().height
+        x = int(mouseLoc.x *scale)
+        y = int(mouseLoc.y *scale)
+        w = int(overlay.size().width *scale)
+        h = int(overlay.size().height *scale)
         org_x = x
         org_y = y
 
@@ -341,18 +338,39 @@ class Sniffer:
         rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
 
-        # then mouse cursor 
-        # objc : [overlay CGImageForProposedRect: NULL context: NULL hints: NULL]
-        # pyobjc : overlay(CGImageForProposedRect: NULL context: NULL hints: NULL]
-        # TODO convert NSImage into CGImage
-        # print "overlay start"
-        # overlay2 = overlay.CGImageForProposedRect(None,None,None)
-        # print "overlay test"
+        # Adding Mouse cursor to the screenshot
 
-        # Quartz.CGContextDrawImage(bitmapContext,
-        #   CG.CGRectMake(org_x, org_y, w, h), 
-        #   overlay2)
-        # print "cursor drawn"
+        # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]        
+        # # arrowCursor grabs the arrow cursor
+        # # currentSystemCursor grabs the image of the current cursor, 
+        # overlay = NSCursor.arrowCursor().image().copy()
+
+        # # Now convert NSImage into CGImage
+        # # Gave up on this, I don't understand why it doesn't work...
+        # # objc : [overlay CGImageForProposedRect: NULL context: NULL hints: NULL]
+        # # pyobjc : overlay(CGImageForProposedRect: NULL context: NULL hints: NULL]
+        # cursorRectangle = NSMakeRect(0, 0, w, h)
+        # overlay2 = overlay.CGImageForProposedRect_context_hints_(None,None,None)
+        # overlay2 = overlay.CGImageForProposedRect_context_(cursorRectangle,None)
+
+        # Adding Mouse cursor to the screenshot
+        # Alternative 1 : load a cursor image 
+
+        # Convert path to url for saving image
+        cursorPath = "../Resources/cursor.png"
+        cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
+        cursorURL = NSURL.fileURLWithPath_(cursorPathStr)
+
+        # Create a CGImageSource object from 'url'.
+        cursorImageSource = Quartz.CGImageSourceCreateWithURL(cursorURL, None)
+
+        # Create a CGImage object from the first image in the file. Image
+        # indexes are 0 based.
+        cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
+
+        Quartz.CGContextDrawImage(bitmapContext,
+          CG.CGRectMake(org_x, org_y, w, h), 
+          cursorOverlay)
 
         #Recreate image from context
         imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
