@@ -339,7 +339,7 @@ class Sniffer:
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
 
         # Adding Mouse cursor to the screenshot
-
+        # https://stackoverflow.com/questions/8008630/not-displaying-mouse-cursor
         # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]        
         # # arrowCursor grabs the arrow cursor
         # # currentSystemCursor grabs the image of the current cursor, 
