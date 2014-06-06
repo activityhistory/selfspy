@@ -21,6 +21,8 @@ from datetime import datetime
 NOW = datetime.now
 
 import sqlalchemy
+import urllib
+import re
 
 from threading import Thread
 
@@ -87,6 +89,11 @@ class ActivityStore:
           # If there is no activity we take a screenshot every 60 seconds
           t = Thread(target=self.take_screenshots_every, args=(60,))
           t.start()
+
+        geoloc = True
+        if (geoloc) : 
+          t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
+          t_geoloc.start()
         
         self.started = NOW()
 
@@ -290,6 +297,19 @@ class ActivityStore:
             k.encrypt_text(dtext, new_encrypter)
             k.encrypt_keys(dkeys, new_encrypter)
         self.session.commit()
+
+
+    def take_geoloc_every(self,n):
+        while True:
+            self.take_geoloc()
+            time.sleep(n)
+
+    def take_geoloc(self):
+        # TODO check if skyhook api is a better alternative
+        response = urllib.urlopen('http://api.hostip.info/get_html.php').read()
+        m = re.search('City: (.*)', response)
+        if m:
+            print m.group(1)
 
 
     def take_screenshots_every(self,n):

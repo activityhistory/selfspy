@@ -305,21 +305,20 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
+        #Get size of image    
+        width = self.screenshotSize[0]
+        height = self.screenshotSize[1]
 
         mouseLoc = NSEvent.mouseLocation()
         # Get cursor information
         x = int(mouseLoc.x *scale)
         y = int(mouseLoc.y *scale)
-        w = int(overlay.size().width *scale)
-        h = int(overlay.size().height *scale)
+        w = int(width *scale)
+        h = int(height *scale)
         org_x = x
         org_y = y
 
         print "cursor :", x, y, w, h
-
-        #Get size of image    
-        width = self.screenshotSize[0]
-        height = self.screenshotSize[1]
         
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
@@ -355,7 +354,7 @@ class Sniffer:
 
         # Adding Mouse cursor to the screenshot
         # Alternative 1 : load a cursor image 
-
+        print "test"
         # Convert path to url for saving image
         cursorPath = "../Resources/cursor.png"
         cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
@@ -368,6 +367,7 @@ class Sniffer:
         # indexes are 0 based.
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
+        print "test"
         Quartz.CGContextDrawImage(bitmapContext,
           CG.CGRectMake(org_x, org_y, w, h), 
           cursorOverlay)
