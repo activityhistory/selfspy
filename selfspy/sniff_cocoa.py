@@ -49,6 +49,14 @@ NOW = datetime.now
 
 start_time = NSDate.date()
 
+#Class for Preferences window launcher
+#http://forrst.com/posts/Window_preferences_with_toolbar_in_pyobjc_with_c-LlB
+#http://rudis.net/content/2008/12/18/creating-using-nsstatusbar-pyobjc.html
+class PreferencesController(NSWindowController):
+
+	def windowDidLoad(self):
+		NSWindowController.windowDidLoad(self)
+
 
 class Sniffer:
     def __init__(self):
@@ -60,6 +68,7 @@ class Sniffer:
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
         self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
 
+
     def createAppDelegate(self):
         sc = self
 
@@ -67,6 +76,20 @@ class Sniffer:
             statusbar = None
             state = 'pause'
             screenshot = True
+            
+            #Function for showing Preferences window
+            def showPreferences_(self, notification):
+            	NSLog("Showing Preference Window...")
+            	
+            	# Initiate the contrller with a XIB
+            	prefController = PreferencesController.alloc().initWithWindowNibName_("preferences")
+            	
+            	# Show the window
+            	prefController.showWindow_(prefController)
+            	
+            	#bring app to top
+            	NSApp.activateIgnoringOtherApps_(True)
+            	
             
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching.")
@@ -170,6 +193,9 @@ class Sniffer:
             			self.resolutionSubmenu.addItem_(submenuitem)
             	
             	menuitem.setSubmenu_(self.resolutionSubmenu)
+            	
+            	menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
+                self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
                 self.menu.addItem_(menuitem)
