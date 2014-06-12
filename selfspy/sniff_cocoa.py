@@ -82,13 +82,15 @@ class Sniffer:
             	NSLog("Showing Preference Window...")
             	
             	# Initiate the contrller with a XIB
-            	prefController = PreferencesController.alloc().initWithWindowNibName_("preferences")
+            	prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
             	
             	# Show the window
             	prefController.showWindow_(prefController)
             	
             	#bring app to top
             	NSApp.activateIgnoringOtherApps_(True)
+            	
+            	#NSWindow.makeKeyAndOrderFront_(self)
             	
             
             def applicationDidFinishLaunching_(self, notification):
