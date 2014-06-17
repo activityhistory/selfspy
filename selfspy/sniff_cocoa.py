@@ -19,6 +19,7 @@
 
 import string 
 import objc, re, os
+from objc import IBAction, IBOutlet
 
 from Foundation import *
 from AppKit import *
@@ -41,7 +42,6 @@ import config as cfg
 import Quartz
 import LaunchServices
 import Quartz.CoreGraphics as CG
-# import Quartz.CoreImage as CI
 
 import time
 from datetime import datetime
@@ -49,13 +49,44 @@ NOW = datetime.now
 
 start_time = NSDate.date()
 
-#Class for Preferences window launcher
-#http://forrst.com/posts/Window_preferences_with_toolbar_in_pyobjc_with_c-LlB
-#http://rudis.net/content/2008/12/18/creating-using-nsstatusbar-pyobjc.html
-class PreferencesController(NSWindowController):
+class HelloController(NSObject):
+    @IBAction
+    def sayHello_(self, notification):
+        print notification.tag()
 
-	def windowDidLoad(self):
+
+#Preferences window launcher
+class PreferencesController(NSWindowController):
+    
+    imageSize = IBOutlet()
+    imageFreq = IBOutlet()
+    experienceFreq = IBOutlet()
+
+    @IBAction
+    def changeImageSize_(self, notification):
+        height = notification.tag()
+        print height
+
+    def windowDidLoad(self):
 		NSWindowController.windowDidLoad(self)
+
+    def show(self):
+		try:
+			if self.prefController:
+				self.prefController.close()
+		except:
+			pass
+		
+		#open window from NIB file	
+		self.prefController = NSWindowController.alloc().initWithWindowNibName_("Preferences")
+ 
+ 		#show window front and center
+		self.prefController.showWindow_(None)        
+		self.prefController.window().center()
+		self.prefController.window().makeKeyAndOrderFront_(None) # not working
+		self.prefController.retain() # needed to keep window from disappearing 
+
+    show = classmethod(show)
 
 
 class Sniffer:
@@ -77,22 +108,6 @@ class Sniffer:
             state = 'pause'
             screenshot = True
             
-            #Function for showing Preferences window
-            def showPreferences_(self, notification):
-            	NSLog("Showing Preference Window...")
-            	
-            	# Initiate the contrller with a XIB
-            	prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
-            	
-            	# Show the window
-            	prefController.showWindow_(prefController)
-            	
-            	#bring app to top
-            	NSApp.activateIgnoringOtherApps_(True)
-            	
-            	#NSWindow.makeKeyAndOrderFront_(self)
-            	
-            
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching.")
 
@@ -108,12 +123,6 @@ class Sniffer:
                         | NSScrollWheelMask
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
-
-                # self.statusItem = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
-                # self.statusItem.setTitle_(u"Selfspy")
-                # self.statusItem.setHighlightMode_(TRUE)
-                # self.statusItem.setEnabled_(TRUE)
-                # self.statusItem.retain()
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
@@ -142,6 +151,9 @@ class Sniffer:
             	notification.setState_(1)
             	print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
             	
+            def showPreferences_(self, notification):
+            	NSLog("Showing Preference Window...")
+            	PreferencesController.show()
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")

@@ -28,19 +28,6 @@ from tkSimpleDialog import Dialog
      
 #     def windowDidLoad(self):
 #         NSWindowController.windowDidLoad(self)
-         
-#         # Start the counter
-#         self.password = 0
-     
-#     @objc.IBAction
-#     def increment_(self, sender):
-#         self.count += 1
-#         self.updateDisplay()
-     
-#     @objc.IBAction
-#     def decrement_(self, sender):
-#         self.count -= 1
-#         self.updateDisplay()
      
 #     def getPassword(self):
 #         self.password = self.passwordField.getStringValue_()
@@ -101,7 +88,6 @@ def set_keyring_password(password):
 
 
 # def get_cocoa_password(verify, message=None, force_save=False):
-#     app = NSApplication.sharedApplication()
 #     # Initiate the contrller with a XIB
 #     viewController = SimpleXibDemoController.alloc().initWithWindowNibName_("SimpleXibDemo")
      
@@ -110,9 +96,6 @@ def set_keyring_password(password):
      
 #     # Bring app to top
 #     # NSApp.activateIgnoringOtherApps_(True)
-#     # from PyObjCTools import AppHelper
-#     # AppHelper.runEventLoop()
-
 
 
 def get_tty_password(verify, message=None, force_save=False):
