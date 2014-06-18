@@ -16,6 +16,7 @@
 # along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import ConfigParser
 import time
 from datetime import datetime
 NOW = datetime.now
@@ -64,6 +65,8 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name, encrypter=None, store_text=True, screenshots=False):
+        self.config()
+
         self.session_maker = models.initialize(db_name)
 
         models.ENCRYPTER = encrypter
@@ -337,3 +340,40 @@ class ActivityStore:
               self.last_screenshot = time.time()
           except:
               print "error with image backup"
+
+    def config(self):
+        self.configFile = self.lookupConfigDrive()
+
+        if self.configFile :
+            print self.configFile
+            self.parseConfigFile(self.configFile)
+            print self.config.get('Selfspy', 'screenshot-size')
+
+
+    def lookupConfigDrive(self, namefilter=""):
+        for dir in os.listdir('/Volumes') :
+            print dir
+            print "namefilter: ", namefilter
+            if namefilter in dir :
+                volume = os.path.join('/Volumes', dir)
+                print "filtered : ", volume
+                if (os.path.ismount(volume)) :
+                    subDirs = os.listdir(volume)
+                    for filename in subDirs:
+                        print filename
+                        if "selfspy.cfg" == filename :
+                            print "backup drive found"
+                            return os.path.join(volume, filename)
+        return None
+
+    def parseConfigFile(self, configFile):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(configFile)
+
+
+    def backupConfigFile(self):
+        if (self.configFile):
+            print ">>>>>>> TODO backup config file!  <<<<<<<"
+        else :
+            print ">>>>>>> Error no config file set! <<<<<<<"
+
