@@ -49,12 +49,6 @@ NOW = datetime.now
 
 start_time = NSDate.date()
 
-class HelloController(NSObject):
-    @IBAction
-    def sayHello_(self, notification):
-        print notification.tag()
-
-
 #Preferences window launcher
 class PreferencesController(NSWindowController):
     
@@ -66,25 +60,54 @@ class PreferencesController(NSWindowController):
     def changeImageSize_(self, notification):
         height = notification.tag()
         print height
+        print NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
 
     def windowDidLoad(self):
 		NSWindowController.windowDidLoad(self)
 
     def show(self):
-		try:
-			if self.prefController:
-				self.prefController.close()
-		except:
-			pass
-		
-		#open window from NIB file	
-		self.prefController = NSWindowController.alloc().initWithWindowNibName_("Preferences")
- 
- 		#show window front and center
-		self.prefController.showWindow_(None)        
-		self.prefController.window().center()
-		self.prefController.window().makeKeyAndOrderFront_(None) # not working
-		self.prefController.retain() # needed to keep window from disappearing 
+        try:
+            if self.prefController:
+                self.prefController.close()
+        except:
+            pass
+        
+        #open window from NIB file, show front and center
+        self.prefController = NSWindowController.alloc().initWithWindowNibName_("Preferences")
+        self.prefController.window().makeKeyAndOrderFront_(None) # not working
+        self.prefController.window().center()
+        self.prefController.showWindow_(None) 
+             
+        self.prefController.retain() # needed to keep window from disappearing
+
+    show = classmethod(show)
+
+#Preferences window launcher
+class ExperienceController(NSWindowController):
+    
+    experienceText = IBOutlet()
+
+    @IBAction
+    def changeExperienceText_(self, notification):
+        print "hello"
+
+    def windowDidLoad(self):
+        NSWindowController.windowDidLoad(self)
+
+    def show(self):
+        try:
+            if self.expController:
+                self.expController.close()
+        except:
+            pass
+        
+        #open window from NIB file, show front and center
+        self.expController = NSWindowController.alloc().initWithWindowNibName_("Experience")
+        self.expController.window().makeKeyAndOrderFront_(None) # not working
+        self.expController.window().center()
+        self.expController.showWindow_(None) 
+             
+        self.expController.retain() # needed to keep window from disappearing
 
     show = classmethod(show)
 
@@ -97,7 +120,7 @@ class Sniffer:
         self.screen_hook = lambda x: True
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
-        self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
+        #self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
 
 
     def createAppDelegate(self):
@@ -124,6 +147,14 @@ class Sniffer:
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
+                #Register preferance defaults
+                prefDictionary = {}
+                prefDictionary[u'imageSize'] = 720
+                prefDictionary[u"imageFreq"] = 50
+                prefDictionary[u"experienceFreq"] = 30
+                NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
+                #NSUserDefaults.registerDefaults_(prefDictionary)
+
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
                 # application terminates it does not run the rest the
@@ -144,16 +175,22 @@ class Sniffer:
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
 
+            '''
             def setScreenshotSize_(self, notification):
             	height = notification.tag()
             	sc.screenshotSize[0] = height*sc.screenRatio
             	sc.screenshotSize[1] = height
             	notification.setState_(1)
             	print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
-            	
+            '''
+
             def showPreferences_(self, notification):
             	NSLog("Showing Preference Window...")
             	PreferencesController.show()
+
+            def showExperience_(self, notification):
+                NSLog("Showing Experience Sampling Window...")
+                ExperienceController.show()
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")
@@ -188,25 +225,9 @@ class Sniffer:
                 else :
                   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record screenshots', 'toggleScreenshots:', '')
                   self.menu.addItem_(menuitem)
-                  
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Screenshot size','','')
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
                 self.menu.addItem_(menuitem)
-                
-            	self.resolutionSubmenu = NSMenu.alloc().init()
-            	self.resolutionSubmenu.setAutoenablesItems_(False)
-            	
-            	submenuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(int(sc.screenSize[1])) + ' x ' + str(int(sc.screenSize[0])) ,'setScreenshotSize:','')
-            	submenuitem.setState_(1)
-            	submenuitem.setTag_(int(sc.screenSize[1]))
-            	self.resolutionSubmenu.addItem_(submenuitem)
-            	
-            	for x in [1080,720,480]:
-            		if sc.screenSize[1]>x:
-            			submenuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(x) + ' x ' + str(int(x*sc.screenRatio)), 'setScreenshotSize:','')
-            			submenuitem.setTag_(x)
-            			self.resolutionSubmenu.addItem_(submenuitem)
-            	
-            	menuitem.setSubmenu_(self.resolutionSubmenu)
             	
             	menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
@@ -346,8 +367,8 @@ class Sniffer:
         )
 
         #Get size of image    
-        width = self.screenshotSize[0]
-        height = self.screenshotSize[1]
+        width = self.screenRatio * NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
 
         mouseLoc = NSEvent.mouseLocation()
         # Get cursor information
