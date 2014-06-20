@@ -51,10 +51,6 @@ start_time = NSDate.date()
 
 #Preferences window launcher
 class PreferencesController(NSWindowController):
-    
-    imageSize = IBOutlet()
-    imageFreq = IBOutlet()
-    experienceFreq = IBOutlet()
 
     @IBAction
     def changeImageSize_(self, notification):
@@ -71,12 +67,12 @@ class PreferencesController(NSWindowController):
                 self.prefController.close()
         except:
             pass
-        
+
         #open window from NIB file, show front and center
         self.prefController = NSWindowController.alloc().initWithWindowNibName_("Preferences")
+        self.prefController.showWindow_(None)
         self.prefController.window().makeKeyAndOrderFront_(None) # not working
         self.prefController.window().center()
-        self.prefController.showWindow_(None) 
              
         self.prefController.retain() # needed to keep window from disappearing
 
@@ -103,9 +99,10 @@ class ExperienceController(NSWindowController):
         
         #open window from NIB file, show front and center
         self.expController = NSWindowController.alloc().initWithWindowNibName_("Experience")
+        self.expController.showWindow_(None) 
         self.expController.window().makeKeyAndOrderFront_(None) # not working
         self.expController.window().center()
-        self.expController.showWindow_(None) 
+        
              
         self.expController.retain() # needed to keep window from disappearing
 
@@ -152,6 +149,15 @@ class Sniffer:
                 prefDictionary[u'imageSize'] = 720
                 prefDictionary[u"imageFreq"] = 50
                 prefDictionary[u"experienceFreq"] = 30
+                #Not sure if next line encodes the file URL correctly, 
+                #see https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/UserDefaults/AccessingPreferenceValues/AccessingPreferenceValues.html
+                prefDictionary[u"dbLocation"] = NSKeyedArchiver.archivedDataWithRootObject_('file:///Users/adamrule/.selfspy')
+                #following preferences not exposed to the user in the Preferences window
+                prefDictionary[u"maxScreenshotDelay"] = 100
+                prefDictionary[u"dbName"] = 'selfspy.sqlite'
+                prefDictionary[u"lockFile"] = 'selfspy.pid'
+                prefDictionary[u"lock"] = None
+
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
                 #NSUserDefaults.registerDefaults_(prefDictionary)
 
@@ -174,15 +180,6 @@ class Sniffer:
                 else :
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
-
-            '''
-            def setScreenshotSize_(self, notification):
-            	height = notification.tag()
-            	sc.screenshotSize[0] = height*sc.screenRatio
-            	sc.screenshotSize[1] = height
-            	notification.setState_(1)
-            	print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
-            '''
 
             def showPreferences_(self, notification):
             	NSLog("Showing Preference Window...")
@@ -251,7 +248,7 @@ class Sniffer:
         app = NSApplication.sharedApplication()
         self.delegate = self.createAppDelegate().alloc().init()
         app.setDelegate_(self.delegate)
-        app.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
+        app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
         AppHelper.runEventLoop()
 
