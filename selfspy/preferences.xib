@@ -56,7 +56,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ImY-8d-57i">
+                    <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ImY-8d-57i">
                         <rect key="frame" x="250" y="106" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="5dU-bf-hGU">
@@ -83,7 +83,7 @@
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageSize" id="adq-Ih-Tw8"/>
                         </connections>
                     </popUpButton>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="u9O-ix-AHD">
+                    <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="u9O-ix-AHD">
                         <rect key="frame" x="250" y="79" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="c2W-F2-bwG">
@@ -113,7 +113,7 @@
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageFreq" id="4hl-hE-CgY"/>
                         </connections>
                     </popUpButton>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6hc-qF-2hY">
+                    <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6hc-qF-2hY">
                         <rect key="frame" x="250" y="50" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Uqk-2c-GxT">
@@ -146,7 +146,30 @@
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.experienceFreq" id="xod-Jy-Ufn"/>
                         </connections>
                     </popUpButton>
+                    <pathControl verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="buP-aW-40o">
+                        <rect key="frame" x="249" y="21" width="105" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <pathCell key="cell" controlSize="small" selectable="YES" editable="YES" alignment="left" pathStyle="popUp" id="cC6-Ui-szq">
+                            <font key="font" metaFont="smallSystem"/>
+                            <url key="url" string="file:///Users/adamrule/.selfspy/"/>
+                            <allowedTypes>
+                                <string>public.folder</string>
+                            </allowedTypes>
+                        </pathCell>
+                        <connections>
+                            <binding destination="bq4-b7-72c" name="value" keyPath="values.dbLocation" id="Ms6-xW-BI9">
+                                <dictionary key="options">
+                                    <string key="NSValueTransformerName">NSKeyedUnarchiveFromData</string>
+                                </dictionary>
+                            </binding>
+                        </connections>
+                    </pathControl>
                 </subviews>
+                <constraints>
+                    <constraint firstItem="ImY-8d-57i" firstAttribute="trailing" secondItem="6hc-qF-2hY" secondAttribute="trailing" id="10j-XF-l2h"/>
+                    <constraint firstItem="ImY-8d-57i" firstAttribute="trailing" secondItem="u9O-ix-AHD" secondAttribute="trailing" id="3nv-tu-TH6"/>
+                    <constraint firstItem="ImY-8d-57i" firstAttribute="trailing" secondItem="buP-aW-40o" secondAttribute="trailing" id="iKu-Yu-mir"/>
+                </constraints>
             </view>
         </window>
         <customObject id="2X5-EM-jwX" customClass="PreferencesController"/>
