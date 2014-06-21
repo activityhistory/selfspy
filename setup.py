@@ -50,7 +50,7 @@ OPTIONS = {#'argv_emulation': True,
           'iconfile':'assets/eye.icns',
           }
           
-DATA_FILES = ['./assets/eye-32.png','./assets/cursor.png', './selfspy/Preferences.xib','./selfspy/Experience.xib']
+DATA_FILES = ['./assets/eye-32.png','./assets/bookmark-64.png','./assets/cursor.png', './selfspy/Preferences.xib','./selfspy/Experience.xib']
 
 setup(
   name="selfspy",
@@ -60,7 +60,7 @@ setup(
   options={'py2app': OPTIONS},
   data_files=DATA_FILES,
   # packages=['selfspy'],
-  author="David Fendrich",
+  # author="David Fendrich",
   description=''.join("""
       Log everything you do on the computer, for statistics,
       future reference and all-around fun!
