@@ -1,21 +1,21 @@
 # Copyright 2012 Bjarte Johansen
 
-# This file is part of Selfspy
+""" Copyright 2012 Bjarte Johansen
+Modified 2014 by Aurélien Tabard and Adam Rule
+This file is part of Selfspy
 
-# Selfspy is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+Selfspy is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-# Selfspy is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
-
-#Modified in 2014 by Aurélien Tabard and Adam Rule
+Selfspy is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details. You should have 
+received a copy of the GNU General Public License along with Selfspy. 
+If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import string 
 import objc, re, os
@@ -59,7 +59,7 @@ class PreferencesController(NSWindowController):
         print NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
 
     def windowDidLoad(self):
-		NSWindowController.windowDidLoad(self)
+        NSWindowController.windowDidLoad(self)
 
     def show(self):
         try:
@@ -132,6 +132,7 @@ class Sniffer:
                 NSLog("Application did finish launching.")
 
                 self.createStatusMenu()
+                self.createStatusButton()
 
                 mask = (NSKeyDownMask
                         | NSKeyUpMask
@@ -151,7 +152,7 @@ class Sniffer:
                 prefDictionary[u"experienceFreq"] = 30
                 #Not sure if next line encodes the file URL correctly, 
                 #see https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/UserDefaults/AccessingPreferenceValues/AccessingPreferenceValues.html
-                prefDictionary[u"dbLocation"] = NSKeyedArchiver.archivedDataWithRootObject_('file:///Users/adamrule/.selfspy')
+                prefDictionary[u"dbLocation"] = NSKeyedArchiver.archivedDataWithRootObject_('file://' + os.path.expanduser('~/.selfspy'))
                 #following preferences not exposed to the user in the Preferences window
                 prefDictionary[u"maxScreenshotDelay"] = 100
                 prefDictionary[u"dbName"] = 'selfspy.sqlite'
@@ -181,9 +182,21 @@ class Sniffer:
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
 
+            '''
+            def setScreenshotSize_(self, notification):
+                height = notification.tag()
+                sc.screenshotSize[0] = height*sc.screenRatio
+                sc.screenshotSize[1] = height
+                notification.setState_(1)
+                print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
+            '''
+
+            def bookmarkEvent_(self, sender):
+                print "Hello again, World!"
+
             def showPreferences_(self, notification):
-            	NSLog("Showing Preference Window...")
-            	PreferencesController.show()
+                NSLog("Showing Preference Window...")
+                PreferencesController.show()
 
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window...")
@@ -225,8 +238,8 @@ class Sniffer:
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
                 self.menu.addItem_(menuitem)
-            	
-            	menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
+                
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
@@ -237,6 +250,45 @@ class Sniffer:
 
                 self.statusitem.setEnabled_(TRUE)                
                 self.statusitem.retain()
+
+            def createStatusButton(self):
+                NSLog("Creating status button")
+                statusbar = NSStatusBar.systemStatusBar()
+
+                # Create the statusbar item
+                self.statusitem2 = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
+                # self.statusitem.setTitle_(u"Selfspy")
+
+                # Load all images
+                self.bookmarkIcon = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
+                self.bookmarkIcon.setScalesWhenResized_(True)
+                self.bookmarkIcon.setSize_((20, 20))
+                self.statusitem2.setImage_(self.bookmarkIcon)
+
+
+                # Let it highlight upon clicking
+                self.statusitem2.setHighlightMode_(1)
+                # Set a tooltip
+                self.statusitem2.setToolTip_('Selfspy')
+
+                # https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/classes/NSButtonCell_Class/Reference/Reference.html
+                self.hel = NSButton.alloc().initWithFrame_ (((0.0, 0.0), (18.0, 22.0)))
+                self.hel.setBezelStyle_(6)
+                # self.hel.setTransparent_(True)
+                self.hel.setButtonType_(0)
+                self.hel.setBackgroundColor_(0)
+                self.hel.setBordered_(False)
+                self.hel.setTitle_( 'Bookmark' )
+                self.hel.setImage_(self.bookmarkIcon)
+                # self.hel.setTarget_( self )
+                self.hel.setAction_( "bookmarkEvent:" )
+
+                # Bind to the status item
+                self.statusitem2.setView_(self.hel)
+
+                self.statusitem2.setEnabled_(TRUE)       
+                self.statusitem2.retain()
+
 
             def isScreenshotActive(self):
               # print "state", self.state

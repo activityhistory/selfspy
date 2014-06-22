@@ -1,37 +1,25 @@
-# Copyright 2012 David Fendrich
+""" Copyright 2012 Bjarte Johansen
+Modified 2014 by Aurélien Tabard and Adam Rule
+This file is part of Selfspy
 
-# This file is part of Selfspy
+Selfspy is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-# Selfspy is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# Selfspy is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with Selfspy.  If not, see <http://www.gnu.org/licenses/>.
+Selfspy is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details. You should have 
+received a copy of the GNU General Public License along with Selfspy. 
+If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import sys
 import getpass
 
 from Tkinter import Tk
 from tkSimpleDialog import Dialog
-# from Cocoa import *
-# from Foundation import NSObject
-
-# class SimpleXibDemoController(NSWindowController):
-#     counterTextField = objc.IBOutlet()
-     
-#     def windowDidLoad(self):
-#         NSWindowController.windowDidLoad(self)
-     
-#     def getPassword(self):
-#         self.password = self.passwordField.getStringValue_()
-#         return self.password
          
 
 def get_password(verify=None, message=None):
@@ -85,17 +73,6 @@ def set_keyring_password(password):
         pass
     except:
         print 'Unable to save password to keyring'
-
-
-# def get_cocoa_password(verify, message=None, force_save=False):
-#     # Initiate the contrller with a XIB
-#     viewController = SimpleXibDemoController.alloc().initWithWindowNibName_("SimpleXibDemo")
-     
-#     # Show the window
-#     viewController.showWindow_(viewController)
-     
-#     # Bring app to top
-#     # NSApp.activateIgnoringOtherApps_(True)
 
 
 def get_tty_password(verify, message=None, force_save=False):
