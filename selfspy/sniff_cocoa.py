@@ -182,15 +182,6 @@ class Sniffer:
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
 
-            '''
-            def setScreenshotSize_(self, notification):
-                height = notification.tag()
-                sc.screenshotSize[0] = height*sc.screenRatio
-                sc.screenshotSize[1] = height
-                notification.setState_(1)
-                print("Change screenshot size to " + str(sc.screenshotSize[1]) + " x " + str(sc.screenshotSize[0]))
-            '''
-
             def bookmarkEvent_(self, sender):
                 print "Hello again, World!"
 
