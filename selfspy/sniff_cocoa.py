@@ -25,6 +25,8 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import NibClassBuilder, AppHelper
 
+from threading import Thread
+
 from Cocoa import (NSEvent, 
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
@@ -117,7 +119,7 @@ class Sniffer:
         self.screen_hook = lambda x: True
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
-        #self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
+        self.delegate = None
 
 
     def createAppDelegate(self):
@@ -145,22 +147,28 @@ class Sniffer:
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
-                #Register preferance defaults
+                # Register preferance defaults for user-facing preferences
                 prefDictionary = {}
-                prefDictionary[u'imageSize'] = 720
-                prefDictionary[u"imageFreq"] = 50
-                prefDictionary[u"experienceFreq"] = 30
-                #Not sure if next line encodes the file URL correctly, 
-                #see https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/UserDefaults/AccessingPreferenceValues/AccessingPreferenceValues.html
-                prefDictionary[u"dbLocation"] = NSKeyedArchiver.archivedDataWithRootObject_('file://' + os.path.expanduser('~/.selfspy'))
-                #following preferences not exposed to the user in the Preferences window
-                prefDictionary[u"maxScreenshotDelay"] = 100
-                prefDictionary[u"dbName"] = 'selfspy.sqlite'
-                prefDictionary[u"lockFile"] = 'selfspy.pid'
-                prefDictionary[u"lock"] = None
+                prefDictionary[u'imageSize'] = 720          # in px
+                prefDictionary[u"imageTimeMax"] = 60        # in s
+                prefDictionary[u"imageTimeMin"] = 100       # in ms
+                prefDictionary[u"experienceTime"] = 1800    # in s
 
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
                 #NSUserDefaults.registerDefaults_(prefDictionary)
+
+            """
+                sample = True
+                if (sample) : 
+                  t_sample = Thread(target=self.take_sample_every, args=())
+                  t_sample.start()
+
+            def take_sample_every(self):
+                while True:
+                    self.sample_time = 10 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')    
+                    self.showExperience_('dummyMessage')
+                    time.sleep(self.sample_time)
+            """
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
@@ -406,9 +414,9 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        #Get size of image    
-        width = self.screenRatio * NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+        #Get size of image
+        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')    
+        width = self.screenRatio * height
 
         mouseLoc = NSEvent.mouseLocation()
         # Get cursor information

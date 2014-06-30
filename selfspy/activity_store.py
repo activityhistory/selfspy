@@ -24,6 +24,9 @@ import sqlalchemy
 import urllib
 import re
 
+from Foundation import *
+from AppKit import *
+
 from threading import Thread
 
 import platform
@@ -63,7 +66,7 @@ class MouseMove:
         self.time = time
 
 class ActivityStore:
-    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=False):
+    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=True):
         self.session_maker = models.initialize(db_name)
 
         models.ENCRYPTER = encrypter
@@ -82,13 +85,15 @@ class ActivityStore:
         self.last_move_time = time.time()
         self.last_commit = time.time()
         
-        self.screenshots_active = screenshots
+        self.screenshots_active = True
         self.last_screenshot = time.time()
+        self.screenshot_time_min = 0.2
+        self.screenshot_time_max = 60
+        self.sample_time = 1800
 
-        if (screenshots) :
-          # If there is no activity we take a screenshot every 60 seconds
-          t = Thread(target=self.take_screenshots_every, args=(60,))
-          t.start()
+        # If there is no activity we take a screenshot every so often as specified by user
+        t = Thread(target=self.take_screenshots_every, args=())
+        t.start()          
 
         geoloc = True
         if (geoloc) : 
@@ -118,6 +123,7 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
 
         self.sniffer.run()
+        
 
     def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height):
         """ Receives a screen change and stores any changes. If the process or window has
@@ -312,27 +318,31 @@ class ActivityStore:
             print m.group(1)
 
 
-    def take_screenshots_every(self,n):
+    def take_screenshots_every(self):
         while True:
-            self.take_screenshot()
-            time.sleep(n)
+            self.screenshot_time_max = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMax')
+            time_since_last_screenshot = time.time() - self.last_screenshot
+            if (time_since_last_screenshot > self.screenshot_time_max):
+                self.take_screenshot()
+                time_since_last_screenshot = 0.0
+            time.sleep(self.screenshot_time_max - time_since_last_screenshot + 0.1)
             # print str(datetime.now().isoformat())
 
 
     def take_screenshot(self):
       # We check whether the screenshot option is on and then 
-      # limit the screenshot taking rate to 5 screenshots per second.
-      self.screenshots_active = self.sniffer.isScreenshotActive()      
+      # limit the screenshot taking rate to user defined rate
+      self.screenshots_active = self.sniffer.isScreenshotActive()
+      self.screenshot_time_min = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMin') / 1000.0
+
       if (self.screenshots_active
-        and (time.time() - self.last_screenshot) > 0.2): 
+        and (time.time() - self.last_screenshot) > self.screenshot_time_min) : 
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
-              # print folder
-
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
-
               print path
+
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
           except:
