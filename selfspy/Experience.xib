@@ -48,6 +48,9 @@
 DQ
 </string>
                         </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="QvC-M9-y7g" id="OHz-6p-bbi"/>
+                        </connections>
                     </button>
                 </subviews>
             </view>

@@ -1,5 +1,3 @@
-# Copyright 2012 Bjarte Johansen
-
 """ Copyright 2012 Bjarte Johansen
 Modified 2014 by Aurélien Tabard and Adam Rule
 This file is part of Selfspy
@@ -37,7 +35,8 @@ from Cocoa import (NSEvent,
                    NSAlternateKeyMask, NSCommandKeyMask, NSControlKeyMask,
                    NSShiftKeyMask, NSAlphaShiftKeyMask,
                    NSApplicationActivationPolicyProhibited,
-                   NSURL, NSString)
+                   NSURL, NSString,
+                   NSTimer,NSInvocation)
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 
 import config as cfg
@@ -157,18 +156,6 @@ class Sniffer:
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
                 #NSUserDefaults.registerDefaults_(prefDictionary)
 
-            """
-                sample = True
-                if (sample) : 
-                  t_sample = Thread(target=self.take_sample_every, args=())
-                  t_sample.start()
-
-            def take_sample_every(self):
-                while True:
-                    self.sample_time = 10 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')    
-                    self.showExperience_('dummyMessage')
-                    time.sleep(self.sample_time)
-            """
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
@@ -295,13 +282,20 @@ class Sniffer:
 
         return AppDelegate
 
+
     def run(self):
         app = NSApplication.sharedApplication()
         self.delegate = self.createAppDelegate().alloc().init()
         app.setDelegate_(self.delegate)
         app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
+
+        s = objc.selector(self.delegate.showExperience_,signature='v@:@')
+        self.sample_time = 10.0 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
+        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, True)
+        
         AppHelper.runEventLoop()
+        
 
     def cancel(self):
         AppHelper.stopEventLoop()

@@ -55,7 +55,7 @@ DATA_FILES = ['./assets/eye-32.png','./assets/bookmark-64.png','./assets/cursor.
 setup(
   name="selfspy",
   app=['selfspy/__init__.py'],
-  version='0.3.1',
+  version='0.1.7',
   setup_requires=["py2app"],
   options={'py2app': OPTIONS},
   data_files=DATA_FILES,
