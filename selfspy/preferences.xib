@@ -6,6 +6,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesController">
             <connections>
+                <outlet property="screenshotSizeMenu" destination="Zfc-cP-1Ys" id="cO3-ne-XTx"/>
+                <outlet property="screenshotSizePopup" destination="ImY-8d-57i" id="jGL-9c-OyC"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="k2w-Wa-h0P"/>
             </connections>
         </customObject>
@@ -68,25 +70,10 @@
                     <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ImY-8d-57i">
                         <rect key="frame" x="250" y="106" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="push" title="720 px" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="720" imageScaling="proportionallyDown" inset="2" selectedItem="Tjd-KA-w7T" id="5dU-bf-hGU">
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="5dU-bf-hGU">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="OtherViews" id="Zfc-cP-1Ys">
-                                <items>
-                                    <menuItem title="Native" tag="800" id="jRb-Dt-RtO">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="1080 px" tag="1080" id="AqZ-F9-SLp">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="720 px" state="on" tag="720" id="Tjd-KA-w7T">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="480 px" tag="480" id="aZj-7A-DRR">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                </items>
-                            </menu>
+                            <menu key="menu" title="OtherViews" id="Zfc-cP-1Ys"/>
                         </popUpButtonCell>
                         <connections>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageSize" id="adq-Ih-Tw8"/>

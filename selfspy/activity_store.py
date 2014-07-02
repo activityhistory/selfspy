@@ -31,13 +31,7 @@ from Cocoa import NSNotificationCenter
 
 from threading import Thread
 
-import platform
-if platform.system() == 'Darwin':
-    from selfspy import sniff_cocoa as sniffer
-elif platform.system() == 'Windows':
-    from selfspy import sniff_win as sniffer
-else:
-    from selfspy import sniff_x as sniffer
+from selfspy import sniff_cocoa as sniffer
 
 from selfspy import models
 from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location
@@ -99,9 +93,10 @@ class ActivityStore:
 
         geoloc = True
         if (geoloc) : 
-          t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
-          t_geoloc.start()
+            t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
+            t_geoloc.start()
 
+        # listen for experience sample events sent by OK button on Experience window
         s = objc.selector(self.got_experience,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
         
@@ -126,7 +121,6 @@ class ActivityStore:
         self.sniffer.key_hook = self.got_key
         self.sniffer.mouse_button_hook = self.got_mouse_click
         self.sniffer.mouse_move_hook = self.got_mouse_move
-        self.sniffer.experience_hook = self.got_experience
 
         self.sniffer.run()
         
@@ -340,7 +334,6 @@ class ActivityStore:
                 self.take_screenshot()
                 time_since_last_screenshot = 0.0
             time.sleep(self.screenshot_time_max - time_since_last_screenshot + 0.1)
-            # print str(datetime.now().isoformat())
 
 
     def take_screenshot(self):

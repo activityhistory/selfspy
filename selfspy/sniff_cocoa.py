@@ -52,14 +52,38 @@ start_time = NSDate.date()
 #Preferences window launcher
 class PreferencesController(NSWindowController):
 
-    @IBAction
-    def changeImageSize_(self, notification):
-        height = notification.tag()
-        print height
-        print NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+    screenshotSizePopup = IBOutlet()
+    screenshotSizeMenu = IBOutlet()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
+
+        # Set size options based on screen
+        nativeHeight = int(NSScreen.mainScreen().frame().size.height)
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(nativeHeight)+' px', '', '')
+        menuitem.setTag_(nativeHeight)
+        self.prefController.screenshotSizeMenu.removeAllItems()
+        self.prefController.screenshotSizeMenu.addItem_(menuitem)
+
+        sizes = [1080,720,480]
+
+        for x in sizes:
+            if x < nativeHeight:
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(x)+' px', '', '')
+                menuitem.setTag_(x)
+                self.prefController.screenshotSizeMenu.addItem_(menuitem)
+
+        selectedSize = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+        selectedMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(selectedSize)
+        if(selectedMenuItem):
+            self.prefController.screenshotSizePopup.selectItemWithTag_(selectedSize)
+        else:
+            nativeMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(nativeHeight)
+            NSUserDefaultsController.sharedUserDefaultsController().defaults().setInteger_forKey_(nativeHeight,'imageSize')
+            self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
+
+        # get NSUserdefault
+        # set state of correct item to 1
 
     def show(self):
         try:
@@ -68,12 +92,14 @@ class PreferencesController(NSWindowController):
         except:
             pass
 
+        #self.changeNativeMenuItem_(self)
+
         #open window from NIB file, show front and center
         self.prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
+
         self.prefController.showWindow_(None)
         self.prefController.window().makeKeyAndOrderFront_(None) # not working
         self.prefController.window().center()
-             
         self.prefController.retain() # needed to keep window from disappearing
 
     show = classmethod(show)
@@ -119,7 +145,6 @@ class Sniffer:
         self.mouse_button_hook = lambda x: True
         self.mouse_move_hook = lambda x: True
         self.screen_hook = lambda x: True
-        self.experience_hook = lambda x: True
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
         self.delegate = None
@@ -416,6 +441,8 @@ class Sniffer:
         # Get size of image
         height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')    
         width = self.screenRatio * height
+
+        print height
 
         mouseLoc = NSEvent.mouseLocation()
         # Get cursor information
