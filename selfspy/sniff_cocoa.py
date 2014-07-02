@@ -23,8 +23,6 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import NibClassBuilder, AppHelper
 
-from threading import Thread
-
 from Cocoa import (NSEvent, 
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
@@ -36,7 +34,8 @@ from Cocoa import (NSEvent,
                    NSShiftKeyMask, NSAlphaShiftKeyMask,
                    NSApplicationActivationPolicyProhibited,
                    NSURL, NSString,
-                   NSTimer,NSInvocation)
+                   NSTimer,NSInvocation,
+                   NSNotificationCenter)
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 
 import config as cfg
@@ -70,7 +69,7 @@ class PreferencesController(NSWindowController):
             pass
 
         #open window from NIB file, show front and center
-        self.prefController = NSWindowController.alloc().initWithWindowNibName_("Preferences")
+        self.prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
         self.prefController.showWindow_(None)
         self.prefController.window().makeKeyAndOrderFront_(None) # not working
         self.prefController.window().center()
@@ -85,8 +84,13 @@ class ExperienceController(NSWindowController):
     experienceText = IBOutlet()
 
     @IBAction
-    def changeExperienceText_(self, notification):
-        print "hello"
+    def recordText_(self, sender):
+        message_value = self.experienceText.stringValue()
+        print 'Received message of: ' + message_value
+        
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('experienceReceived',self)
+        
+        self.expController.close()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
@@ -99,11 +103,10 @@ class ExperienceController(NSWindowController):
             pass
         
         #open window from NIB file, show front and center
-        self.expController = NSWindowController.alloc().initWithWindowNibName_("Experience")
+        self.expController = ExperienceController.alloc().initWithWindowNibName_("Experience")
         self.expController.showWindow_(None) 
         self.expController.window().makeKeyAndOrderFront_(None) # not working
         self.expController.window().center()
-        
              
         self.expController.retain() # needed to keep window from disappearing
 
@@ -116,6 +119,7 @@ class Sniffer:
         self.mouse_button_hook = lambda x: True
         self.mouse_move_hook = lambda x: True
         self.screen_hook = lambda x: True
+        self.experience_hook = lambda x: True
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
         self.delegate = None
@@ -290,6 +294,7 @@ class Sniffer:
         app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
 
+        # experience sampling loop. Currently shows window every 10 seconds for debugging purposes
         s = objc.selector(self.delegate.showExperience_,signature='v@:@')
         self.sample_time = 10.0 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
         self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, True)
@@ -392,11 +397,11 @@ class Sniffer:
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
       try:
-        #For testing how long it takes to take screenshot
+        # For testing how long it takes to take screenshot
         start = time.time()
         scale = 1.0
 
-        #Set to capture entire screen, including multiple monitors
+        # Set to capture entire screen, including multiple monitors
         if region is None:  
           region = CG.CGRectInfinite
 
@@ -408,7 +413,7 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        #Get size of image
+        # Get size of image
         height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')    
         width = self.screenRatio * height
 

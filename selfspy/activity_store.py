@@ -27,6 +27,8 @@ import re
 from Foundation import *
 from AppKit import *
 
+from Cocoa import NSNotificationCenter
+
 from threading import Thread
 
 import platform
@@ -38,7 +40,7 @@ else:
     from selfspy import sniff_x as sniffer
 
 from selfspy import models
-from selfspy.models import Process, Window, Geometry, Click, Keys
+from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location
 from selfspy import config as cfg
 
 
@@ -99,6 +101,9 @@ class ActivityStore:
         if (geoloc) : 
           t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
           t_geoloc.start()
+
+        s = objc.selector(self.got_experience,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
         
         self.started = NOW()
 
@@ -121,6 +126,7 @@ class ActivityStore:
         self.sniffer.key_hook = self.got_key
         self.sniffer.mouse_button_hook = self.got_mouse_click
         self.sniffer.mouse_move_hook = self.got_mouse_move
+        self.sniffer.experience_hook = self.got_experience
 
         self.sniffer.run()
         
@@ -288,6 +294,14 @@ class ActivityStore:
         if now-self.last_move_time > 1/frequency:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
+
+    def store_experience(self, message):
+        self.session.add(Experience(message))
+        self.trycommit()
+
+    def got_experience(self, notification):
+        message = notification.object().experienceText.stringValue()
+        self.store_experience(message)
 
     def close(self):
         """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""

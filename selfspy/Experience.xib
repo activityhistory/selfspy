@@ -6,6 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ExperienceController">
             <connections>
+                <outlet property="experienceText" destination="2Wl-gQ-b0R" id="0EY-ww-UcG"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="POw-bE-877"/>
             </connections>
         </customObject>
@@ -49,7 +50,7 @@ DQ
 </string>
                         </buttonCell>
                         <connections>
-                            <action selector="performClose:" target="QvC-M9-y7g" id="OHz-6p-bbi"/>
+                            <action selector="recordText:" target="-2" id="iKk-Uf-FMN"/>
                         </connections>
                     </button>
                 </subviews>
