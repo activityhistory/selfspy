@@ -100,6 +100,9 @@ class ActivityStore:
         s = objc.selector(self.gotExperience_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
         
+        s = objc.selector(self.getPrior_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+
         self.started = NOW()
 
     def trycommit(self):
@@ -123,7 +126,6 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
 
         self.sniffer.run()
-        
 
     def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height):
         """ Receives a screen change and stores any changes. If the process or window has
@@ -297,6 +299,13 @@ class ActivityStore:
         message = notification.object().experienceText.stringValue()
         self.store_experience(message)
 
+    def getPrior_(self, notification):
+        prior_experiences = self.session.query(sqlalchemy.distinct(Experience.message)).order_by(Experience.id.desc()).limit(5).all()
+        for e in prior_experiences:
+            notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])    
+        #message = notification.object().experienceText.stringValue()
+        #self.store_experience(message)
+
     def close(self):
         """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
         self.sniffer.cancel()
@@ -325,7 +334,6 @@ class ActivityStore:
         if m:
             print m.group(1)
 
-
     def take_screenshots_every(self):
         while True:
             self.screenshot_time_max = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMax')
@@ -333,7 +341,7 @@ class ActivityStore:
             if (time_since_last_screenshot > self.screenshot_time_max):
                 self.take_screenshot()
                 time_since_last_screenshot = 0.0
-            time.sleep(self.screenshot_time_max - time_since_last_screenshot + 0.1)
+            time.sleep(self.screenshot_time_max - time_since_last_screenshot + 0.01)
 
 
     def take_screenshot(self):

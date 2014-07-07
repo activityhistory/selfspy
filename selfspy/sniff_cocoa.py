@@ -118,6 +118,11 @@ class ExperienceController(NSWindowController):
         
         self.expController.close()
 
+    @IBAction
+    def takeExperienceScreenshot_(self,sender):
+        NSLog('Taking Experience Screenshot')
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('takeExperienceScreenshot',self)
+
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
@@ -136,7 +141,9 @@ class ExperienceController(NSWindowController):
              
         self.expController.retain() # needed to keep window from disappearing
 
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+        
 
     show = classmethod(show)
 
@@ -186,7 +193,6 @@ class Sniffer:
 
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
                 #NSUserDefaults.registerDefaults_(prefDictionary)
-
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the
@@ -282,7 +288,6 @@ class Sniffer:
                 self.bookmarkIcon.setSize_((20, 20))
                 self.statusitem2.setImage_(self.bookmarkIcon)
 
-
                 # Let it highlight upon clicking
                 self.statusitem2.setHighlightMode_(1)
                 # Set a tooltip
@@ -306,7 +311,6 @@ class Sniffer:
                 self.statusitem2.setEnabled_(TRUE)       
                 self.statusitem2.retain()
 
-
             def isScreenshotActive(self):
               # print "state", self.state
               return self.screenshot
@@ -324,25 +328,27 @@ class Sniffer:
         s = objc.selector(self.makeAppActive_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'makeAppActive', None)
 
+        s = objc.selector(self.takeExperienceScreenshot_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'takeExperienceScreenshot', None)
+
         # experience sampling loop. Currently shows window every 10 seconds for debugging purposes
-        s = objc.selector(self.showExperience_,signature='v@:@')
+        s = objc.selector(self.showExp_,signature='v@:@')
         self.sample_time = 10 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
-        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, False)
+        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self, s, None, False)
 
         AppHelper.runEventLoop()
         
 
-    def showExperience_(self, notification):
-        NSLog("Showing Preference Window on Cycle...")
-        PreferencesController.show()
+    def showExp_(self, notification):
+        NSLog("Showing Experience Window on Cycle...")
+        ExperienceController.show()
 
-        s = objc.selector(self.showExperience_,signature='v@:@')
+        s = objc.selector(self.showExp_,signature='v@:@')
         self.sample_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, False)
+        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self, s, None, False)
 
     def makeAppActive_(self, notification):
-        self.app.activateIgnoringOtherApps_(True)
-        
+        self.app.activateIgnoringOtherApps_(True)  
 
     def cancel(self):
         AppHelper.stopEventLoop()
@@ -428,6 +434,14 @@ class Sniffer:
     def isScreenshotActive(self):
       return self.delegate.isScreenshotActive()
         
+    def takeExperienceScreenshot_(self, notification):
+        folder = os.path.join(cfg.DATA_DIR,"screenshots")
+        filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-experience'
+        path = os.path.join(folder,""+filename+".jpg")
+        command = "screencapture -i -x " + path
+        print command
+        os.system(command)
+
     def screenshot2(self, path, region = None):
         # -t tiff saves to tiff format, should be faster
         # -C captures the mouse cursor.
