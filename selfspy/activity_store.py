@@ -97,7 +97,7 @@ class ActivityStore:
             t_geoloc.start()
 
         # listen for experience sample events sent by OK button on Experience window
-        s = objc.selector(self.got_experience,signature='v@:@')
+        s = objc.selector(self.gotExperience_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
         
         self.started = NOW()
@@ -293,7 +293,7 @@ class ActivityStore:
         self.session.add(Experience(message))
         self.trycommit()
 
-    def got_experience(self, notification):
+    def gotExperience_(self, notification):
         message = notification.object().experienceText.stringValue()
         self.store_experience(message)
 

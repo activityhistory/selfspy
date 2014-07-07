@@ -82,8 +82,6 @@ class PreferencesController(NSWindowController):
             NSUserDefaultsController.sharedUserDefaultsController().defaults().setInteger_forKey_(nativeHeight,'imageSize')
             self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
 
-        # get NSUserdefault
-        # set state of correct item to 1
 
     def show(self):
         try:
@@ -101,6 +99,8 @@ class PreferencesController(NSWindowController):
         self.prefController.window().makeKeyAndOrderFront_(None) # not working
         self.prefController.window().center()
         self.prefController.retain() # needed to keep window from disappearing
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
     show = classmethod(show)
 
@@ -135,6 +135,8 @@ class ExperienceController(NSWindowController):
         self.expController.window().center()
              
         self.expController.retain() # needed to keep window from disappearing
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
     show = classmethod(show)
 
@@ -313,18 +315,33 @@ class Sniffer:
 
 
     def run(self):
-        app = NSApplication.sharedApplication()
+        self.app = NSApplication.sharedApplication()
         self.delegate = self.createAppDelegate().alloc().init()
-        app.setDelegate_(self.delegate)
-        app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+        self.app.setDelegate_(self.delegate)
+        self.app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
 
+        s = objc.selector(self.makeAppActive_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'makeAppActive', None)
+
         # experience sampling loop. Currently shows window every 10 seconds for debugging purposes
-        s = objc.selector(self.delegate.showExperience_,signature='v@:@')
-        self.sample_time = 10.0 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
-        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, True)
-        
+        s = objc.selector(self.showExperience_,signature='v@:@')
+        self.sample_time = 10 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
+        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, False)
+
         AppHelper.runEventLoop()
+        
+
+    def showExperience_(self, notification):
+        NSLog("Showing Preference Window on Cycle...")
+        PreferencesController.show()
+
+        s = objc.selector(self.showExperience_,signature='v@:@')
+        self.sample_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+        self.experience_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.sample_time, self.delegate, s, None, False)
+
+    def makeAppActive_(self, notification):
+        self.app.activateIgnoringOtherApps_(True)
         
 
     def cancel(self):
