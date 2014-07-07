@@ -106,6 +106,7 @@
                             </menu>
                         </popUpButtonCell>
                         <connections>
+                            <action selector="changedMaxScreenshot:" target="-2" id="mWx-VP-i92"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageTimeMax" id="YeM-Zi-oBt"/>
                         </connections>
                     </popUpButton>
@@ -151,7 +152,7 @@
                     <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6hc-qF-2hY">
                         <rect key="frame" x="250" y="23" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="push" title="30 min" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1800" imageScaling="proportionallyDown" inset="2" selectedItem="MUs-tv-Kt6" id="Uqk-2c-GxT">
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Uqk-2c-GxT">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="kYh-fM-84s">
@@ -159,7 +160,7 @@
                                     <menuItem title="15 min" tag="900" id="lya-cJ-ys3">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
-                                    <menuItem title="30 min" state="on" tag="1800" id="MUs-tv-Kt6">
+                                    <menuItem title="30 min" tag="1800" id="MUs-tv-Kt6">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="45 min" tag="2700" id="Oe6-Bj-fg0">
@@ -178,6 +179,7 @@
                             </menu>
                         </popUpButtonCell>
                         <connections>
+                            <action selector="changedExperienceRate:" target="-2" id="aHv-gs-bBy"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.experienceTime" id="G4q-EV-j78"/>
                         </connections>
                     </popUpButton>
