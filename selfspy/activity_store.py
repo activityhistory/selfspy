@@ -15,10 +15,10 @@ received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import os
 import time
 from datetime import datetime
-NOW = datetime.now
 
 import sqlalchemy
 import urllib
@@ -29,17 +29,14 @@ from AppKit import *
 
 from Cocoa import NSNotificationCenter, NSTimer
 
-from threading import Thread
-
 from selfspy import sniff_cocoa as sniffer
-
+from selfspy import config as cfg
 from selfspy import models
 from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location
-from selfspy import config as cfg
 
 
+NOW = datetime.now
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
-
 SCROLL_BUTTONS = {4, 5, 6, 7}
 SCROLL_COOLOFF = 10  # seconds
 
@@ -50,16 +47,19 @@ class Display:
         self.win_id = None
         self.geo_id = None
 
+
 class KeyPress:
     def __init__(self, key, time, is_repeat):
         self.key = key
         self.time = time
         self.is_repeat = is_repeat
 
+
 class MouseMove:
     def __init__(self, xy, time):
         self.xy = xy
         self.time = time
+
 
 class ActivityStore:
     def __init__(self, db_name, encrypter=None, store_text=True, screenshots=True):
@@ -101,7 +101,7 @@ class ActivityStore:
         self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
         self.geoTimer.fire() # get location immediately
 
-        # Listen for various events
+        # Listen for various events thrown by the Experience Sampling window
         s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
@@ -116,26 +116,6 @@ class ActivityStore:
 
         self.started = NOW()
 
-    def runExperienceLoop(self):
-        NSLog("Showing Experience Sampling Window on Cycle...")
-        sniffer.ExperienceController.show()
-        self.last_experience = time.time()
-
-        s = objc.selector(self.runExperienceLoop,signature='v@:')
-        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
-
-    def checkExperienceOnPrefChange_(self, notification):
-        self.experienceTimer.invalidate()
-        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-        time_since_last_experience = time.time() - self.last_experience
-        if (time_since_last_experience > self.exp_time):
-            self.runExperienceLoop()
-        else:
-            sleep_time = self.exp_time - time_since_last_experience + 0.01
-            s = objc.selector(self.runExperienceLoop,signature='v@:')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
-
     def run(self):
         self.session = self.session_maker()
 
@@ -146,6 +126,11 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
 
         self.sniffer.run()
+
+    def close(self):
+        """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
+        self.sniffer.cancel()
+        self.store_keys()
 
     def trycommit(self):
         self.last_commit = time.time()
@@ -335,11 +320,6 @@ class ActivityStore:
         for e in prior_experiences:
             notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])    
 
-    def close(self):
-        """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
-        self.sniffer.cancel()
-        self.store_keys()
-
     def change_password(self, new_encrypter):
         self.session = self.session_maker()
         keys = self.session.query(Keys).all()
@@ -356,6 +336,26 @@ class ActivityStore:
         m = re.search('City: (.*)', response)
         if m:
             print m.group(1)
+
+    def runExperienceLoop(self):
+        NSLog("Showing Experience Sampling Window on Cycle...")
+        sniffer.ExperienceController.show()
+        self.last_experience = time.time()
+
+        s = objc.selector(self.runExperienceLoop,signature='v@:')
+        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+
+    def checkExperienceOnPrefChange_(self, notification):
+        self.experienceTimer.invalidate()
+        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+        time_since_last_experience = time.time() - self.last_experience
+        if (time_since_last_experience > self.exp_time):
+            self.runExperienceLoop()
+        else:
+            sleep_time = self.exp_time - time_since_last_experience + 0.01
+            s = objc.selector(self.runExperienceLoop,signature='v@:')
+            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
@@ -383,7 +383,7 @@ class ActivityStore:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
-              print path
+              # print path
 
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()

@@ -139,8 +139,6 @@ def main():
         astore.close()
     except KeyboardInterrupt:
         pass
-    # In OS X this is has to be released in sniff_cocoa
-    cfg.LOCK.release()
 
 if __name__ == '__main__':
     main()

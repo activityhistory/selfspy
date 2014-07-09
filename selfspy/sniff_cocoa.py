@@ -15,13 +15,17 @@ received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import string 
 import objc, re, os
+
 from objc import IBAction, IBOutlet
 
 from Foundation import *
 from AppKit import *
 from PyObjCTools import NibClassBuilder, AppHelper
+
+import LaunchServices
 
 from Cocoa import (NSEvent, 
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
@@ -36,20 +40,18 @@ from Cocoa import (NSEvent,
                    NSURL, NSString,
                    NSTimer,NSInvocation,
                    NSNotificationCenter)
+
+import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
+import Quartz.CoreGraphics as CG
 
 import config as cfg
-import Quartz
-import LaunchServices
-import Quartz.CoreGraphics as CG
 
 import time
 from datetime import datetime
-NOW = datetime.now
 
-start_time = NSDate.date()
 
-#Preferences window launcher
+# Preferences window controller
 class PreferencesController(NSWindowController):
 
     screenshotSizePopup = IBOutlet()
@@ -66,10 +68,11 @@ class PreferencesController(NSWindowController):
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
-        # Set size options based on screen
+        # Set screenshot size options based on screen's native height
         nativeHeight = int(NSScreen.mainScreen().frame().size.height)
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(nativeHeight)+' px', '', '')
         menuitem.setTag_(nativeHeight)
+
         self.prefController.screenshotSizeMenu.removeAllItems()
         self.prefController.screenshotSizeMenu.addItem_(menuitem)
 
@@ -81,15 +84,16 @@ class PreferencesController(NSWindowController):
                 menuitem.setTag_(x)
                 self.prefController.screenshotSizeMenu.addItem_(menuitem)
 
+        # update newly created screenshot size dropdown to select saved preference or default size
         selectedSize = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
         selectedMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(selectedSize)
+
         if(selectedMenuItem):
             self.prefController.screenshotSizePopup.selectItemWithTag_(selectedSize)
         else:
             nativeMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(nativeHeight)
             NSUserDefaultsController.sharedUserDefaultsController().defaults().setInteger_forKey_(nativeHeight,'imageSize')
             self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
-
 
     def show(self):
         try:
@@ -98,21 +102,20 @@ class PreferencesController(NSWindowController):
         except:
             pass
 
-        #self.changeNativeMenuItem_(self)
-
-        #open window from NIB file, show front and center
+        # open window from NIB file, show front and center
         self.prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
-
         self.prefController.showWindow_(None)
-        self.prefController.window().makeKeyAndOrderFront_(None) # not working
+        self.prefController.window().makeKeyAndOrderFront_(None)
         self.prefController.window().center()
-        self.prefController.retain() # needed to keep window from disappearing
+        self.prefController.retain() 
 
+        # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
     show = classmethod(show)
 
-#Preferences window launcher
+
+# Experience Sampling window controller
 class ExperienceController(NSWindowController):
     
     experienceText = IBOutlet()
@@ -120,10 +123,8 @@ class ExperienceController(NSWindowController):
     @IBAction
     def recordText_(self, sender):
         message_value = self.experienceText.stringValue()
-        print 'Received message of: ' + message_value
-        
+        NSLog('Received experience message of: ' + message_value)
         NSNotificationCenter.defaultCenter().postNotificationName_object_('experienceReceived',self)
-        
         self.expController.close()
 
     @IBAction
@@ -141,18 +142,18 @@ class ExperienceController(NSWindowController):
         except:
             pass
         
-        #open window from NIB file, show front and center
+        # open window from NIB file, show front and center
         self.expController = ExperienceController.alloc().initWithWindowNibName_("Experience")
         self.expController.showWindow_(None) 
-        self.expController.window().makeKeyAndOrderFront_(None) # not working
-        self.expController.window().center()
-             
-        self.expController.retain() # needed to keep window from disappearing
+        self.expController.window().makeKeyAndOrderFront_(None)
+        self.expController.window().center()     
+        self.expController.retain() 
+
+        # needed to show window on top of other applications
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
         
-
     show = classmethod(show)
 
 
@@ -162,10 +163,10 @@ class Sniffer:
         self.mouse_button_hook = lambda x: True
         self.mouse_move_hook = lambda x: True
         self.screen_hook = lambda x: True
+
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
         self.delegate = None
-
 
     def createAppDelegate(self):
         sc = self
@@ -176,7 +177,7 @@ class Sniffer:
             screenshot = True
             
             def applicationDidFinishLaunching_(self, notification):
-                NSLog("Application did finish launching.")
+                NSLog("Application did finish launching...")
 
                 self.createStatusMenu()
                 self.createStatusButton()
@@ -202,27 +203,22 @@ class Sniffer:
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
 
             def applicationWillTerminate_(self, application):
-                # need to release the lock here as when the
-                # application terminates it does not run the rest the
-                # original main, only the code that has crossed the
-                # pyobc bridge.
+                # need to release the lock here as when the application terminates it does not run the rest the
+                # original main, only the code that has crossed the pyobc bridge.
                 if cfg.LOCK.is_locked():
                     cfg.LOCK.release()
-                print "Exiting ..."
+                NSLog("Exiting Selfspy...")
 
             def toggleLogging_(self, notification):
                 NSLog("todo : pause logging")
 
             def toggleScreenshots_(self, notification):
-                print "toggleScreenshots"
+                NSLog("toggleScreenshots")
                 if self.screenshot:
                   self.menu.itemWithTitle_("Pause screenshots").setTitle_("Record screenshots")
                 else :
                   self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
                 self.screenshot = not self.screenshot
-
-            def bookmarkEvent_(self, sender):
-                print "Hello again, World!"
 
             def showPreferences_(self, notification):
                 NSLog("Showing Preference Window...")
@@ -231,6 +227,9 @@ class Sniffer:
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
                 ExperienceController.show()
+
+            def isScreenshotActive(self):
+              return self.screenshot
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")
@@ -266,8 +265,8 @@ class Sniffer:
                   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record screenshots', 'toggleScreenshots:', '')
                   self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
+                # self.menu.addItem_(menuitem)
                 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
@@ -310,7 +309,7 @@ class Sniffer:
                 self.hel.setTitle_( 'Bookmark' )
                 self.hel.setImage_(self.bookmarkIcon)
                 # self.hel.setTarget_( self )
-                self.hel.setAction_( "bookmarkEvent:" )
+                self.hel.setAction_( "showExperience:" )
 
                 # Bind to the status item
                 self.statusitem2.setView_(self.hel)
@@ -318,12 +317,7 @@ class Sniffer:
                 self.statusitem2.setEnabled_(TRUE)       
                 self.statusitem2.retain()
 
-            def isScreenshotActive(self):
-              # print "state", self.state
-              return self.screenshot
-
         return AppDelegate
-
 
     def run(self):
         self.app = NSApplication.sharedApplication()
@@ -332,6 +326,7 @@ class Sniffer:
         self.app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
 
+        # listen for events thrown by the Experience sampling window
         s = objc.selector(self.makeAppActive_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'makeAppActive', None)
 
@@ -339,9 +334,6 @@ class Sniffer:
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'takeExperienceScreenshot', None)
 
         AppHelper.runEventLoop()
-
-    def makeAppActive_(self, notification):
-        self.app.activateIgnoringOtherApps_(True)  
 
     def cancel(self):
         AppHelper.stopEventLoop()
@@ -424,6 +416,9 @@ class Sniffer:
             AppHelper.stopEventLoop()
             raise
 
+    def makeAppActive_(self, notification):
+        self.app.activateIgnoringOtherApps_(True)  
+
     def isScreenshotActive(self):
       return self.delegate.isScreenshotActive()
         
@@ -431,22 +426,18 @@ class Sniffer:
         folder = os.path.join(cfg.DATA_DIR,"screenshots")
         filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-experience'
         path = os.path.join(folder,""+filename+".jpg")
-        command = "screencapture -i -x " + path
-        print command
-        os.system(command)
 
-    def screenshot2(self, path, region = None):
-        # -t tiff saves to tiff format, should be faster
+        # -i makes the screenshot interactive
         # -C captures the mouse cursor.
         # -x removes the screenshot sound
-        command = "screencapture -C -x " + path
+        command = "screencapture -i -x -C " + path
         print command
         os.system(command)
 
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
       try:
-        # For testing how long it takes to take screenshot
+        # record how long it takes to take screenshot
         start = time.time()
         scale = 1.0
 
@@ -466,8 +457,6 @@ class Sniffer:
         height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')    
         width = self.screenRatio * height
 
-        print height
-
         mouseLoc = NSEvent.mouseLocation()
         # Get cursor information
         x = int(mouseLoc.x *scale)
@@ -477,7 +466,7 @@ class Sniffer:
         org_x = x
         org_y = y
 
-        print "cursor :", x, y, w, h
+        # print "cursor :", x, y, w, h
         
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
@@ -513,7 +502,7 @@ class Sniffer:
 
         # Adding Mouse cursor to the screenshot
         # Alternative 1 : load a cursor image 
-        print "test"
+        # print "test"
         # Convert path to url for saving image
         cursorPath = "../Resources/cursor.png"
         cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
@@ -526,7 +515,7 @@ class Sniffer:
         # indexes are 0 based.
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
-        print "test"
+        # print "test"
         Quartz.CGContextDrawImage(bitmapContext,
           CG.CGRectMake(org_x, org_y, w, h), 
           cursorOverlay)
@@ -562,16 +551,15 @@ class Sniffer:
 
         #For testing how long it takes to take screenshot
         stop = time.time()
-        print str(stop-start)[:5] + ' seconds to save image'
+        print 'took ' + str(height) + 'px image in ' + str(stop-start)[:5] + ' seconds'
 
       except KeyboardInterrupt:
         AppHelper.stopEventLoop()
       except:
-        print "couldn't save image"
+        NSLog("couldn't save image")
 
 
-# Cocoa does not provide a good api to get the keycodes, therefore we
-# have to provide our own.
+# Cocoa does not provide a good api to get the keycodes, therefore we have to provide our own.
 keycodes = {
    u"\u0009": "Tab",
    u"\u001b": "Escape",
