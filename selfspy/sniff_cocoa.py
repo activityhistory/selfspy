@@ -233,8 +233,9 @@ class Sniffer:
                   self.loggingMenuItem.setTitle_("Pause Recording")
                   self.screenshotMenuItem.setEnabled_(True)
                 else:
-                  self.loggingMenuItem.setTitle_("Sart Recording")
+                  self.loggingMenuItem.setTitle_("Start Recording")
                   self.screenshotMenuItem.setEnabled_(False)
+                self.changeIcon()
 
             def toggleScreenshots_(self, notification):
                 NSLog("toggleScreenshots")
@@ -245,6 +246,21 @@ class Sniffer:
                   self.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
                 screen = not screen
                 NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(screen,'screenshots')
+                self.changeIcon()
+
+            def changeIcon(self):
+                record = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+                screenshots = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+                if(record):
+                    if(screenshots):
+                        self.statusitem.setImage_(self.iconPhoto)
+                    else:
+                        self.statusitem.setImage_(self.icon)
+                else:
+                    if(screenshots):
+                        self.statusitem.setImage_(self.iconGrayPhoto)
+                    else:
+                        self.statusitem.setImage_(self.iconGray)
 
             def showPreferences_(self, notification):
                 NSLog("Showing Preference Window...")
@@ -267,6 +283,20 @@ class Sniffer:
                 self.icon.setScalesWhenResized_(True)
                 self.icon.setSize_((20, 20))
                 self.statusitem.setImage_(self.icon)
+
+                self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_gray-64.png')
+                self.iconGray.setScalesWhenResized_(True)
+                self.iconGray.setSize_((20, 20))
+
+                self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/photo-64.png')
+                self.iconPhoto.setScalesWhenResized_(True)
+                self.iconPhoto.setSize_((20, 20))
+
+                self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/photo_gray-64.png')
+                self.iconGrayPhoto.setScalesWhenResized_(True)
+                self.iconGrayPhoto.setSize_((20, 20))
+
+                self.changeIcon()
 
                 # Let it highlight upon clicking
                 self.statusitem.setHighlightMode_(1)
