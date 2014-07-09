@@ -16,50 +16,50 @@
         <window title="Selfspy Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="240" width="371" height="156"/>
+            <rect key="contentRect" x="196" y="240" width="384" height="177"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="371" height="156"/>
+                <rect key="frame" x="0.0" y="0.0" width="384" height="177"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vge-wW-8ie">
-                        <rect key="frame" x="18" y="119" width="103" height="17"/>
+                        <rect key="frame" x="59" y="68" width="102" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Screenshot Size" id="bsM-og-tgy">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Screenshot size" id="bsM-og-tgy">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                    </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4AT-Sr-lnp">
-                        <rect key="frame" x="18" y="92" width="170" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Time Between Screenshots" id="uBj-2X-3Hl">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
+                        <connections>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="YGf-3F-Jau"/>
+                        </connections>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YQq-ib-ZqF">
-                        <rect key="frame" x="212" y="92" width="34" height="17"/>
+                        <rect key="frame" x="59" y="118" width="127" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Max:" id="nqA-Nt-4OO">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="At least once every:" id="nqA-Nt-4OO">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="disabledControlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <connections>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="CHs-a8-y0o"/>
+                        </connections>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="G8j-B8-1Hq">
-                        <rect key="frame" x="214" y="63" width="32" height="17"/>
+                        <rect key="frame" x="59" y="93" width="194" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Min:" id="5O0-nQ-v4C">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="But not more than once every:" id="5O0-nQ-v4C">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="disabledControlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <connections>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="MqQ-ze-AZt"/>
+                        </connections>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ImY-8d-57i">
-                        <rect key="frame" x="250" y="114" width="104" height="26"/>
+                        <rect key="frame" x="263" y="61" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="5dU-bf-hGU">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -67,11 +67,12 @@
                             <menu key="menu" title="OtherViews" id="Zfc-cP-1Ys"/>
                         </popUpButtonCell>
                         <connections>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="JgA-Ff-zth"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageSize" id="adq-Ih-Tw8"/>
                         </connections>
                     </popUpButton>
                     <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="u9O-ix-AHD">
-                        <rect key="frame" x="250" y="87" width="104" height="26"/>
+                        <rect key="frame" x="263" y="113" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" title="1 min" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="60" imageScaling="proportionallyDown" inset="2" selectedItem="SOb-IX-4h2" id="c2W-F2-bwG">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -98,11 +99,12 @@
                         </popUpButtonCell>
                         <connections>
                             <action selector="changedMaxScreenshot:" target="-2" id="mWx-VP-i92"/>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="tfU-xr-K0p"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageTimeMax" id="YeM-Zi-oBt"/>
                         </connections>
                     </popUpButton>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8Hz-T1-x1c">
-                        <rect key="frame" x="18" y="63" width="4" height="17"/>
+                        <rect key="frame" x="18" y="84" width="4" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="yAZ-qB-uKD">
                             <font key="font" metaFont="system"/>
@@ -111,7 +113,7 @@
                         </textFieldCell>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ty1-b2-cv3">
-                        <rect key="frame" x="250" y="58" width="104" height="26"/>
+                        <rect key="frame" x="263" y="87" width="104" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" title="100 ms" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="100" imageScaling="proportionallyDown" inset="2" selectedItem="Y98-mg-uEN" id="C3r-W1-9HF">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -137,11 +139,12 @@
                             </menu>
                         </popUpButtonCell>
                         <connections>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.screenshots" id="GlR-7c-8bN"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.imageTimeMin" id="9RF-BS-BiU"/>
                         </connections>
                     </popUpButton>
                     <popUpButton verticalHuggingPriority="750" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6hc-qF-2hY">
-                        <rect key="frame" x="212" y="17" width="142" height="26"/>
+                        <rect key="frame" x="225" y="14" width="142" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Uqk-2c-GxT">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -171,16 +174,33 @@
                         </popUpButtonCell>
                         <connections>
                             <action selector="changedExperienceRate:" target="-2" id="aHv-gs-bBy"/>
+                            <binding destination="bq4-b7-72c" name="enabled" keyPath="values.experienceLoop" id="LdA-iA-WjM"/>
                             <binding destination="bq4-b7-72c" name="selectedTag" keyPath="values.experienceTime" id="G4q-EV-j78"/>
                         </connections>
                     </popUpButton>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="QqD-WB-mrQ">
-                        <rect key="frame" x="18" y="21" width="142" height="18"/>
+                        <rect key="frame" x="18" y="18" width="147" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Ask what I'm doing" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="3rS-hG-gLQ">
+                        <buttonCell key="cell" type="check" title="Ask what I'm doing:" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="3rS-hG-gLQ">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="changedExperienceRate:" target="-2" id="hEy-v2-Gdn"/>
+                            <binding destination="bq4-b7-72c" name="value" keyPath="values.experienceLoop" id="jOl-5u-hB8"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C7M-Uj-hwm">
+                        <rect key="frame" x="18" y="141" width="184" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Take periodic screenshots" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="vFV-an-UGa">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="changedScreenshot:" target="-2" id="Svy-Ka-uf9"/>
+                            <binding destination="bq4-b7-72c" name="value" keyPath="values.screenshots" id="p13-56-0m2"/>
+                        </connections>
                     </button>
                 </subviews>
                 <constraints>

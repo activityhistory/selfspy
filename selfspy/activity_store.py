@@ -88,8 +88,13 @@ class ActivityStore:
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
         self.geoloc_time = 5*60
-        self.exp_time = 10 #NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime') 
+        self.exp_time = 10 # time before first experience sample shows
 
+        self.addObservers()
+
+        self.started = NOW()
+
+    def startLoops(self):
         # Timers for taking screenshots when idle, checking location, and showing experience-sample window
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)       
@@ -101,20 +106,37 @@ class ActivityStore:
         self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
         self.geoTimer.fire() # get location immediately
 
-        # Listen for various events thrown by the Experience Sampling window
-        s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
+    def stopLoops(self):
+        self.screenshotTimer.invalidate()
+        self.experienceTimer.invalidate()
+        self.geoTimer.invalidate()
 
-        s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperienceRatePref', None)
+    def checkLoops_(self, notification):
+        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+        if(recording):
+            self.startLoops()
+        else:
+            self.stopLoops()
 
-        s = objc.selector(self.gotExperience_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
-        
-        s = objc.selector(self.getPrior_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+    def addObservers(self):
+            # Listen for various events thrown by the Experience Sampling window
+            s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
-        self.started = NOW()
+            s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
+
+            s = objc.selector(self.gotExperience_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
+            
+            s = objc.selector(self.getPrior_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+
+            s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
+
+            s = objc.selector(self.checkLoops_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -338,24 +360,31 @@ class ActivityStore:
             print m.group(1)
 
     def runExperienceLoop(self):
-        NSLog("Showing Experience Sampling Window on Cycle...")
-        sniffer.ExperienceController.show()
-        self.last_experience = time.time()
+        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+        if(experienceLoop):
+            NSLog("Showing Experience Sampling Window on Cycle...")
+            sniffer.ExperienceController.show()
+            self.last_experience = time.time()
 
-        s = objc.selector(self.runExperienceLoop,signature='v@:')
-        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+            s = objc.selector(self.runExperienceLoop,signature='v@:')
+            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
     def checkExperienceOnPrefChange_(self, notification):
-        self.experienceTimer.invalidate()
+        if(self.experienceTimer):
+            self.experienceTimer.invalidate()
+
         self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
         time_since_last_experience = time.time() - self.last_experience
-        if (time_since_last_experience > self.exp_time):
-            self.runExperienceLoop()
-        else:
-            sleep_time = self.exp_time - time_since_last_experience + 0.01
-            s = objc.selector(self.runExperienceLoop,signature='v@:')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
+        
+        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+        if(experienceLoop):
+            if (time_since_last_experience > self.exp_time):
+                self.runExperienceLoop()
+            else:
+                sleep_time = self.exp_time - time_since_last_experience + 0.01
+                s = objc.selector(self.runExperienceLoop,signature='v@:')
+                self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
@@ -371,10 +400,19 @@ class ActivityStore:
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
+    def toggleScreenshotMenuTitle_(self,notification):
+        print "Sent Message"
+        screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+        if screen:
+            self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
+            #self.screenshotitem.setTitle_("Record screenshots")
+        else :
+            self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
+            #self.screenshotitem.setTitle_("Pause screenshots")
+
     def take_screenshot(self):
-      # We check whether the screenshot option is on and then 
-      # limit the screenshot taking rate to user defined rate
-      self.screenshots_active = self.sniffer.isScreenshotActive()
+      # We check whether the screenshot option is on and then limit the screenshot taking rate to user defined rate
+      self.screenshots_active = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
       self.screenshot_time_min = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMin') / 1000.0
 
       if (self.screenshots_active

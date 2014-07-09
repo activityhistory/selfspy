@@ -58,12 +58,16 @@ class PreferencesController(NSWindowController):
     screenshotSizeMenu = IBOutlet()
 
     @IBAction
+    def changedScreenshot_(self,sender):
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedScreenshot',self)
+
+    @IBAction
     def changedMaxScreenshot_(self,sender):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshotPref',self)
 
     @IBAction
     def changedExperienceRate_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperienceRatePref',self)
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperiencePref',self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
@@ -179,8 +183,18 @@ class Sniffer:
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching...")
 
-                self.createStatusMenu()
-                self.createStatusButton()
+                # Register preferance defaults for user-facing preferences
+                prefDictionary = {}
+                prefDictionary[u"screenshots"] = True 
+                prefDictionary[u'imageSize'] = 720          # in px
+                prefDictionary[u"imageTimeMax"] = 60        # in s
+                prefDictionary[u"imageTimeMin"] = 100       # in ms
+
+                prefDictionary[u"experienceTime"] = 1800    # in s
+                prefDictionary[u"experienceLoop"] = True 
+                prefDictionary[u"recording"] = True 
+
+                NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
 
                 mask = (NSKeyDownMask
                         | NSKeyUpMask
@@ -193,14 +207,10 @@ class Sniffer:
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
-                # Register preferance defaults for user-facing preferences
-                prefDictionary = {}
-                prefDictionary[u'imageSize'] = 720          # in px
-                prefDictionary[u"imageTimeMax"] = 60        # in s
-                prefDictionary[u"imageTimeMin"] = 100       # in ms
-                prefDictionary[u"experienceTime"] = 1800    # in s
+                self.createStatusMenu()
+                self.createStatusButton()
 
-                NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the application terminates it does not run the rest the
@@ -210,15 +220,31 @@ class Sniffer:
                 NSLog("Exiting Selfspy...")
 
             def toggleLogging_(self, notification):
-                NSLog("todo : pause logging")
+                NSLog("Toggle Recording")
+
+                recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+                recording = not recording
+                NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(recording,'recording')
+
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
+
+                #change text and enabled status of screenshot menu item
+                if recording:
+                  self.loggingMenuItem.setTitle_("Pause Recording")
+                  self.screenshotMenuItem.setEnabled_(True)
+                else:
+                  self.loggingMenuItem.setTitle_("Sart Recording")
+                  self.screenshotMenuItem.setEnabled_(False)
 
             def toggleScreenshots_(self, notification):
                 NSLog("toggleScreenshots")
-                if self.screenshot:
-                  self.menu.itemWithTitle_("Pause screenshots").setTitle_("Record screenshots")
-                else :
-                  self.menu.itemWithTitle_("Record screenshots").setTitle_("Pause screenshots")
-                self.screenshot = not self.screenshot
+                screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+                if screen:
+                  self.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
+                else:
+                  self.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
+                screen = not screen
+                NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(screen,'screenshots')
 
             def showPreferences_(self, notification):
                 NSLog("Showing Preference Window...")
@@ -227,9 +253,6 @@ class Sniffer:
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
                 ExperienceController.show()
-
-            def isScreenshotActive(self):
-              return self.screenshot
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")
@@ -254,21 +277,33 @@ class Sniffer:
                 self.menu = NSMenu.alloc().init()
                 self.menu.setAutoenablesItems_(False)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Logging', 'toggleLogging:', '')
-                menuitem.setEnabled_(False)
+                if NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording'):
+                    menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Recording', 'toggleLogging:', '')
+                else:
+                    menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Start Recording', 'toggleLogging:', '')
+                #menuitem.setEnabled_(False)
                 self.menu.addItem_(menuitem)
+                self.loggingMenuItem = menuitem
 
-                if self.screenshot:
-                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause screenshots', 'toggleScreenshots:', '')
-                  self.menu.addItem_(menuitem)
+                if NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots'):
+                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Screenshots', 'toggleScreenshots:', '')
                 else :
-                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record screenshots', 'toggleScreenshots:', '')
-                  self.menu.addItem_(menuitem)
+                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Screenshots', 'toggleScreenshots:', '')
+                if(not NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
+                    menuitem.setEnabled_(False)
+                self.menu.addItem_(menuitem)
+                self.screenshotMenuItem = menuitem
+
+                menuitem = NSMenuItem.separatorItem()
+                self.menu.addItem_(menuitem)
 
                 # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
                 # self.menu.addItem_(menuitem)
                 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
+                self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
@@ -340,75 +375,77 @@ class Sniffer:
 
     def handler(self, event):
         try:
-            activeApps = self.workspace.runningApplications()
-            #Have to look into this if it is too slow on move and scoll,
-            #right now the check is done for everything.
-            for app in activeApps:
-                if app.isActive():
-                    options = kCGWindowListOptionOnScreenOnly
-                    windowList = CGWindowListCopyWindowInfo(options,
-                                                            kCGNullWindowID)
-                    for window in windowList:
-                        if (window['kCGWindowNumber'] == event.windowNumber()
-                            or (not event.windowNumber()
-                                and window['kCGWindowOwnerName'] == app.localizedName())):
-                            geometry = window['kCGWindowBounds']
-                            self.screen_hook(window['kCGWindowOwnerName'],
-                                             window.get('kCGWindowName', u''),
-                                             geometry['X'],
-                                             geometry['Y'],
-                                             geometry['Width'],
-                                             geometry['Height'])
-                            break
-                    break
+            recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+            if(recording):
+                activeApps = self.workspace.runningApplications()
+                #Have to look into this if it is too slow on move and scoll,
+                #right now the check is done for everything.
+                for app in activeApps:
+                    if app.isActive():
+                        options = kCGWindowListOptionOnScreenOnly
+                        windowList = CGWindowListCopyWindowInfo(options,
+                                                                kCGNullWindowID)
+                        for window in windowList:
+                            if (window['kCGWindowNumber'] == event.windowNumber()
+                                or (not event.windowNumber()
+                                    and window['kCGWindowOwnerName'] == app.localizedName())):
+                                geometry = window['kCGWindowBounds']
+                                self.screen_hook(window['kCGWindowOwnerName'],
+                                                 window.get('kCGWindowName', u''),
+                                                 geometry['X'],
+                                                 geometry['Y'],
+                                                 geometry['Width'],
+                                                 geometry['Height'])
+                                break
+                        break
 
-            loc = NSEvent.mouseLocation()
-            if event.type() == NSLeftMouseDown:
-                self.mouse_button_hook(1, loc.x, loc.y)
-            # elif event.type() == NSLeftMouseUp:
-            #     self.mouse_button_hook(1, loc.x, loc.y)
-            elif event.type() == NSRightMouseDown:
-                self.mouse_button_hook(3, loc.x, loc.y)
-#           elif event.type() == NSRightMouseUp:
-#               self.mouse_button_hook(2, loc.x, loc.y)
-            elif event.type() == NSScrollWheel:
-                if event.deltaY() > 0:
-                    self.mouse_button_hook(4, loc.x, loc.y)
-                elif event.deltaY() < 0:
-                    self.mouse_button_hook(5, loc.x, loc.y)
-                if event.deltaX() > 0:
-                    self.mouse_button_hook(6, loc.x, loc.y)
-                elif event.deltaX() < 0:
-                    self.mouse_button_hook(7, loc.x, loc.y)
-#               if event.deltaZ() > 0:
-#                   self.mouse_button_hook(8, loc.x, loc.y)
-#               elif event.deltaZ() < 0:
-#                   self.mouse_button_hook(9, loc.x, loc.y)
-            elif event.type() == NSKeyDown:
-                flags = event.modifierFlags()
-                modifiers = []  # OS X api doesn't care it if is left or right
-                if flags & NSControlKeyMask:
-                    modifiers.append('Ctrl')
-                if flags & NSAlternateKeyMask:
-                    modifiers.append('Alt')
-                if flags & NSCommandKeyMask:
-                    modifiers.append('Cmd')
-                if flags & (NSShiftKeyMask | NSAlphaShiftKeyMask):
-                    modifiers.append('Shift')
-                character = event.charactersIgnoringModifiers()
-                # these two get a special case because I am unsure of
-                # their unicode value
-                if event.keyCode() is 36:
-                    character = "Enter"
-                elif event.keyCode() is 51:
-                    character = "Backspace"
-                self.key_hook(event.keyCode(),
-                              modifiers,
-                              keycodes.get(character,
-                                           character),
-                              event.isARepeat())
-            elif event.type() == NSMouseMoved:
-                self.mouse_move_hook(loc.x, loc.y)
+                loc = NSEvent.mouseLocation()
+                if event.type() == NSLeftMouseDown:
+                    self.mouse_button_hook(1, loc.x, loc.y)
+                # elif event.type() == NSLeftMouseUp:
+                #     self.mouse_button_hook(1, loc.x, loc.y)
+                elif event.type() == NSRightMouseDown:
+                    self.mouse_button_hook(3, loc.x, loc.y)
+    #           elif event.type() == NSRightMouseUp:
+    #               self.mouse_button_hook(2, loc.x, loc.y)
+                elif event.type() == NSScrollWheel:
+                    if event.deltaY() > 0:
+                        self.mouse_button_hook(4, loc.x, loc.y)
+                    elif event.deltaY() < 0:
+                        self.mouse_button_hook(5, loc.x, loc.y)
+                    if event.deltaX() > 0:
+                        self.mouse_button_hook(6, loc.x, loc.y)
+                    elif event.deltaX() < 0:
+                        self.mouse_button_hook(7, loc.x, loc.y)
+    #               if event.deltaZ() > 0:
+    #                   self.mouse_button_hook(8, loc.x, loc.y)
+    #               elif event.deltaZ() < 0:
+    #                   self.mouse_button_hook(9, loc.x, loc.y)
+                elif event.type() == NSKeyDown:
+                    flags = event.modifierFlags()
+                    modifiers = []  # OS X api doesn't care it if is left or right
+                    if flags & NSControlKeyMask:
+                        modifiers.append('Ctrl')
+                    if flags & NSAlternateKeyMask:
+                        modifiers.append('Alt')
+                    if flags & NSCommandKeyMask:
+                        modifiers.append('Cmd')
+                    if flags & (NSShiftKeyMask | NSAlphaShiftKeyMask):
+                        modifiers.append('Shift')
+                    character = event.charactersIgnoringModifiers()
+                    # these two get a special case because I am unsure of
+                    # their unicode value
+                    if event.keyCode() is 36:
+                        character = "Enter"
+                    elif event.keyCode() is 51:
+                        character = "Backspace"
+                    self.key_hook(event.keyCode(),
+                                  modifiers,
+                                  keycodes.get(character,
+                                               character),
+                                  event.isARepeat())
+                elif event.type() == NSMouseMoved:
+                    self.mouse_move_hook(loc.x, loc.y)
         except (SystemExit, KeyboardInterrupt):
             AppHelper.stopEventLoop()
             return
@@ -418,9 +455,6 @@ class Sniffer:
 
     def makeAppActive_(self, notification):
         self.app.activateIgnoringOtherApps_(True)  
-
-    def isScreenshotActive(self):
-      return self.delegate.isScreenshotActive()
         
     def takeExperienceScreenshot_(self, notification):
         folder = os.path.join(cfg.DATA_DIR,"screenshots")
