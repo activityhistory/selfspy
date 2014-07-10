@@ -47,6 +47,8 @@ import time
 from datetime import datetime
 NOW = datetime.now
 
+from selfspy import locationTracking
+
 start_time = NSDate.date()
 
 #Preferences window launcher
@@ -117,7 +119,13 @@ class Sniffer:
         self.screen_hook = lambda x: True
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
-        #self.screenshotSize = [self.screenSize[0],self.screenSize[1]]
+        
+        self.location_hook = lambda x: True
+        print "doing ok"
+        self.geo = locationTracking.LocationTracking()
+        print "doing fine"
+        self.geo.startTracking()
+        # self.geo.locationchange_hook = self.got_location_change
 
 
     def createAppDelegate(self):
@@ -419,8 +427,6 @@ class Sniffer:
         org_x = x
         org_y = y
 
-        print "cursor :", x, y, w, h
-        
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
 
@@ -455,7 +461,7 @@ class Sniffer:
 
         # Adding Mouse cursor to the screenshot
         # Alternative 1 : load a cursor image 
-        print "test"
+
         # Convert path to url for saving image
         cursorPath = "../Resources/cursor.png"
         cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
@@ -468,7 +474,6 @@ class Sniffer:
         # indexes are 0 based.
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
-        print "test"
         Quartz.CGContextDrawImage(bitmapContext,
           CG.CGRectMake(org_x, org_y, w, h), 
           cursorOverlay)
@@ -510,6 +515,9 @@ class Sniffer:
         AppHelper.stopEventLoop()
       except:
         print "couldn't save image"
+
+    def got_location_change(self, latitude, longitude, latitudeRange, longitudeRange):
+        print "location_change", latitude, longitude
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we

@@ -90,10 +90,10 @@ class ActivityStore:
           t = Thread(target=self.take_screenshots_every, args=(60,))
           t.start()
 
-        geoloc = True
-        if (geoloc) : 
-          t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
-          t_geoloc.start()
+        # geoloc = True
+        # if (geoloc) : 
+        #   t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
+        #   t_geoloc.start()
         
         self.started = NOW()
 

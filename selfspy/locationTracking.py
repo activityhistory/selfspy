@@ -16,12 +16,19 @@ import CoreLocation
 from CoreLocation import *
 import math
 
-class locationTracking:
+class LocationTracking:
     locationManager = objc.ivar()
 
-    def startTracking(self, notification):
+    def __init__(self):
+        self.locationchange_hook = lambda x: True
+
+    def startTracking(self):
+        print "start tracking location "
         self.locationManager = CoreLocation.CLLocationManager.alloc().init()
         self.locationManager.startUpdatingLocation()
+        # self.locationManager.startMonitoringSignificantLocationChanges()
+        print self.locationManager._.location
+        # print self.locationManager._.location.description()
 
     @classmethod
     def latitudeRangeForLocation_(self, aLocation):
@@ -33,12 +40,14 @@ class locationTracking:
 
     @classmethod
     def longitudeRangeForLocation_(self, aLocation):
-        latitudeRange = locationTracking.latitudeRangeForLocation_(aLocation)
+        latitudeRange = LocationTracking.latitudeRangeForLocation_(aLocation)
 
         return latitudeRange * math.cos(aLocation.coordinate().latitude * math.pi / 180.0)
 
     def locationManager_didUpdateToLocation_fromLocation_(self,
             manager, newLocation, oldLocation):
+
+        print "location update"
 
         # Ignore updates where nothing we care about changed
         if newLocation is None:
@@ -50,13 +59,21 @@ class locationTracking:
                 newLocation.horizontalAccuracy() == oldLocation.horizontalAccuracy()):
             return
 
+        print "location", newLocation.coordinate().latitude, newLocation.coordinate().longitude, LocationTracking.latitudeRangeForLocation_(newLocation), LocationTracking.longitudeRangeForLocation_(newLocation)
+
+        self.locationchange_hook(newLocation.coordinate().latitude,
+            newLocation.coordinate().longitude,
+            LocationTracking.latitudeRangeForLocation_(newLocation),
+            LocationTracking.longitudeRangeForLocation_(newLocation))
+
         # TODO what happens in case of new location.
         # newLocation.coordinate().latitude,
         # newLocation.coordinate().longitude,
-        # locationTracking.latitudeRangeForLocation_(newLocation),
-        # locationTracking.longitudeRangeForLocation_(newLocation))
+        # LocationTracking.latitudeRangeForLocation_(newLocation),
+        # LocationTracking.longitudeRangeForLocation_(newLocation))
 
     def locationManager_didFailWithError_(self, manager, error):
+        print "location error"
         print error.localizedDescription()
 
     def stopTracking(self, aNotification):
