@@ -91,11 +91,6 @@ class ActivityStore:
         self.exp_time = 10 # time before first experience sample shows
 
         self.addObservers()
-
-        # geoloc = True
-        # if (geoloc) : 
-        #   t_geoloc = Thread(target=self.take_geoloc_every, args=(5*60,))
-        #   t_geoloc.start()
         
         self.started = NOW()
 
@@ -107,9 +102,9 @@ class ActivityStore:
         s = objc.selector(self.runExperienceLoop,signature='v@:')
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
-        s = objc.selector(self.takeGeoloc,signature='v@:')
-        self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
-        self.geoTimer.fire() # get location immediately
+        # s = objc.selector(self.takeGeoloc,signature='v@:')
+        # self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
+        # self.geoTimer.fire() # get location immediately
 
     def stopLoops(self):
         self.screenshotTimer.invalidate()

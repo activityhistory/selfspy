@@ -27,7 +27,7 @@ class LocationTracking:
         self.locationManager = CoreLocation.CLLocationManager.alloc().init()
         self.locationManager.startUpdatingLocation()
         # self.locationManager.startMonitoringSignificantLocationChanges()
-        print self.locationManager._.location
+        print "location ", self.locationManager._.location
         # print self.locationManager._.location.description()
 
     @classmethod
@@ -59,7 +59,7 @@ class LocationTracking:
                 newLocation.horizontalAccuracy() == oldLocation.horizontalAccuracy()):
             return
 
-        print "location", newLocation.coordinate().latitude, newLocation.coordinate().longitude, LocationTracking.latitudeRangeForLocation_(newLocation), LocationTracking.longitudeRangeForLocation_(newLocation)
+        print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, LocationTracking.latitudeRangeForLocation_(newLocation), LocationTracking.longitudeRangeForLocation_(newLocation)
 
         self.locationchange_hook(newLocation.coordinate().latitude,
             newLocation.coordinate().longitude,

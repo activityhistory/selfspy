@@ -176,11 +176,9 @@ class Sniffer:
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
         
         self.location_hook = lambda x: True
-        print "doing ok"
         self.geo = locationTracking.LocationTracking()
-        print "doing fine"
         self.geo.startTracking()
-        # self.geo.locationchange_hook = self.got_location_change
+        self.geo.locationchange_hook = self.got_location_change
 
         self.delegate = None
 
