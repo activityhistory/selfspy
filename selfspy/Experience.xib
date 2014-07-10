@@ -6,6 +6,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ExperienceController">
             <connections>
+                <outlet property="experienceText" destination="2Wl-gQ-b0R" id="0EY-ww-UcG"/>
+                <outlet property="screenshotDisplay" destination="yIv-Dh-m0U" id="zdx-ud-hvq"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="POw-bE-877"/>
             </connections>
         </customObject>
@@ -14,14 +16,14 @@
         <window title="Selfspy" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="240" width="398" height="92"/>
+            <rect key="contentRect" x="196" y="240" width="398" height="366"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="398" height="92"/>
+                <rect key="frame" x="0.0" y="0.0" width="398" height="366"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="o4J-I2-oWs">
-                        <rect key="frame" x="18" y="55" width="132" height="17"/>
+                        <rect key="frame" x="18" y="329" width="132" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="What are you doing?" id="glJ-tJ-Zvb">
                             <font key="font" metaFont="system"/>
@@ -30,7 +32,7 @@
                         </textFieldCell>
                     </textField>
                     <comboBox verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2Wl-gQ-b0R">
-                        <rect key="frame" x="21" y="20" width="305" height="26"/>
+                        <rect key="frame" x="21" y="294" width="305" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="Ed7-gH-e7F">
                             <font key="font" metaFont="system"/>
@@ -39,7 +41,7 @@
                         </comboBoxCell>
                     </comboBox>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cT8-GG-44U">
-                        <rect key="frame" x="325" y="16" width="59" height="32"/>
+                        <rect key="frame" x="325" y="290" width="59" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BW4-jd-qgk">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -48,7 +50,26 @@
 DQ
 </string>
                         </buttonCell>
+                        <connections>
+                            <action selector="recordText:" target="-2" id="iKk-Uf-FMN"/>
+                        </connections>
                     </button>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="H9A-EF-w5H">
+                        <rect key="frame" x="15" y="250" width="142" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Take Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="4L7-An-Mz9">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="takeExperienceScreenshot:" target="-2" id="I7m-fs-7Ga"/>
+                        </connections>
+                    </button>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yIv-Dh-m0U">
+                        <rect key="frame" x="17" y="17" width="360" height="225"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="3zK-Gy-h6e"/>
+                    </imageView>
                 </subviews>
             </view>
         </window>

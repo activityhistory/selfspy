@@ -15,32 +15,28 @@ received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import os
 import time
 from datetime import datetime
-NOW = datetime.now
 
 import sqlalchemy
 import urllib
 import re
 
-from threading import Thread
+from Foundation import *
+from AppKit import *
 
-import platform
-if platform.system() == 'Darwin':
-    from selfspy import sniff_cocoa as sniffer
-elif platform.system() == 'Windows':
-    from selfspy import sniff_win as sniffer
-else:
-    from selfspy import sniff_x as sniffer
+from Cocoa import NSNotificationCenter, NSTimer
 
-from selfspy import models
-from selfspy.models import Process, Window, Geometry, Click, Keys
+from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
+from selfspy import models
+from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location
 
 
+NOW = datetime.now
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
-
 SCROLL_BUTTONS = {4, 5, 6, 7}
 SCROLL_COOLOFF = 10  # seconds
 
@@ -51,19 +47,22 @@ class Display:
         self.win_id = None
         self.geo_id = None
 
+
 class KeyPress:
     def __init__(self, key, time, is_repeat):
         self.key = key
         self.time = time
         self.is_repeat = is_repeat
 
+
 class MouseMove:
     def __init__(self, xy, time):
         self.xy = xy
         self.time = time
 
+
 class ActivityStore:
-    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=False):
+    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=True):
         self.session_maker = models.initialize(db_name)
 
         models.ENCRYPTER = encrypter
@@ -81,14 +80,17 @@ class ActivityStore:
         self.last_key_time = time.time()
         self.last_move_time = time.time()
         self.last_commit = time.time()
-        
-        self.screenshots_active = screenshots
         self.last_screenshot = time.time()
+        self.last_experience = time.time()
 
-        if (screenshots) :
-          # If there is no activity we take a screenshot every 60 seconds
-          t = Thread(target=self.take_screenshots_every, args=(60,))
-          t.start()
+        self.screenshots_active = True
+
+        self.screenshot_time_min = 0.2
+        self.screenshot_time_max = 60
+        self.geoloc_time = 5*60
+        self.exp_time = 10 # time before first experience sample shows
+
+        self.addObservers()
 
         # geoloc = True
         # if (geoloc) : 
@@ -97,16 +99,49 @@ class ActivityStore:
         
         self.started = NOW()
 
-    def trycommit(self):
-        self.last_commit = time.time()
-        for _ in xrange(1000):
-            try:
-                self.session.commit()
-                break
-            except sqlalchemy.exc.OperationalError:
-                time.sleep(1)
-            except:
-               self.session.rollback()
+    def startLoops(self):
+        # Timers for taking screenshots when idle, checking location, and showing experience-sample window
+        s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
+        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)       
+
+        s = objc.selector(self.runExperienceLoop,signature='v@:')
+        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+
+        s = objc.selector(self.takeGeoloc,signature='v@:')
+        self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
+        self.geoTimer.fire() # get location immediately
+
+    def stopLoops(self):
+        self.screenshotTimer.invalidate()
+        self.experienceTimer.invalidate()
+        self.geoTimer.invalidate()
+
+    def checkLoops_(self, notification):
+        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+        if(recording):
+            self.startLoops()
+        else:
+            self.stopLoops()
+
+    def addObservers(self):
+            # Listen for various events thrown by the Experience Sampling window
+            s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
+
+            s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
+
+            s = objc.selector(self.gotExperience_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
+            
+            s = objc.selector(self.getPrior_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+
+            s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
+
+            s = objc.selector(self.checkLoops_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -118,6 +153,22 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
 
         self.sniffer.run()
+
+    def close(self):
+        """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
+        self.sniffer.cancel()
+        self.store_keys()
+
+    def trycommit(self):
+        self.last_commit = time.time()
+        for _ in xrange(1000):
+            try:
+                self.session.commit()
+                break
+            except sqlalchemy.exc.OperationalError:
+                time.sleep(1)
+            except:
+               self.session.rollback()
 
     def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height):
         """ Receives a screen change and stores any changes. If the process or window has
@@ -283,10 +334,18 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def close(self):
-        """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
-        self.sniffer.cancel()
-        self.store_keys()
+    def store_experience(self, message):
+        self.session.add(Experience(message))
+        self.trycommit()
+
+    def gotExperience_(self, notification):
+        message = notification.object().experienceText.stringValue()
+        self.store_experience(message)
+
+    def getPrior_(self, notification):
+        prior_experiences = self.session.query(sqlalchemy.distinct(Experience.message)).order_by(Experience.id.desc()).limit(5).all()
+        for e in prior_experiences:
+            notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])    
 
     def change_password(self, new_encrypter):
         self.session = self.session_maker()
@@ -298,46 +357,81 @@ class ActivityStore:
             k.encrypt_keys(dkeys, new_encrypter)
         self.session.commit()
 
-
-    def take_geoloc_every(self,n):
-        while True:
-            self.take_geoloc()
-            time.sleep(n)
-
-    def take_geoloc(self):
+    def takeGeoloc(self):
         # TODO check if skyhook api is a better alternative
         response = urllib.urlopen('http://api.hostip.info/get_html.php').read()
         m = re.search('City: (.*)', response)
         if m:
             print m.group(1)
 
+    def runExperienceLoop(self):
+        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+        if(experienceLoop):
+            NSLog("Showing Experience Sampling Window on Cycle...")
+            sniffer.ExperienceController.show()
+            self.last_experience = time.time()
 
-    def take_screenshots_every(self,n):
-        while True:
+            s = objc.selector(self.runExperienceLoop,signature='v@:')
+            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+
+    def checkExperienceOnPrefChange_(self, notification):
+        if(self.experienceTimer):
+            self.experienceTimer.invalidate()
+
+        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+        time_since_last_experience = time.time() - self.last_experience
+        
+        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+        if(experienceLoop):
+            if (time_since_last_experience > self.exp_time):
+                self.runExperienceLoop()
+            else:
+                sleep_time = self.exp_time - time_since_last_experience + 0.01
+                s = objc.selector(self.runExperienceLoop,signature='v@:')
+                self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
+
+    def checkMaxScreenshotOnPrefChange_(self, notification):
+        self.screenshotTimer.invalidate()
+        self.runMaxScreenshotLoop()
+
+    def runMaxScreenshotLoop(self):
+        self.screenshot_time_max = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMax')
+        time_since_last_screenshot = time.time() - self.last_screenshot
+        if (time_since_last_screenshot > self.screenshot_time_max):
             self.take_screenshot()
-            time.sleep(n)
-            # print str(datetime.now().isoformat())
+            time_since_last_screenshot = 0.0
+        sleep_time = self.screenshot_time_max - time_since_last_screenshot + 0.01
+        s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
+        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
+    def toggleScreenshotMenuTitle_(self,notification):
+        print "Sent Message"
+        screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+        if screen:
+            self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
+            #self.screenshotitem.setTitle_("Record screenshots")
+        else :
+            self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
+            #self.screenshotitem.setTitle_("Pause screenshots")
 
     def take_screenshot(self):
-      # We check whether the screenshot option is on and then 
-      # limit the screenshot taking rate to 5 screenshots per second.
-      self.screenshots_active = self.sniffer.isScreenshotActive()      
+      # We check whether the screenshot option is on and then limit the screenshot taking rate to user defined rate
+      self.screenshots_active = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+      self.screenshot_time_min = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMin') / 1000.0
+
       if (self.screenshots_active
-        and (time.time() - self.last_screenshot) > 0.2): 
+        and (time.time() - self.last_screenshot) > self.screenshot_time_min) : 
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
-              # print folder
-
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
+              # print path
 
-              print path
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
           except:
               print "error with image backup"
-
 
     def lookupThumbdriveDrive(self, namefilter=""):
         for dir in os.listdir('/Volumes') :

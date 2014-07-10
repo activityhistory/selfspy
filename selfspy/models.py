@@ -124,6 +124,26 @@ class Click(SpookMixin, Base):
     def __repr__(self):
         return "<Click (%d, %d), (%d, %d, %d)>" % (self.x, self.y, self.button, self.press, self.nrmoves)
 
+
+class Experience(SpookMixin, Base):
+    message = Column(Unicode, index=True, unique=True)
+
+    def __init__(self, message):
+        self.message = message
+
+    def __repr__(self):
+        return "<Experience message '%s'>" % self.message
+
+
+class Location(SpookMixin, Base):
+    location = Column(Unicode, index=True, unique=True)
+
+    def __init__(self, location):
+        self.location = location
+
+    def __repr__(self):
+        return "<Location is '%s'>" % self.location
+
     
 def pad(s, padnum):
     ls = len(s)
