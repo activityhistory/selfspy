@@ -553,8 +553,10 @@ class Sniffer:
         # Get cursor information
         x = int(mouseLoc.x *scale)
         y = int(mouseLoc.y *scale)
-        w = int(width *scale)
-        h = int(height *scale)
+        # w = int(width *scale)
+        # h = int(height *scale)
+        w = 20
+        h = 24
         org_x = x
         org_y = y
 
