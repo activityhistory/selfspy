@@ -123,6 +123,7 @@ class PreferencesController(NSWindowController):
 class ExperienceController(NSWindowController):
     
     experienceText = IBOutlet()
+    screenshotDisplay = IBOutlet()
 
     @IBAction
     def recordText_(self, sender):
@@ -497,6 +498,24 @@ class Sniffer:
         command = "screencapture -i -x -C " + path
         print command
         os.system(command)
+
+        path = os.path.expanduser(path)
+
+        experienceImage = NSImage.alloc().initByReferencingFile_(path)
+        width = experienceImage.size().width
+        height = experienceImage.size().height
+        ratio = width / height
+        if( width > 360 or height > 225 ):
+            if (ratio > 1.6):
+                width = 360
+                height = 360 / ratio
+            else:
+                width = 225 * ratio
+                height = 225
+
+        experienceImage.setScalesWhenResized_(True)
+        experienceImage.setSize_((width, height))
+        notification.object().screenshotDisplay.setImage_(experienceImage)
 
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
