@@ -10,8 +10,8 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have 
-received a copy of the GNU General Public License along with Selfspy. 
+GNU General Public License for more details. You should have
+received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
@@ -91,13 +91,13 @@ class ActivityStore:
         self.exp_time = 10 # time before first experience sample shows
 
         self.addObservers()
-        
+
         self.started = NOW()
 
     def startLoops(self):
         # Timers for taking screenshots when idle, checking location, and showing experience-sample window
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
-        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)       
+        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
 
         s = objc.selector(self.runExperienceLoop,signature='v@:')
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
@@ -128,7 +128,7 @@ class ActivityStore:
 
             s = objc.selector(self.gotExperience_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
-            
+
             s = objc.selector(self.getPrior_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
@@ -137,6 +137,9 @@ class ActivityStore:
 
             s = objc.selector(self.checkLoops_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+
+            # s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
+            # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -283,16 +286,16 @@ class ActivityStore:
 
         self.key_presses.append(KeyPress(string, now - self.last_key_time, is_repeat))
         self.last_key_time = now
-        
+
         self.take_screenshot()
 
     def store_click(self, button, x, y):
         """ Stores incoming mouse-clicks """
-        
+
         #Put mouse locations and timings in arrays
         locs = [loc.xy for loc in self.mouse_path]
         timings = [loc.time for loc in self.mouse_path]
-        
+
         self.session.add(Click(button,
                                True,
                                x, y,
@@ -324,23 +327,24 @@ class ActivityStore:
             x,y are the new coordinates on moving the mouse"""
         frequency = 10.0
         now = time.time()
-        
+
         if now-self.last_move_time > 1/frequency:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def store_experience(self, message):
-        self.session.add(Experience(message))
+    def store_experience(self, message, screenshot):
+        self.session.add(Experience(message, screenshot))
         self.trycommit()
 
     def gotExperience_(self, notification):
         message = notification.object().experienceText.stringValue()
-        self.store_experience(message)
+        screenshot = notification.object().currentScreenshot
+        self.store_experience(message, screenshot)
 
     def getPrior_(self, notification):
         prior_experiences = self.session.query(sqlalchemy.distinct(Experience.message)).order_by(Experience.id.desc()).limit(5).all()
         for e in prior_experiences:
-            notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])    
+            notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])
 
     def change_password(self, new_encrypter):
         self.session = self.session_maker()
@@ -376,7 +380,7 @@ class ActivityStore:
 
         self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
         time_since_last_experience = time.time() - self.last_experience
-        
+
         experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
         if(experienceLoop):
             if (time_since_last_experience > self.exp_time):
@@ -385,6 +389,14 @@ class ActivityStore:
                 sleep_time = self.exp_time - time_since_last_experience + 0.01
                 s = objc.selector(self.runExperienceLoop,signature='v@:')
                 self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
+
+    #def getDebriefExperiences_(self, notification):
+        # get query results of all experiences for today
+        # self.session.query()
+        # calculate today's date
+        # filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
+        # get a random sample of 8 experiences
+        # set notification.object().experiences to these 8
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
@@ -401,14 +413,11 @@ class ActivityStore:
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def toggleScreenshotMenuTitle_(self,notification):
-        print "Sent Message"
         screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
         if screen:
             self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
-            #self.screenshotitem.setTitle_("Record screenshots")
         else :
             self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
-            #self.screenshotitem.setTitle_("Pause screenshots")
 
     def take_screenshot(self):
       # We check whether the screenshot option is on and then limit the screenshot taking rate to user defined rate
@@ -416,7 +425,7 @@ class ActivityStore:
       self.screenshot_time_min = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMin') / 1000.0
 
       if (self.screenshots_active
-        and (time.time() - self.last_screenshot) > self.screenshot_time_min) : 
+        and (time.time() - self.last_screenshot) > self.screenshot_time_min) :
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
               filename = datetime.now().strftime("%y%m%d-%H%M%S%f")

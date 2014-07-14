@@ -10,8 +10,8 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have 
-received a copy of the GNU General Public License along with Selfspy. 
+GNU General Public License for more details. You should have
+received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
@@ -68,7 +68,7 @@ class Window(SpookMixin, Base):
     def __repr__(self):
         return "<Window '%s'>" % (self.title)
 
-    
+
 class Geometry(SpookMixin, Base):
     xpos = Column(Integer, nullable=False)
     ypos = Column(Integer, nullable=False)
@@ -86,7 +86,7 @@ class Geometry(SpookMixin, Base):
     def __repr__(self):
         return "<Geometry (%d, %d), (%d, %d)>" % (self.xpos, self.ypos, self.width, self.height)
 
-    
+
 class Click(SpookMixin, Base):
     button = Column(Integer, nullable=False)
     press = Column(Boolean, nullable=False)
@@ -101,14 +101,14 @@ class Click(SpookMixin, Base):
 
     window_id = Column(Integer, ForeignKey('window.id'), nullable=False)
     window = relationship("Window", backref=backref('clicks'))
-    
+
     geometry_id = Column(Integer, ForeignKey('geometry.id'), nullable=False)
     geometry = relationship("Geometry", backref=backref('clicks'))
 
     def __init__(self, button, press, x, y, nrmoves, path, timings, process_id, window_id, geometry_id):
         zpath = zlib.compress(json.dumps(path))
         ztimings = zlib.compress(json.dumps(timings))
-        
+
         self.button = button
         self.press = press
         self.x = x
@@ -127,9 +127,11 @@ class Click(SpookMixin, Base):
 
 class Experience(SpookMixin, Base):
     message = Column(Unicode, index=True, unique=True)
+    screenshot = Column(Unicode, index=True, unique=True)
 
-    def __init__(self, message):
+    def __init__(self, message, screenshot):
         self.message = message
+        self.screenshot = screenshot
 
     def __repr__(self):
         return "<Experience message '%s'>" % self.message
@@ -144,7 +146,7 @@ class Location(SpookMixin, Base):
     def __repr__(self):
         return "<Location is '%s'>" % self.location
 
-    
+
 def pad(s, padnum):
     ls = len(s)
     if ls % padnum == 0:

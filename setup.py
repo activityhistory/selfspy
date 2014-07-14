@@ -49,8 +49,8 @@ OPTIONS = {#'argv_emulation': True,
           'includes' : ['sqlalchemy.dialects.sqlite'],
           'iconfile':'assets/eye.icns',
           }
-          
-DATA_FILES = ['./assets/eye-32.png','./assets/eye_gray-64.png','./assets/photo-64.png','./assets/photo_gray-64.png','./assets/bookmark-64.png','./assets/cursor.png', './selfspy/Preferences.xib','./selfspy/Experience.xib']
+
+DATA_FILES = ['./assets/eye-32.png','./assets/eye_gray-64.png','./assets/photo-64.png','./assets/photo_gray-64.png','./assets/bookmark-64.png','./assets/cursor.png', './selfspy/Preferences.xib','./selfspy/Experience.xib','./selfspy/Debriefer.xib']
 
 setup(
   name="selfspy",

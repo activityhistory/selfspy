@@ -10,13 +10,13 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have 
-received a copy of the GNU General Public License along with Selfspy. 
+GNU General Public License for more details. You should have
+received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-import string 
+import string
 import objc, re, os
 
 from objc import IBAction, IBOutlet
@@ -27,7 +27,7 @@ from PyObjCTools import NibClassBuilder, AppHelper
 
 import LaunchServices
 
-from Cocoa import (NSEvent, 
+from Cocoa import (NSEvent,
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
                    NSRightMouseUp, NSRightMouseDown, NSRightMouseUpMask, NSRightMouseDownMask,
@@ -114,7 +114,7 @@ class PreferencesController(NSWindowController):
         self.prefController.showWindow_(None)
         self.prefController.window().makeKeyAndOrderFront_(None)
         self.prefController.window().center()
-        self.prefController.retain() 
+        self.prefController.retain()
 
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
@@ -124,7 +124,9 @@ class PreferencesController(NSWindowController):
 
 # Experience Sampling window controller
 class ExperienceController(NSWindowController):
-    
+
+    currentScreenshot = None
+
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 
@@ -149,19 +151,81 @@ class ExperienceController(NSWindowController):
                 self.expController.close()
         except:
             pass
-        
+
+        # take initial full-screen screenshot
+        self.takeFullScreenshot = True
+        self.takeExperienceScreenshot_(self,self)
+        self.takeFullScreenshot = False
+
         # open window from NIB file, show front and center
         self.expController = ExperienceController.alloc().initWithWindowNibName_("Experience")
-        self.expController.showWindow_(None) 
+        self.expController.showWindow_(None)
         self.expController.window().makeKeyAndOrderFront_(None)
-        self.expController.window().center()     
-        self.expController.retain() 
+        self.expController.window().center()
+        self.expController.retain()
+
+        path = os.path.expanduser(self.currentScreenshot)
+
+        experienceImage = NSImage.alloc().initByReferencingFile_(path)
+        width = experienceImage.size().width
+        height = experienceImage.size().height
+        ratio = width / height
+        if( width > 360 or height > 225 ):
+            if (ratio > 1.6):
+                width = 360
+                height = 360 / ratio
+            else:
+                width = 225 * ratio
+                height = 225
+
+        experienceImage.setScalesWhenResized_(True)
+        experienceImage.setSize_((width, height))
+        self.expController.screenshotDisplay.setImage_(experienceImage)
 
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
-        
+
+    show = classmethod(show)
+
+
+# Experience Sampling window controller
+class DebriefController(NSWindowController):
+
+    mainPanel = IBOutlet()
+    doingText = IBOutlet()
+    nextText = IBOutlet()
+    progressLabel = IBOutlet()
+
+    experiences = None
+
+    @IBAction
+    def doSomething_(self, sender):
+        print "Did something"
+
+    def windowDidLoad(self):
+        NSWindowController.windowDidLoad(self)
+
+    def show(self):
+        try:
+            if self.debriefController:
+                self.debriefController.close()
+        except:
+            pass
+
+        # open window from NIB file, show front and center
+        self.debriefController = DebriefController.alloc().initWithWindowNibName_("Debriefer")
+        self.debriefController.showWindow_(None)
+        self.debriefController.window().makeKeyAndOrderFront_(None)
+        self.debriefController.window().center()
+        self.debriefController.retain()
+
+        # needed to show window on top of other applications
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getDebriefExperiences',self)
+
     show = classmethod(show)
 
 
@@ -174,7 +238,7 @@ class Sniffer:
 
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
-        
+
         self.location_hook = lambda x: True
         self.geo = locationTracking.LocationTracking()
         self.geo.startTracking()
@@ -189,20 +253,20 @@ class Sniffer:
             statusbar = None
             state = 'pause'
             screenshot = True
-            
+
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching...")
 
                 # Register preferance defaults for user-facing preferences
                 prefDictionary = {}
-                prefDictionary[u"screenshots"] = True 
+                prefDictionary[u"screenshots"] = True
                 prefDictionary[u'imageSize'] = 720          # in px
                 prefDictionary[u"imageTimeMax"] = 60        # in s
                 prefDictionary[u"imageTimeMin"] = 100       # in ms
 
                 prefDictionary[u"experienceTime"] = 1800    # in s
-                prefDictionary[u"experienceLoop"] = True 
-                prefDictionary[u"recording"] = True 
+                prefDictionary[u"experienceLoop"] = True
+                prefDictionary[u"recording"] = True
 
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
 
@@ -272,13 +336,17 @@ class Sniffer:
                     else:
                         self.statusitem.setImage_(self.iconGray)
 
-            def showPreferences_(self, notification):
-                NSLog("Showing Preference Window...")
-                PreferencesController.show()
+            def showDebrief_(self, notification):
+                NSLog("Showing Daily Debrief Window...")
+                DebriefController.show()
 
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
                 ExperienceController.show()
+
+            def showPreferences_(self, notification):
+                NSLog("Showing Preference Window...")
+                PreferencesController.show()
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")
@@ -339,7 +407,10 @@ class Sniffer:
 
                 # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
                 # self.menu.addItem_(menuitem)
-                
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
+                self.menu.addItem_(menuitem)
+
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
@@ -352,7 +423,7 @@ class Sniffer:
                 # Bind it to the status item
                 self.statusitem.setMenu_(self.menu)
 
-                self.statusitem.setEnabled_(TRUE)                
+                self.statusitem.setEnabled_(TRUE)
                 self.statusitem.retain()
 
             def createStatusButton(self):
@@ -389,7 +460,7 @@ class Sniffer:
                 # Bind to the status item
                 self.statusitem2.setView_(self.hel)
 
-                self.statusitem2.setEnabled_(TRUE)       
+                self.statusitem2.setEnabled_(TRUE)
                 self.statusitem2.retain()
 
         return AppDelegate
@@ -494,8 +565,8 @@ class Sniffer:
             raise
 
     def makeAppActive_(self, notification):
-        self.app.activateIgnoringOtherApps_(True)  
-        
+        self.app.activateIgnoringOtherApps_(True)
+
     def takeExperienceScreenshot_(self, notification):
         folder = os.path.join(cfg.DATA_DIR,"screenshots")
         filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-experience'
@@ -504,27 +575,37 @@ class Sniffer:
         # -i makes the screenshot interactive
         # -C captures the mouse cursor.
         # -x removes the screenshot sound
-        command = "screencapture -i -x -C " + path
+        if notification.object().takeFullScreenshot:
+            command = "screencapture -x -C " + path
+        else:
+            command = "screencapture -i -x -C " + path
+            # delete current full-screen screenshot for this experience
+            os.system("rm "+ notification.object().currentScreenshot )
+
         print command
         os.system(command)
 
-        path = os.path.expanduser(path)
+        notification.object().currentScreenshot = path
 
-        experienceImage = NSImage.alloc().initByReferencingFile_(path)
-        width = experienceImage.size().width
-        height = experienceImage.size().height
-        ratio = width / height
-        if( width > 360 or height > 225 ):
-            if (ratio > 1.6):
-                width = 360
-                height = 360 / ratio
-            else:
-                width = 225 * ratio
-                height = 225
+        if not notification.object().takeFullScreenshot:
 
-        experienceImage.setScalesWhenResized_(True)
-        experienceImage.setSize_((width, height))
-        notification.object().screenshotDisplay.setImage_(experienceImage)
+            path = os.path.expanduser(path)
+
+            experienceImage = NSImage.alloc().initByReferencingFile_(path)
+            width = experienceImage.size().width
+            height = experienceImage.size().height
+            ratio = width / height
+            if( width > 360 or height > 225 ):
+                if (ratio > 1.6):
+                    width = 360
+                    height = 360 / ratio
+                else:
+                    width = 225 * ratio
+                    height = 225
+
+            experienceImage.setScalesWhenResized_(True)
+            experienceImage.setSize_((width, height))
+            notification.object().screenshotDisplay.setImage_(experienceImage)
 
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
@@ -534,7 +615,7 @@ class Sniffer:
         scale = 1.0
 
         # Set to capture entire screen, including multiple monitors
-        if region is None:  
+        if region is None:
           region = CG.CGRectInfinite
 
         # Create CGImage, composite image of windows in region
@@ -546,7 +627,7 @@ class Sniffer:
         )
 
         # Get size of image
-        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')    
+        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
         width = self.screenRatio * height
 
         mouseLoc = NSEvent.mouseLocation()
@@ -561,19 +642,19 @@ class Sniffer:
         org_y = y
 
         # print "cursor :", x, y, w, h
-        
+
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
 
         bitmapContext = Quartz.CGBitmapContextCreate(
           imageData, # image data we just allocated...
-          width*scale, 
-          height*scale, 
+          width*scale,
+          height*scale,
           8, # 8 bits per component
           4 * width, # bytes per pixel times number of pixels wide
           Quartz.CGImageGetColorSpace(image), # use the same colorspace as the original image
           Quartz.kCGImageAlphaPremultipliedFirst # use premultiplied alpha
-        ) 
+        )
 
         #Draw image on context at new scale
         rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
@@ -581,9 +662,9 @@ class Sniffer:
 
         # Adding Mouse cursor to the screenshot
         # https://stackoverflow.com/questions/8008630/not-displaying-mouse-cursor
-        # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]        
+        # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]
         # # arrowCursor grabs the arrow cursor
-        # # currentSystemCursor grabs the image of the current cursor, 
+        # # currentSystemCursor grabs the image of the current cursor,
         # overlay = NSCursor.arrowCursor().image().copy()
 
         # # Now convert NSImage into CGImage
@@ -595,7 +676,7 @@ class Sniffer:
         # overlay2 = overlay.CGImageForProposedRect_context_(cursorRectangle,None)
 
         # Adding Mouse cursor to the screenshot
-        # Alternative 1 : load a cursor image 
+        # Alternative 1 : load a cursor image
         # Convert path to url for saving image
         cursorPath = "../Resources/cursor.png"
         cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
@@ -609,7 +690,7 @@ class Sniffer:
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
         Quartz.CGContextDrawImage(bitmapContext,
-          CG.CGRectMake(org_x, org_y, w, h), 
+          CG.CGRectMake(org_x, org_y, w, h),
           cursorOverlay)
 
         #Recreate image from context
@@ -638,7 +719,7 @@ class Sniffer:
         # Add the image to the destination, with certain properties
         Quartz.CGImageDestinationAddImage(dest, imageOut, properties)
 
-        # finalize the CGImageDestination object. 
+        # finalize the CGImageDestination object.
         Quartz.CGImageDestinationFinalize(dest)
 
         #For testing how long it takes to take screenshot
