@@ -136,6 +136,21 @@ class Experience(SpookMixin, Base):
     def __repr__(self):
         return "<Experience message '%s'>" % self.message
 
+class Debrief(SpookMixin, Base):
+    doing_report = Column(Unicode, index=True, unique=True)
+    next_report = Column(Unicode, index=True, unique=True)
+
+    experience_id = Column(Integer, ForeignKey('experience.id'), nullable=False, index=True)
+    experience = relationship("Experience", backref=backref('debrief'))
+
+    def __init__(self, experience_id, doing_report, next_report):
+        self.experience_id = experience_id
+        self.doing_report = doing_report
+        self.next_report = next_report
+
+    def __repr__(self):
+        return "<Participant was '%s'>" % self.doing_report
+
 
 class Location(SpookMixin, Base):
     location = Column(Unicode, index=True, unique=True)

@@ -197,12 +197,63 @@ class DebriefController(NSWindowController):
     doingText = IBOutlet()
     nextText = IBOutlet()
     progressLabel = IBOutlet()
+    progressButton = IBOutlet()
+    errorMessage = IBOutlet()
 
     experiences = None
+    currentExperience = -1
 
     @IBAction
-    def doSomething_(self, sender):
-        print "Did something"
+    def advanceExperienceWindow_(self, sender):
+        controller = self.debriefController
+
+        if self.currentExperience == -2:
+            self.debriefController.close()
+
+        l = len(self.experiences)
+        if (not self.experiences) or (l == 0):
+            controller.errorMessage.setHidden_(False)
+            controller.doingText.setEnabled_(False)
+            controller.nextText.setEnabled_(False)
+            controller.progressLabel.setStringValue_("0/0")
+            controller.progressButton.setTitle_("Finish")
+            self.currentExperience -= 1
+            return
+            # tell user there are no experiences to sample
+
+        self.currentExperience += 1
+        i = self.currentExperience
+
+        if i > 0:
+            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordDebrief',self)
+
+        if i == l-1:
+            controller.progressButton.setTitle_("Finish")
+
+        if i < l:
+            path = self.experiences[i]['screenshot'][:]
+            path = os.path.expanduser(path)
+            experienceImage = NSImage.alloc().initByReferencingFile_(path)
+            width = experienceImage.size().width
+            height = experienceImage.size().height
+            ratio = width / height
+            if( width > 960 or height > 600 ):
+                if (ratio > 1.6):
+                    width = 960
+                    height = 960 / ratio
+                else:
+                    width = 600 * ratio
+                    height = 600
+            experienceImage.setScalesWhenResized_(True)
+            experienceImage.setSize_((width, height))
+            controller.mainPanel.setImage_(experienceImage)
+
+            controller.doingText.setStringValue_("")
+            controller.nextText.setStringValue_("")
+            controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
+
+        else:
+            self.debriefController.close()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
@@ -224,7 +275,10 @@ class DebriefController(NSWindowController):
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
+        # get random set of experiences
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getDebriefExperiences',self)
+
+        self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
 

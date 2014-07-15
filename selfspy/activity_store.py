@@ -23,6 +23,7 @@ from datetime import datetime
 import sqlalchemy
 import urllib
 import re
+import random
 
 from Foundation import *
 from AppKit import *
@@ -32,7 +33,7 @@ from Cocoa import NSNotificationCenter, NSTimer
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location
+from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location, Debrief
 
 
 NOW = datetime.now
@@ -138,8 +139,11 @@ class ActivityStore:
             s = objc.selector(self.checkLoops_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
-            # s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
-            # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+            s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+
+            s = objc.selector(self.recordDebrief_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -341,6 +345,14 @@ class ActivityStore:
         screenshot = notification.object().currentScreenshot
         self.store_experience(message, screenshot)
 
+    def recordDebrief_(self, notification):
+        doing_report = notification.object().debriefController.doingText.stringValue()
+        next_report = notification.object().debriefController.nextText.stringValue()
+        experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
+
+        self.session.add(Debrief(experience_id, doing_report, next_report))
+        self.trycommit()
+
     def getPrior_(self, notification):
         prior_experiences = self.session.query(sqlalchemy.distinct(Experience.message)).order_by(Experience.id.desc()).limit(5).all()
         for e in prior_experiences:
@@ -390,13 +402,21 @@ class ActivityStore:
                 s = objc.selector(self.runExperienceLoop,signature='v@:')
                 self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
-    #def getDebriefExperiences_(self, notification):
-        # get query results of all experiences for today
-        # self.session.query()
-        # calculate today's date
-        # filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
-        # get a random sample of 8 experiences
-        # set notification.object().experiences to these 8
+    def getDebriefExperiences_(self, notification):
+        today = datetime.now().strftime("%Y-%m-%d")
+        q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
+        m = []
+        for row in q:
+            m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
+            print m
+        # .add_columns(Experience.id, Experience.created_at, Experience.message, Experience.screenshot)
+        # get a random sample of up to 8 random experiences
+        if len(m) > 8:
+            e = random.sample(m, 8)
+        else:
+            e = random.sample(m, len(m))
+        notification.object().experiences = e
+
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
