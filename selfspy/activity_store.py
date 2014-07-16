@@ -103,9 +103,9 @@ class ActivityStore:
         s = objc.selector(self.runExperienceLoop,signature='v@:')
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
-        # s = objc.selector(self.takeGeoloc,signature='v@:')
-        # self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
-        # self.geoTimer.fire() # get location immediately
+        s = objc.selector(self.takeGeoloc,signature='v@:')
+        self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
+        self.geoTimer.fire() # get location immediately
 
     def stopLoops(self):
         self.screenshotTimer.invalidate()
@@ -354,9 +354,9 @@ class ActivityStore:
         self.trycommit()
 
     def getPrior_(self, notification):
-        prior_experiences = self.session.query(sqlalchemy.distinct(Experience.message)).order_by(Experience.id.desc()).limit(5).all()
+        prior_experiences = self.session.query(Experience).distinct(Experience.message).order_by(Experience.id.desc()).limit(5).all()
         for e in prior_experiences:
-            notification.object().experienceText.addItemWithObjectValue_(str(e).split('\'')[1])
+            notification.object().experienceText.addItemWithObjectValue_(e.message)
 
     def change_password(self, new_encrypter):
         self.session = self.session_maker()
@@ -408,7 +408,6 @@ class ActivityStore:
         m = []
         for row in q:
             m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
-            print m
         # .add_columns(Experience.id, Experience.created_at, Experience.message, Experience.screenshot)
         # get a random sample of up to 8 random experiences
         if len(m) > 8:

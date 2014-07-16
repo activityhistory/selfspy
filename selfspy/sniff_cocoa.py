@@ -336,7 +336,7 @@ class Sniffer:
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
                 self.createStatusMenu()
-                self.createStatusButton()
+                #self.createStatusButton()
 
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
 
@@ -411,20 +411,20 @@ class Sniffer:
                 # self.statusitem.setTitle_(u"Selfspy")
 
                 # Load all images
-                self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye-32.png')
+                self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye-48.png')
                 self.icon.setScalesWhenResized_(True)
                 self.icon.setSize_((20, 20))
                 self.statusitem.setImage_(self.icon)
 
-                self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_gray-64.png')
+                self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_gray-48.png')
                 self.iconGray.setScalesWhenResized_(True)
                 self.iconGray.setSize_((20, 20))
 
-                self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/photo-64.png')
+                self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo-48.png')
                 self.iconPhoto.setScalesWhenResized_(True)
                 self.iconPhoto.setSize_((20, 20))
 
-                self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/photo_gray-64.png')
+                self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo_gray-48.png')
                 self.iconGrayPhoto.setScalesWhenResized_(True)
                 self.iconGrayPhoto.setSize_((20, 20))
 
@@ -459,8 +459,8 @@ class Sniffer:
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
-                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
-                # self.menu.addItem_(menuitem)
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
+                self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
                 self.menu.addItem_(menuitem)
@@ -602,6 +602,8 @@ class Sniffer:
                     # their unicode value
                     if event.keyCode() is 36:
                         character = "Enter"
+                        if modifiers == ['Cmd', 'Shift']:
+                            self.delegate.showExperience_(self)
                     elif event.keyCode() is 51:
                         character = "Backspace"
                     self.key_hook(event.keyCode(),
