@@ -90,27 +90,43 @@ class ActivityStore:
         self.screenshot_time_max = 60
         self.geoloc_time = 5*60
         self.exp_time = 10 # time before first experience sample shows
+        self.thumbdrive_time = 10
 
         self.addObservers()
+
+        # We check if a selfspy thumbdrive is plugged in and available
+        # if so this is where we're storing the screenshots and DB
+        self.drivePath = self.lookupThumbdrive()
+        if (self.drivePath):
+            cfg.DATA_DIR = self.drivePath
+
 
         self.started = NOW()
 
     def startLoops(self):
-        # Timers for taking screenshots when idle, checking location, and showing experience-sample window
+        # Timers for taking screenshots when idle, and showing experience-sample window
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
 
         s = objc.selector(self.runExperienceLoop,signature='v@:')
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
+        # Timer for checking if thumbdrive/memory card is available
+        s = objc.selector(self.isThumbdrivePlugged,signature='v@:')
+        self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
+        self.thumbdriveTimer.fire() # get location immediately
+
+        # Timer for checking location
         # s = objc.selector(self.takeGeoloc,signature='v@:')
         # self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
         # self.geoTimer.fire() # get location immediately
 
+
     def stopLoops(self):
         self.screenshotTimer.invalidate()
         self.experienceTimer.invalidate()
-        self.geoTimer.invalidate()
+        self.thumbdriveTimer.invalidate()
+        # self.geoTimer.invalidate()
 
     def checkLoops_(self, notification):
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
@@ -457,7 +473,7 @@ class ActivityStore:
           except:
               print "error with image backup"
 
-    def lookupThumbdriveDrive(self, namefilter=""):
+    def lookupThumbdrive(self, namefilter=""):
         for dir in os.listdir('/Volumes') :
             # print dir
             # print "namefilter: ", namefilter
@@ -468,5 +484,16 @@ class ActivityStore:
                     for filename in subDirs:
                         if "selfspy.cfg" == filename :
                             print "backup drive found"
-                            return os.path.join(volume, filename)
+                            return volume
         return None
+
+    def isThumbdrivePlugged(self):
+        if (self.drivePath != None and drive != ""):
+            if (os.path.ismount(self.drivePath)):
+                return True
+            else :
+                print "TODO thumbdrive not plugged display alert message"
+                return False
+        else :
+            return False
+
