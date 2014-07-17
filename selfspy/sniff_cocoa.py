@@ -335,6 +335,7 @@ class Sniffer:
                         | NSFlagsChangedMask)
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
+                print "About to create status menu"
                 self.createStatusMenu()
                 #self.createStatusButton()
 
@@ -533,6 +534,7 @@ class Sniffer:
         s = objc.selector(self.takeExperienceScreenshot_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'takeExperienceScreenshot', None)
 
+        print "About to run AppHelper loop"
         AppHelper.runEventLoop()
 
     def cancel(self):

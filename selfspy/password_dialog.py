@@ -10,8 +10,8 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have 
-received a copy of the GNU General Public License along with Selfspy. 
+GNU General Public License for more details. You should have
+received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
@@ -20,7 +20,7 @@ import getpass
 
 from Tkinter import Tk
 from tkSimpleDialog import Dialog
-         
+
 
 def get_password(verify=None, message=None):
     if (not verify):
@@ -112,10 +112,10 @@ def get_tk_password(verify, message=None, force_save=False):
         message = 'Password'
 
     while True:
-        # 
-        # Buggy behavior so only returning the password 
+        #
+        # Buggy behavior so only returning the password
         # and setting the keyring password silently
-        # 
+        #
         # pw, save_to_keychain = PasswordDialog(title='Selfspy encryption password',
         #                     prompt=message,
         #                     parent=root)
@@ -126,10 +126,8 @@ def get_tk_password(verify, message=None, force_save=False):
         if pw.result is None:
             return ""
 
-        if (not verify) or verify(pw):
+        if (not verify) or verify(pw.result):
             break
-
-    print pw.result
 
     # if save_to_keychain or force_save:
     set_keyring_password(pw.result)
@@ -165,7 +163,6 @@ class PasswordDialog(Dialog):
 
     def apply(self):
         self.result = self.e1.get()# , self.checkVar.get() == 1)
-        print "result", self.result
 
 
 if __name__ == '__main__':

@@ -89,7 +89,7 @@ class ActivityStore:
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
         self.geoloc_time = 5*60
-        self.exp_time = 10 # time before first experience sample shows
+        self.exp_time = 60 # time before first experience sample shows
         self.thumbdrive_time = 10
 
         self.addObservers()

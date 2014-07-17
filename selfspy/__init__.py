@@ -12,8 +12,8 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have 
-received a copy of the GNU General Public License along with Selfspy. 
+GNU General Public License for more details. You should have
+received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
@@ -33,6 +33,7 @@ from selfspy.password_dialog import get_password
 from selfspy import check_password
 
 from selfspy import config as cfg
+
 
 def parse_config():
     conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False,
@@ -67,10 +68,13 @@ def make_encrypter(password):
 
 
 def main():
+
+    # print header info
     print "Selfspy started"
     print(sys.version)
-    args = vars(parse_config())
 
+    # create needed folders for data storage
+    args = vars(parse_config())
     args['data_dir'] = os.path.expanduser(args['data_dir'])
 
     def check_with_encrypter(password):
@@ -82,9 +86,10 @@ def main():
     except OSError:
         pass
 
-    try: 
-      if not(os.path.exists(os.path.join(args['data_dir'], 'screenshots'))):
-        os.makedirs(os.path.join(args['data_dir'], 'screenshots'))
+    screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
+    try:
+      if not(os.path.exists(screenshot_directory)):
+        os.makedirs(screenshot_directory)
     except OSError:
         pass
 
@@ -92,6 +97,7 @@ def main():
     if args['screenshots']:
       take_screenshots = True;
 
+    # check if Selfspy is already running
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
     cfg.LOCK  = LockFile(lockname)
     if cfg.LOCK.is_locked():
@@ -100,6 +106,7 @@ def main():
         print 'Shutting down.'
         sys.exit(1)
 
+    # manage the passwords
     if args['no_text']:
         args['password'] = ""
 
@@ -132,10 +139,11 @@ def main():
                            encrypter,
                            store_text=(not args['no_text']),
                            screenshots=take_screenshots)
+
     cfg.LOCK.acquire()
     try:
         astore.run()
-    except SystemExit:  
+    except SystemExit:
         astore.close()
     except KeyboardInterrupt:
         pass
