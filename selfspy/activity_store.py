@@ -18,7 +18,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import time
-from datetime import datetime
+import datetime
 
 import sqlalchemy
 import urllib
@@ -36,7 +36,7 @@ from selfspy import models
 from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location, Debrief
 
 
-NOW = datetime.now
+NOW = datetime.datetime.now
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
 SCROLL_BUTTONS = {4, 5, 6, 7}
 SCROLL_COOLOFF = 10  # seconds
@@ -155,6 +155,9 @@ class ActivityStore:
 
             s = objc.selector(self.recordDebrief_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
+
+            s = objc.selector(self.clearData_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -413,7 +416,7 @@ class ActivityStore:
                 self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def getDebriefExperiences_(self, notification):
-        today = datetime.now().strftime("%Y-%m-%d")
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
         q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
         m = []
         for row in q:
@@ -448,6 +451,31 @@ class ActivityStore:
         else :
             self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
 
+    def clearData_(self, notification):
+        minutes_to_delete = notification.object().clearDataPopup.selectedItem().tag()
+        text = notification.object().clearDataPopup.selectedItem().title()
+
+        if minutes_to_delete == -1:
+            delete_from_time = datetime.datetime.min
+        else:
+            delta = datetime.timedelta(minutes=minutes_to_delete)
+            now = datetime.datetime.now()
+            delete_from_time = now - delta
+
+        # delete data from all tables
+        q = self.session.query(Click).filter(Click.created_at > delete_from_time).delete()
+        q = self.session.query(Debrief).filter(Debrief.created_at > delete_from_time).delete()
+        q = self.session.query(Experience).filter(Experience.created_at > delete_from_time).delete()
+        q = self.session.query(Geometry).filter(Geometry.created_at > delete_from_time).delete()
+        q = self.session.query(Keys).filter(Keys.created_at > delete_from_time).delete()
+        q = self.session.query(Location).filter(Location.created_at > delete_from_time).delete()
+        q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
+        q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
+
+
+        print "You deleted the last " + text + " of your history"
+
+
     def take_screenshot(self):
       # We check whether the screenshot option is on and then limit the screenshot taking rate to user defined rate
       self.screenshots_active = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
@@ -457,7 +485,7 @@ class ActivityStore:
         and (time.time() - self.last_screenshot) > self.screenshot_time_min) :
           try:
               folder = os.path.join(cfg.DATA_DIR,"screenshots")
-              filename = datetime.now().strftime("%y%m%d-%H%M%S%f")
+              filename = datetime.datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
               # print path
 

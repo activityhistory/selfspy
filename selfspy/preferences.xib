@@ -6,6 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesController">
             <connections>
+                <outlet property="clearDataPopup" destination="Q9J-pq-Mhp" id="xat-PC-s4L"/>
                 <outlet property="screenshotSizeMenu" destination="Zfc-cP-1Ys" id="cO3-ne-XTx"/>
                 <outlet property="screenshotSizePopup" destination="ImY-8d-57i" id="jGL-9c-OyC"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="k2w-Wa-h0P"/>
@@ -17,7 +18,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="384" height="285"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="778"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="384" height="285"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -216,6 +217,9 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="clearData:" target="-2" id="e99-3m-GU2"/>
+                        </connections>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jhp-ZU-5Lx">
                         <rect key="frame" x="20" y="64" width="205" height="17"/>
@@ -229,18 +233,18 @@
                     <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Q9J-pq-Mhp">
                         <rect key="frame" x="229" y="57" width="138" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="push" title="15 min" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="c7C-D3-odu" id="e2T-2O-4Pl">
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="e2T-2O-4Pl">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
+                            <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="jEX-yb-UJI">
                                 <items>
-                                    <menuItem title="15 min" state="on" id="c7C-D3-odu"/>
-                                    <menuItem title="hour" id="Kvh-zB-ULz"/>
-                                    <menuItem title="day" id="dSu-5Q-nA4"/>
-                                    <menuItem title="week" id="adH-ZM-9eb">
+                                    <menuItem title="15 min" tag="15" id="c7C-D3-odu"/>
+                                    <menuItem title="hour" tag="60" id="Kvh-zB-ULz"/>
+                                    <menuItem title="day" tag="1440" id="dSu-5Q-nA4"/>
+                                    <menuItem title="week" tag="7980" id="adH-ZM-9eb">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
-                                    <menuItem title="forever" id="I1H-f7-pDQ">
+                                    <menuItem title="forever" tag="-1" id="I1H-f7-pDQ">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                 </items>

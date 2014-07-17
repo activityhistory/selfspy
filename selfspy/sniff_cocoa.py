@@ -59,6 +59,13 @@ class PreferencesController(NSWindowController):
 
     screenshotSizePopup = IBOutlet()
     screenshotSizeMenu = IBOutlet()
+    clearDataPopup = IBOutlet()
+
+    @IBAction
+    def clearData_(self,sender):
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
+        x = 1
+        # clear data
 
     @IBAction
     def changedScreenshot_(self,sender):
