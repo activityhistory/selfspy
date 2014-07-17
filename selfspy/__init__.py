@@ -66,12 +66,12 @@ def main():
     except OSError:
         pass
 
-    # screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
-    # try:
-    #   if not(os.path.exists(screenshot_directory)):
-    #     os.makedirs(screenshot_directory)
-    # except OSError:
-    #     pass
+    screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
+    try:
+      if not(os.path.exists(screenshot_directory)):
+        os.makedirs(screenshot_directory)
+    except OSError:
+        pass
 
     # check if Selfspy is already running
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
