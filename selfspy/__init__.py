@@ -31,7 +31,6 @@ from Crypto.Cipher import Blowfish
 from selfspy.activity_store import ActivityStore
 from selfspy.password_dialog import get_password
 from selfspy import check_password
-
 from selfspy import config as cfg
 
 
@@ -73,7 +72,7 @@ def main():
     print "Selfspy started"
     print(sys.version)
 
-    # create needed folders for data storage
+    # create folders for data storage
     args = vars(parse_config())
     args['data_dir'] = os.path.expanduser(args['data_dir'])
 
@@ -135,12 +134,14 @@ def main():
         print 'Exiting...'
         sys.exit(0)
 
+    # create main activity tracker
     astore = ActivityStore(os.path.join(args['data_dir'], cfg.DBNAME),
                            encrypter,
                            store_text=(not args['no_text']),
                            screenshots=take_screenshots)
 
     cfg.LOCK.acquire()
+
     try:
         astore.run()
     except SystemExit:
