@@ -63,13 +63,8 @@ class MouseMove:
 
 
 class ActivityStore:
-    def __init__(self, db_name, encrypter=None, store_text=True, screenshots=True):
+    def __init__(self, db_name):
         self.session_maker = models.initialize(db_name)
-
-        models.ENCRYPTER = encrypter
-
-        self.store_text = store_text
-        self.curtext = u""
 
         self.key_presses = []
         self.mouse_path = []
@@ -265,11 +260,10 @@ class ActivityStore:
             add = lambda count, press: count + (0 if press.is_repeat else 1)
             nrkeys = reduce(add, self.key_presses, 0)
 
+            # we don't store the keys pressed for privacy reasons
+            # but we do keep their timings and numbers.
             curtext = u""
-            if not self.store_text:
-                keys = []
-            else:
-                curtext = ''.join(keys)
+            keys = []
 
             self.session.add(Keys(curtext.encode('utf8'),
                                   keys,
