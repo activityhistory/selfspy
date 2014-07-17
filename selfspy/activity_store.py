@@ -472,6 +472,12 @@ class ActivityStore:
         q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
         q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
 
+        screenshot_directory = os.path.expanduser(os.path.join(cfg.DATA_DIR,"screenshots"))
+        screenshot_files = os.listdir(screenshot_directory)
+
+        for f in screenshot_files:
+            if f[0:19] > delete_from_time.strftime("%y%m%d-%H%M%S%f") or  minutes_to_delete == -1 :
+                os.remove(os.path.join(screenshot_directory,f))
 
         print "You deleted the last " + text + " of your history"
 
