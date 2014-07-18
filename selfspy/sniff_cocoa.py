@@ -41,6 +41,9 @@ from Cocoa import (NSEvent,
                    NSTimer,NSInvocation,
                    NSNotificationCenter)
 
+from AVFoundation import *
+from ctypes import c_int, pointer
+
 import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 import Quartz.CoreGraphics as CG
@@ -206,9 +209,30 @@ class DebriefController(NSWindowController):
     progressLabel = IBOutlet()
     progressButton = IBOutlet()
     errorMessage = IBOutlet()
+    startButton = IBOutlet()
+    stopButton = IBOutlet()
 
     experiences = None
     currentExperience = -1
+
+    @IBAction
+    def startRecording_(self, sender):
+        audioPath = '~/Desktop/test.mp3'
+        audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
+        audioURL = NSURL.fileURLWithPath_(audioPathStr)
+
+        audioSettings = {'AVFormatIDKey': 'kAudioFormatAppleIMA4', 'AVSampleRateKey': 1600.0, 'AVNumberOfChannelsKey': 1 }
+        audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
+
+        # function shold only require 2 parameters (error is out parameter) but is still looking for the third parameter
+        # recorder, error = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioDict)
+        # print error
+        # self.recorder.record()
+
+    @IBAction
+    def stopRecording_(self, sender):
+        if self.recorder:
+            self.recorder.stop()
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
@@ -340,6 +364,7 @@ class Sniffer:
                         | NSMouseMovedMask
                         | NSScrollWheelMask
                         | NSFlagsChangedMask)
+
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
                 print "About to create status menu"

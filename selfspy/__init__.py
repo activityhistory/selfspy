@@ -73,6 +73,13 @@ def main():
     except OSError:
         pass
 
+    audio_directory = os.path.join(args['data_dir'], 'audio')
+    try:
+      if not(os.path.exists(audio_directory)):
+        os.makedirs(audio_directory)
+    except OSError:
+        pass
+
     # check if Selfspy is already running
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
     cfg.LOCK  = LockFile(lockname)
