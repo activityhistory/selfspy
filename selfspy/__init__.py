@@ -47,7 +47,7 @@ def parse_config():
 
     parser = argparse.ArgumentParser(description='Monitor your computer activities and store them in an encrypted database for later analysis or disaster recovery.', parents=[conf_parser])
     parser.set_defaults(**defaults)
-    parser.add_argument('-d', '--data-dir', help='Data directory for selfspy, where the database is stored. Remember that Selfspy must have read/write access. Default is %s' % cfg.DATA_DIR, default=cfg.DATA_DIR)
+    parser.add_argument('-d', '--data-dir', help='Data directory for selfspy, where the database is stored. Remember that Selfspy must have read/write access. Default is %s' % cfg.LOCAL_DIR, default=cfg.LOCAL_DIR)
 
     return parser.parse_args()
 
@@ -90,7 +90,7 @@ def main():
         sys.exit(1)
 
     # create main activity tracker
-    astore = ActivityStore(os.path.join(args['data_dir'], cfg.DBNAME))
+    astore = ActivityStore(cfg.DBNAME)
     cfg.LOCK.acquire()
 
     try:

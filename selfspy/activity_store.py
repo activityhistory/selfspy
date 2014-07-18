@@ -64,7 +64,22 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name):
-        self.session_maker = models.initialize(db_name)
+        print "ActivityStore ", self, db_name
+
+        # We check if a selfspy thumbdrive is plugged in and available
+        # if so this is where we're storing the screenshots and DB
+        # otherwise we store locally 
+        self.lookupThumbdrive()
+        self.defineCurrentDrive()
+
+        screenshot_directory = os.path.join(cfg.CURRENT_DIR, 'screenshots')
+        try:
+            if not(os.path.exists(screenshot_directory)):
+                os.makedirs(screenshot_directory)
+        except OSError:
+            pass
+
+        self.session_maker = models.initialize(os.path.join(cfg.CURRENT_DIR, db_name))
 
         self.key_presses = []
         self.mouse_path = []
@@ -89,13 +104,6 @@ class ActivityStore:
 
         self.addObservers()
 
-        # We check if a selfspy thumbdrive is plugged in and available
-        # if so this is where we're storing the screenshots and DB
-        self.drivePath = self.lookupThumbdrive()
-        if (self.drivePath):
-            cfg.DATA_DIR = self.drivePath
-
-
         self.started = NOW()
 
     def startLoops(self):
@@ -107,7 +115,7 @@ class ActivityStore:
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
         # Timer for checking if thumbdrive/memory card is available
-        s = objc.selector(self.isThumbdrivePlugged,signature='v@:')
+        s = objc.selector(self.defineCurrentDrive,signature='v@:')
         self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
         self.thumbdriveTimer.fire() # get location immediately
 
@@ -472,7 +480,7 @@ class ActivityStore:
         q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
         q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
 
-        screenshot_directory = os.path.expanduser(os.path.join(cfg.DATA_DIR,"screenshots"))
+        screenshot_directory = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots"))
         screenshot_files = os.listdir(screenshot_directory)
 
         for f in screenshot_files:
@@ -490,7 +498,7 @@ class ActivityStore:
       if (self.screenshots_active
         and (time.time() - self.last_screenshot) > self.screenshot_time_min) :
           try:
-              folder = os.path.join(cfg.DATA_DIR,"screenshots")
+              folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
               filename = datetime.datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
               # print path
@@ -510,16 +518,25 @@ class ActivityStore:
                     subDirs = os.listdir(volume)
                     for filename in subDirs:
                         if "selfspy.cfg" == filename :
-                            print "backup drive found"
-                            return volume
+                            print "backup drive found ", volume
+                            cfg.THUMBDRIVE_DIR = volume 
+                            return cfg.THUMBDRIVE_DIR
         return None
 
+    def defineCurrentDrive(self):
+        if (self.isThumbdrivePlugged()) :
+            cfg.CURRENT_DIR = cfg.THUMBDRIVE_DIR
+        else :
+            cfg.CURRENT_DIR = cfg.LOCAL_DIR
+
     def isThumbdrivePlugged(self):
-        if (self.drivePath != None and drive != ""):
-            if (os.path.ismount(self.drivePath)):
+        if (cfg.THUMBDRIVE_DIR != None and cfg.THUMBDRIVE_DIR != ""):
+            if (os.path.ismount(cfg.THUMBDRIVE_DIR)):
                 return True
             else :
-                print "TODO thumbdrive not plugged display alert message"
+                print "TODO thumbdrive defined but not plugged display alert message"
+                cfg.THUMBDRIVE_DIR = None
+                self.lookupThumbdrive()
                 return False
         else :
             return False

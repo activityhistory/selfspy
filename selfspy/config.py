@@ -15,7 +15,9 @@ received a copy of the GNU General Public License along with Selfspy.
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-DATA_DIR = '~/.selfspy'
+LOCAL_DIR = '~/.selfspy'
+THUMBDRIVE_DIR = None
+CURRENT_DIR = None
 DBNAME = 'selfspy.sqlite'
 LOCK_FILE = 'selfspy.pid'
 LOCK = None
