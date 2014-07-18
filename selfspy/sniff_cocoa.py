@@ -217,17 +217,19 @@ class DebriefController(NSWindowController):
 
     @IBAction
     def startRecording_(self, sender):
-        audioPath = '~/Desktop/test.mp3'
+
+        # (names, error) = NSString.stringWithContentsOfFile_encoding_error_(u"/usr/share/dict/propernames", NSASCIIStringEncoding, objc.nil)
+        # print names
+
+        audioPath = '~/Desktop/recordTest.mp3'
         audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
         audioURL = NSURL.fileURLWithPath_(audioPathStr)
 
         audioSettings = {'AVFormatIDKey': 'kAudioFormatAppleIMA4', 'AVSampleRateKey': 1600.0, 'AVNumberOfChannelsKey': 1 }
         audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
 
-        # function shold only require 2 parameters (error is out parameter) but is still looking for the third parameter
-        # recorder, error = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioDict)
-        # print error
-        # self.recorder.record()
+        # (recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioDict, objc.nil)
+        # recorder.record()
 
     @IBAction
     def stopRecording_(self, sender):
@@ -666,7 +668,7 @@ class Sniffer:
         # -C captures the mouse cursor.
         # -x removes the screenshot sound
         if notification.object().takeFullScreenshot:
-            command = "screencapture -x -C " + path 
+            command = "screencapture -x -C " + path
         else:
             command = "screencapture -i -x -C " + path
             # delete current full-screen screenshot for this experience
