@@ -350,7 +350,6 @@ class Sniffer:
                 prefDictionary[u'imageSize'] = 720          # in px
                 prefDictionary[u"imageTimeMax"] = 60        # in s
                 prefDictionary[u"imageTimeMin"] = 100       # in ms
-
                 prefDictionary[u"experienceTime"] = 1800    # in s
                 prefDictionary[u"experienceLoop"] = True
                 prefDictionary[u"recording"] = True
@@ -369,9 +368,8 @@ class Sniffer:
 
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
-                print "About to create status menu"
                 self.createStatusMenu()
-                #self.createStatusButton()
+                # self.createStatusButton()
 
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
 
@@ -568,7 +566,6 @@ class Sniffer:
         s = objc.selector(self.takeExperienceScreenshot_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'takeExperienceScreenshot', None)
 
-        print "About to run AppHelper loop"
         AppHelper.runEventLoop()
 
     def cancel(self):
