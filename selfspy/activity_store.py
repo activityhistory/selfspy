@@ -504,7 +504,7 @@ class ActivityStore:
         if (self.isThumbdrivePlugged()) :
             cfg.CURRENT_DIR = cfg.THUMBDRIVE_DIR
         else :
-            cfg.CURRENT_DIR = cfg.LOCAL_DIR
+            cfg.CURRENT_DIR = os.path.expanduser(cfg.LOCAL_DIR)
 
     def isThumbdrivePlugged(self):
         if (cfg.THUMBDRIVE_DIR != None and cfg.THUMBDRIVE_DIR != ""):
