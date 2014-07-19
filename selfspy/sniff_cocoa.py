@@ -67,8 +67,6 @@ class PreferencesController(NSWindowController):
     @IBAction
     def clearData_(self,sender):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
-        x = 1
-        # clear data
 
     @IBAction
     def changedScreenshot_(self,sender):
@@ -513,42 +511,42 @@ class Sniffer:
                 self.statusitem.setEnabled_(TRUE)
                 self.statusitem.retain()
 
-            def createStatusButton(self):
-                NSLog("Creating status button")
-                statusbar = NSStatusBar.systemStatusBar()
-
-                # Create the statusbar item
-                self.statusitem2 = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
-                # self.statusitem.setTitle_(u"Selfspy")
-
-                # Load all images
-                self.bookmarkIcon = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
-                self.bookmarkIcon.setScalesWhenResized_(True)
-                self.bookmarkIcon.setSize_((20, 20))
-                self.statusitem2.setImage_(self.bookmarkIcon)
-
-                # Let it highlight upon clicking
-                self.statusitem2.setHighlightMode_(1)
-                # Set a tooltip
-                self.statusitem2.setToolTip_('Selfspy')
-
-                # https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/classes/NSButtonCell_Class/Reference/Reference.html
-                self.hel = NSButton.alloc().initWithFrame_ (((0.0, 0.0), (18.0, 22.0)))
-                self.hel.setBezelStyle_(6)
-                # self.hel.setTransparent_(True)
-                self.hel.setButtonType_(0)
-                self.hel.setBackgroundColor_(0)
-                self.hel.setBordered_(False)
-                self.hel.setTitle_( 'Bookmark' )
-                self.hel.setImage_(self.bookmarkIcon)
-                # self.hel.setTarget_( self )
-                self.hel.setAction_( "showExperience:" )
-
-                # Bind to the status item
-                self.statusitem2.setView_(self.hel)
-
-                self.statusitem2.setEnabled_(TRUE)
-                self.statusitem2.retain()
+            # def createStatusButton(self):
+            #     NSLog("Creating status button")
+            #     statusbar = NSStatusBar.systemStatusBar()
+            #
+            #     # Create the statusbar item
+            #     self.statusitem2 = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
+            #     # self.statusitem.setTitle_(u"Selfspy")
+            #
+            #     # Load all images
+            #     self.bookmarkIcon = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
+            #     self.bookmarkIcon.setScalesWhenResized_(True)
+            #     self.bookmarkIcon.setSize_((20, 20))
+            #     self.statusitem2.setImage_(self.bookmarkIcon)
+            #
+            #     # Let it highlight upon clicking
+            #     self.statusitem2.setHighlightMode_(1)
+            #     # Set a tooltip
+            #     self.statusitem2.setToolTip_('Selfspy')
+            #
+            #     # https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/classes/NSButtonCell_Class/Reference/Reference.html
+            #     self.hel = NSButton.alloc().initWithFrame_ (((0.0, 0.0), (18.0, 22.0)))
+            #     self.hel.setBezelStyle_(6)
+            #     # self.hel.setTransparent_(True)
+            #     self.hel.setButtonType_(0)
+            #     self.hel.setBackgroundColor_(0)
+            #     self.hel.setBordered_(False)
+            #     self.hel.setTitle_( 'Bookmark' )
+            #     self.hel.setImage_(self.bookmarkIcon)
+            #     # self.hel.setTarget_( self )
+            #     self.hel.setAction_( "showExperience:" )
+            #
+            #     # Bind to the status item
+            #     self.statusitem2.setView_(self.hel)
+            #
+            #     self.statusitem2.setEnabled_(TRUE)
+            #     self.statusitem2.retain()
 
         return AppDelegate
 

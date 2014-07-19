@@ -61,6 +61,7 @@ def main():
     args = vars(parse_config())
     args['data_dir'] = os.path.expanduser(args['data_dir'])
 
+    # create directories for data
     try:
         os.makedirs(args['data_dir'])
     except OSError:
@@ -73,12 +74,13 @@ def main():
     except OSError:
         pass
 
-    audio_directory = os.path.join(args['data_dir'], 'audio')
-    try:
-      if not(os.path.exists(audio_directory)):
-        os.makedirs(audio_directory)
-    except OSError:
-        pass
+    # directory for storing audio files once recording is implemented
+    # audio_directory = os.path.join(args['data_dir'], 'audio')
+    # try:
+    #   if not(os.path.exists(audio_directory)):
+    #     os.makedirs(audio_directory)
+    # except OSError:
+    #     pass
 
     # check if Selfspy is already running
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)

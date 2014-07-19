@@ -68,7 +68,7 @@ class ActivityStore:
 
         # We check if a selfspy thumbdrive is plugged in and available
         # if so this is where we're storing the screenshots and DB
-        # otherwise we store locally 
+        # otherwise we store locally
         self.lookupThumbdrive()
         self.defineCurrentDrive()
 
@@ -95,11 +95,9 @@ class ActivityStore:
         self.last_experience = time.time()
 
         self.screenshots_active = True
-
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
-        self.geoloc_time = 5*60
-        self.exp_time = 60 # time before first experience sample shows
+        self.exp_time = 60         # time before first experience sample shows
         self.thumbdrive_time = 10
 
         self.addObservers()
@@ -119,17 +117,10 @@ class ActivityStore:
         self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
         self.thumbdriveTimer.fire() # get location immediately
 
-        # Timer for checking location
-        # s = objc.selector(self.takeGeoloc,signature='v@:')
-        # self.geoTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.geoloc_time, self, s, None, True)
-        # self.geoTimer.fire() # get location immediately
-
-
     def stopLoops(self):
         self.screenshotTimer.invalidate()
         self.experienceTimer.invalidate()
         self.thumbdriveTimer.invalidate()
-        # self.geoTimer.invalidate()
 
     def checkLoops_(self, notification):
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
@@ -139,33 +130,37 @@ class ActivityStore:
             self.stopLoops()
 
     def addObservers(self):
-            # Listen for various events thrown by the Experience Sampling window
+            # Listen for events from the Preferences window
             s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
             s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
 
+            s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
+
+            s = objc.selector(self.clearData_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
+
+            # Listen for events from the Experience samplin window
             s = objc.selector(self.gotExperience_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
 
             s = objc.selector(self.getPrior_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
-            s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
-
-            s = objc.selector(self.checkLoops_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
-
+            # Listen for events from the Debriefer window
             s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
 
             s = objc.selector(self.recordDebrief_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
 
-            s = objc.selector(self.clearData_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
+            # Listen for events thrown by the Status bar menu
+            s = objc.selector(self.checkLoops_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+
 
     def run(self):
         self.session = self.session_maker()
@@ -379,23 +374,6 @@ class ActivityStore:
         for e in prior_experiences:
             notification.object().experienceText.addItemWithObjectValue_(e.message)
 
-    def change_password(self, new_encrypter):
-        self.session = self.session_maker()
-        keys = self.session.query(Keys).all()
-        for k in keys:
-            dtext = k.decrypt_text()
-            dkeys = k.decrypt_keys()
-            k.encrypt_text(dtext, new_encrypter)
-            k.encrypt_keys(dkeys, new_encrypter)
-        self.session.commit()
-
-    def takeGeoloc(self):
-        # TODO check if skyhook api is a better alternative
-        response = urllib.urlopen('http://api.hostip.info/get_html.php').read()
-        m = re.search('City: (.*)', response)
-        if m:
-            print m.group(1)
-
     def runExperienceLoop(self):
         experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
         if(experienceLoop):
@@ -436,7 +414,6 @@ class ActivityStore:
         else:
             e = random.sample(m, len(m))
         notification.object().experiences = e
-
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
@@ -519,7 +496,7 @@ class ActivityStore:
                     for filename in subDirs:
                         if "selfspy.cfg" == filename :
                             print "backup drive found ", volume
-                            cfg.THUMBDRIVE_DIR = volume 
+                            cfg.THUMBDRIVE_DIR = volume
                             return cfg.THUMBDRIVE_DIR
         return None
 
