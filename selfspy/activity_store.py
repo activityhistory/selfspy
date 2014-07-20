@@ -511,7 +511,7 @@ class ActivityStore:
             if (os.path.ismount(cfg.THUMBDRIVE_DIR)):
                 return True
             else :
-                print "TODO thumbdrive defined but not plugged display alert message"
+                print "Thumbdrive defined but not plugged\n TODO: display alert message"
                 cfg.THUMBDRIVE_DIR = None
                 self.lookupThumbdrive()
                 return False

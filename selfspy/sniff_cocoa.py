@@ -677,9 +677,9 @@ class Sniffer:
         # -C captures the mouse cursor.
         # -x removes the screenshot sound
         if notification.object().takeFullScreenshot:
-            command = "screencapture -x -C " + path
+            command = "screencapture -x -C '" + path + "'"
         else:
-            command = "screencapture -i -x -C " + path
+            command = "screencapture -i -x -C '" + path + "'"
             # delete current full-screen screenshot for this experience
             os.system("rm "+ notification.object().currentScreenshot )
 
