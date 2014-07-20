@@ -215,24 +215,37 @@ class DebriefController(NSWindowController):
 
     @IBAction
     def startRecording_(self, sender):
+        print "Start Recording"
+        s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n end tell")
+        s.executeAndReturnError_(None)
 
+        # method using error_ that works
         # (names, error) = NSString.stringWithContentsOfFile_encoding_error_(u"/usr/share/dict/propernames", NSASCIIStringEncoding, objc.nil)
         # print names
 
-        audioPath = '~/Desktop/recordTest.mp3'
-        audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
-        audioURL = NSURL.fileURLWithPath_(audioPathStr)
+        # audioPath = '~/Desktop/recordTest.mp3'
+        # audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
+        # audioURL = NSURL.fileURLWithPath_(audioPathStr)
 
-        audioSettings = {'AVFormatIDKey': 'kAudioFormatAppleIMA4', 'AVSampleRateKey': 1600.0, 'AVNumberOfChannelsKey': 1 }
-        audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
+        # audioSettings = {'AVFormatIDKey': 'kAudioFormatAppleIMA4', 'AVSampleRateKey': 1600.0, 'AVNumberOfChannelsKey': 1 }
+        # audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
 
-        # (recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioDict, objc.nil)
+        # (recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioSettings, objc.NULL)
         # recorder.record()
 
     @IBAction
     def stopRecording_(self, sender):
-        if self.recorder:
-            self.recorder.stop()
+        imageName = str(self.debriefController.mainPanel.image().name())[0:-4]
+        imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName
+        imageName = string.replace(imageName, "/", ":")
+        imageName = imageName[1:]
+        print imageName
+
+        s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + ".m4a\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
+        s.executeAndReturnError_(None)
+
+        # if self.recorder:
+        #     self.recorder.stop()
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
@@ -277,6 +290,7 @@ class DebriefController(NSWindowController):
                     height = 600
             experienceImage.setScalesWhenResized_(True)
             experienceImage.setSize_((width, height))
+            experienceImage.setName_(path.split("/")[-1])
             controller.mainPanel.setImage_(experienceImage)
 
             controller.doingText.setStringValue_("")
