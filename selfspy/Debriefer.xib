@@ -135,6 +135,9 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="toggleAudioPlay:" target="-2" id="xjf-cT-90M"/>
+                        </connections>
                     </button>
                     <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9cU-vc-wUa">
                         <rect key="frame" x="1114" y="93" width="130" height="32"/>
@@ -143,6 +146,9 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="deleteAudio:" target="-2" id="yTk-II-3tM"/>
+                        </connections>
                     </button>
                 </subviews>
             </view>

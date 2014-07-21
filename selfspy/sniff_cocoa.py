@@ -53,6 +53,8 @@ import config as cfg
 import time
 from datetime import datetime
 
+import mutagen.mp4
+
 from selfspy import locationTracking
 
 start_time = NSDate.date()
@@ -214,6 +216,7 @@ class DebriefController(NSWindowController):
     experiences = None
     currentExperience = -1
     recordingAudio = False
+    playingAudio = False
     audio_file = ''
 
     recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
@@ -224,9 +227,57 @@ class DebriefController(NSWindowController):
     stopImage.setScalesWhenResized_(True)
     stopImage.setSize_((13, 13))
 
+    @IBAction
+    def toggleAudioPlay_(self, sender):
+        if self.playingAudio:
+            self.playingAudio = False
+            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
+            s.executeAndReturnError_(None)
+
+            self.debriefController.playAudioButton.setTitle_("Play Audio")
+
+        else:
+            self.playingAudio = True
+
+            audio = mutagen.mp4.MP4(self.audio_file)
+            length = audio.info.length
+
+            audioName = string.replace(self.audio_file, "/", ":")
+            audioName = audioName[1:]
+
+            s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
+            s.executeAndReturnError_(None)
+
+            s = objc.selector(self.stopAudioPlay,signature='v@:')
+            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(length, self, s, None, False)
+
+            self.debriefController.playAudioButton.setTitle_("Stop Audio")
+
+    def stopAudioPlay(self):
+        self.playingAudio = False
+        s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
+        s.executeAndReturnError_(None)
+
+        self.debriefController.playAudioButton.setTitle_("Play Audio")
+
+    @IBAction
+    def deleteAudio_(self, sender):
+        controller = self.debriefController
+
+        if self.audio_file != '':
+            os.remove(self.audio_file)
+        self.audio_file = ''
+
+        controller.recordButton.setEnabled_(True)
+        controller.existAudioText.setHidden_(True)
+        controller.playAudioButton.setHidden_(True)
+        controller.deleteAudioButton.setHidden_(True)
 
     @IBAction
     def toggleAudioRecording_(self, sender):
+        controller = self.debriefController
+
         if self.recordingAudio:
             self.recordingAudio = False
 
@@ -241,13 +292,18 @@ class DebriefController(NSWindowController):
             s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
             s.executeAndReturnError_(None)
 
-            self.debriefController.recordButton.setImage_(self.recordImage)
+            controller.recordButton.setImage_(self.recordImage)
+
+            controller.recordButton.setEnabled_(False)
+            controller.existAudioText.setHidden_(False)
+            controller.playAudioButton.setHidden_(False)
+            controller.deleteAudioButton.setHidden_(False)
 
         else:
             self.recordingAudio = True
 
             print "Start Audio Recording"
-            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n end tell")
+            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
             s.executeAndReturnError_(None)
 
             self.debriefController.recordButton.setImage_(self.stopImage)
