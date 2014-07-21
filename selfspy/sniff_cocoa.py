@@ -242,9 +242,6 @@ class DebriefController(NSWindowController):
             audio = mutagen.mp4.MP4(self.audio_file)
             length = audio.info.length
 
-            audioName = string.replace(self.audio_file, "/", ":")
-            audioName = audioName[1:]
-
             s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
             s.executeAndReturnError_(None)
 
@@ -282,7 +279,10 @@ class DebriefController(NSWindowController):
             self.recordingAudio = False
 
             print "Stop Audio recording"
-            imageName = str(self.debriefController.mainPanel.image().name())[0:-4]
+            # seems to miss reading the name sometimes
+            imageName = str(controller.mainPanel.image().name())[0:-4]
+            if (imageName == None) | (imageName == ''):
+                imageName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
             imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName + '.m4a'
             self.audio_file = imageName
             imageName = string.replace(imageName, "/", ":")
@@ -355,6 +355,7 @@ class DebriefController(NSWindowController):
             experienceImage.setScalesWhenResized_(True)
             experienceImage.setSize_((width, height))
             experienceImage.setName_(path.split("/")[-1])
+            print "name at setting point is " + path.split("/")[-1]
             controller.mainPanel.setImage_(experienceImage)
 
             controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
