@@ -157,6 +157,9 @@ class ActivityStore:
             s = objc.selector(self.recordDebrief_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
 
+            s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
+
             # Listen for events thrown by the Status bar menu
             s = objc.selector(self.checkLoops_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
@@ -363,11 +366,46 @@ class ActivityStore:
 
     def recordDebrief_(self, notification):
         doing_report = notification.object().debriefController.doingText.stringValue()
-        next_report = notification.object().debriefController.nextText.stringValue()
+        audio_file = notification.object().debriefController.audio_file
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
 
-        self.session.add(Debrief(experience_id, doing_report, next_report))
+        # delete existing experience sample with experience_id
+
+        print str(experience_id) + " " + doing_report + " " + audio_file
+
+        self.session.add(Debrief(experience_id, doing_report, audio_file))
         self.trycommit()
+
+    def populateDebriefWindow_(self, notification):
+        controller = notification.object().debriefController
+        audio_file = controller.audio_file
+        current_id = notification.object().experiences[notification.object().currentExperience]['id']
+
+        # populate page with responses to last debrief
+        q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
+        print q
+
+        if q:
+            controller.doingText.setStringValue_(q[-1].doing_report)
+            controller.audio_file = q[-1].audio_file
+
+            if (q[-1].audio_file != '') & (q[-1].audio_file != None):
+                controller.recordButton.setEnabled_(False)
+                controller.existAudioText.setHidden_(False)
+                controller.playAudioButton.setHidden_(False)
+                controller.deleteAudioButton.setHidden_(False)
+            else:
+                controller.recordButton.setEnabled_(True)
+                controller.existAudioText.setHidden_(True)
+                controller.playAudioButton.setHidden_(True)
+                controller.deleteAudioButton.setHidden_(True)
+        else:
+            controller.doingText.setStringValue_('')
+            controller.audio_file = ''
+            controller.recordButton.setEnabled_(True)
+            controller.existAudioText.setHidden_(True)
+            controller.playAudioButton.setHidden_(True)
+            controller.deleteAudioButton.setHidden_(True)
 
     def getPrior_(self, notification):
         prior_experiences = self.session.query(Experience).distinct(Experience.message).order_by(Experience.id.desc()).limit(5).all()

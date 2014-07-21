@@ -50,7 +50,7 @@ OPTIONS = {#'argv_emulation': True,
           'iconfile':'assets/eye.icns',
           }
 
-DATA_FILES = ['./assets/eye-48.png','./assets/eye_gray-48.png','./assets/eye_photo-48.png','./assets/eye_photo_gray-48.png','./assets/bookmark-64.png','./assets/cursor.png', './selfspy/Preferences.xib','./selfspy/Experience.xib','./selfspy/Debriefer.xib']
+DATA_FILES = ['./assets/eye-48.png','./assets/eye_gray-48.png','./assets/eye_photo-48.png','./assets/eye_photo_gray-48.png','./assets/bookmark-64.png','./assets/cursor.png','./assets/record.png','./assets/stop.png', './selfspy/Preferences.xib','./selfspy/Experience.xib','./selfspy/Debriefer.xib']
 
 setup(
   name="selfspy",

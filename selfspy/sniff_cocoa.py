@@ -203,67 +203,73 @@ class DebriefController(NSWindowController):
 
     mainPanel = IBOutlet()
     doingText = IBOutlet()
-    nextText = IBOutlet()
     progressLabel = IBOutlet()
     progressButton = IBOutlet()
     errorMessage = IBOutlet()
-    startButton = IBOutlet()
-    stopButton = IBOutlet()
+    recordButton = IBOutlet()
+    existAudioText = IBOutlet()
+    playAudioButton = IBOutlet()
+    deleteAudioButton = IBOutlet()
 
     experiences = None
     currentExperience = -1
+    recordingAudio = False
+    audio_file = ''
+
+    recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
+    recordImage.setScalesWhenResized_(True)
+    recordImage.setSize_((13, 13))
+
+    stopImage = NSImage.alloc().initByReferencingFile_('../Resources/stop.png')
+    stopImage.setScalesWhenResized_(True)
+    stopImage.setSize_((13, 13))
+
 
     @IBAction
-    def startRecording_(self, sender):
-        print "Start Recording"
-        s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n end tell")
-        s.executeAndReturnError_(None)
+    def toggleAudioRecording_(self, sender):
+        if self.recordingAudio:
+            self.recordingAudio = False
 
-        # method using error_ that works
-        # (names, error) = NSString.stringWithContentsOfFile_encoding_error_(u"/usr/share/dict/propernames", NSASCIIStringEncoding, objc.nil)
-        # print names
+            print "Stop Audio recording"
+            imageName = str(self.debriefController.mainPanel.image().name())[0:-4]
+            imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName + '.m4a'
+            self.audio_file = imageName
+            imageName = string.replace(imageName, "/", ":")
+            imageName = imageName[1:]
+            print imageName
 
-        # audioPath = '~/Desktop/recordTest.mp3'
-        # audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
-        # audioURL = NSURL.fileURLWithPath_(audioPathStr)
+            s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
+            s.executeAndReturnError_(None)
 
-        # audioSettings = {'AVFormatIDKey': 'kAudioFormatAppleIMA4', 'AVSampleRateKey': 1600.0, 'AVNumberOfChannelsKey': 1 }
-        # audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
+            self.debriefController.recordButton.setImage_(self.recordImage)
 
-        # (recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioSettings, objc.NULL)
-        # recorder.record()
+        else:
+            self.recordingAudio = True
 
-    @IBAction
-    def stopRecording_(self, sender):
-        imageName = str(self.debriefController.mainPanel.image().name())[0:-4]
-        imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName
-        imageName = string.replace(imageName, "/", ":")
-        imageName = imageName[1:]
-        print imageName
+            print "Start Audio Recording"
+            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n end tell")
+            s.executeAndReturnError_(None)
 
-        s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + ".m4a\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
-        s.executeAndReturnError_(None)
-
-        # if self.recorder:
-        #     self.recorder.stop()
+            self.debriefController.recordButton.setImage_(self.stopImage)
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
         controller = self.debriefController
 
+        # close if user clicked Finish on window with no experiences to comment
         if self.currentExperience == -2:
             self.debriefController.close()
+            return
 
         l = len(self.experiences)
         if (not self.experiences) or (l == 0):
             controller.errorMessage.setHidden_(False)
             controller.doingText.setEnabled_(False)
-            controller.nextText.setEnabled_(False)
+            controller.recordButton.setEnabled_(False)
             controller.progressLabel.setStringValue_("0/0")
             controller.progressButton.setTitle_("Finish")
             self.currentExperience -= 1
             return
-            # tell user there are no experiences to sample
 
         self.currentExperience += 1
         i = self.currentExperience
@@ -275,6 +281,8 @@ class DebriefController(NSWindowController):
             controller.progressButton.setTitle_("Finish")
 
         if i < l:
+            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
+
             path = self.experiences[i]['screenshot'][:]
             path = os.path.expanduser(path)
             experienceImage = NSImage.alloc().initByReferencingFile_(path)
@@ -293,8 +301,6 @@ class DebriefController(NSWindowController):
             experienceImage.setName_(path.split("/")[-1])
             controller.mainPanel.setImage_(experienceImage)
 
-            controller.doingText.setStringValue_("")
-            controller.nextText.setStringValue_("")
             controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
 
         else:
@@ -316,6 +322,8 @@ class DebriefController(NSWindowController):
         self.debriefController.window().makeKeyAndOrderFront_(None)
         self.debriefController.window().center()
         self.debriefController.retain()
+
+        self.currentExperience = -1
 
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
