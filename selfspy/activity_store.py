@@ -104,7 +104,7 @@ class ActivityStore:
         self.screenshots_active = True
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
-        self.exp_time = 10         # time before first experience sample shows
+        self.exp_time = 120         # time before first experience sample shows
         self.thumbdrive_time = 10
 
         self.addObservers()
@@ -436,7 +436,7 @@ class ActivityStore:
 
             s = objc.selector(self.runExperienceLoop,signature='v@:')
             self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(10, self, s, None, False)
+            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
     def checkExperienceOnPrefChange_(self, notification):
         if(self.experienceTimer):

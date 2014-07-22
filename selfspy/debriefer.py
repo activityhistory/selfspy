@@ -253,4 +253,7 @@ class DebriefController(NSWindowController):
 
         self.advanceExperienceWindow_(self, self)
 
+        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
+        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
+
     show = classmethod(show)

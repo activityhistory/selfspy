@@ -78,6 +78,8 @@ class ExperienceController(NSWindowController):
         s = objc.selector(self.setIgnoredAndClose_,signature='v@:@')
         self.expController.window().standardWindowButton_(NSWindowCloseButton).setTarget_(self.expController)
         self.expController.window().standardWindowButton_(NSWindowCloseButton).setAction_(s)
+        self.expController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
+        self.expController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
     def setIgnoredAndClose_(self, notification):
         self.ignored = True
