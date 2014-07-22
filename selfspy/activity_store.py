@@ -376,15 +376,17 @@ class ActivityStore:
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
         doing_report = notification.object().debriefController.doingText.stringValue()
         audio_file = notification.object().debriefController.audio_file
+        memory_id = notification.object().debriefController.memoryStrength.selectedCell().tag()
         memory_strength = notification.object().debriefController.memoryStrength.selectedCell().title()
 
-        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_strength))
+        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id, memory_strength))
         self.trycommit()
 
     def populateDebriefWindow_(self, notification):
         controller = notification.object().debriefController
         audio_file = controller.audio_file
         current_id = notification.object().experiences[notification.object().currentExperience]['id']
+        controller.memoryStrength.selectedCell().setState_(0)
 
         # populate page with responses to last debrief
         q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
@@ -393,6 +395,8 @@ class ActivityStore:
         if q:
             controller.doingText.setStringValue_(q[-1].doing_report)
             controller.audio_file = q[-1].audio_file
+            if q[-1].memory_id:
+                controller.memoryStrength.selectCellWithTag_(q[-1].memory_id)
 
             if (q[-1].audio_file != '') & (q[-1].audio_file != None):
                 controller.recordButton.setEnabled_(False)

@@ -39,6 +39,7 @@
                         </buttonCell>
                         <connections>
                             <action selector="advanceExperienceWindow:" target="-2" id="FPg-qU-KJ3"/>
+                            <outlet property="nextKeyView" destination="UY4-u6-bnk" id="3WS-Fu-sVu"/>
                         </connections>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Hoh-CD-cXr">
@@ -60,9 +61,9 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KlP-gI-bHI">
-                        <rect key="frame" x="987" y="249" width="216" height="17"/>
+                        <rect key="frame" x="987" y="249" width="221" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How strong is your memory?" id="QPV-TE-rKP">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How strong are your memories?" id="QPV-TE-rKP">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -143,10 +144,10 @@
                         </connections>
                     </button>
                     <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autorecalculatesCellSize="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UY4-u6-bnk">
-                        <rect key="frame" x="989" y="183" width="183" height="58"/>
+                        <rect key="frame" x="989" y="183" width="212" height="58"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        <size key="cellSize" width="183" height="18"/>
+                        <size key="cellSize" width="212" height="18"/>
                         <size key="intercellSpacing" width="4" height="2"/>
                         <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="WGy-ke-NjE">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -154,23 +155,26 @@
                         </buttonCell>
                         <cells>
                             <column>
-                                <buttonCell type="radio" title="I Remember it specifically" imagePosition="left" alignment="left" tag="1" inset="2" id="Zuw-cR-fzg">
+                                <buttonCell type="radio" title="I Remember them specifically" imagePosition="left" alignment="left" tag="1" inset="2" id="Zuw-cR-fzg">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <string key="keyEquivalent">1</string>
                                 </buttonCell>
-                                <buttonCell type="radio" title="I Know from experience" imagePosition="left" alignment="left" inset="2" id="NgL-EA-iBo">
+                                <buttonCell type="radio" title="I Know them from experience" imagePosition="left" alignment="left" tag="2" inset="2" id="NgL-EA-iBo">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <string key="keyEquivalent">2</string>
                                 </buttonCell>
-                                <buttonCell type="radio" title="I am Guessing" imagePosition="left" alignment="left" inset="2" id="lui-Of-qRo">
+                                <buttonCell type="radio" title="I am Guessing" imagePosition="left" alignment="left" tag="3" inset="2" id="lui-Of-qRo">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <string key="keyEquivalent">3</string>
                                 </buttonCell>
                             </column>
                         </cells>
+                        <connections>
+                            <outlet property="nextKeyView" destination="EcU-xD-byN" id="jPm-hf-D6S"/>
+                        </connections>
                     </matrix>
                 </subviews>
             </view>
