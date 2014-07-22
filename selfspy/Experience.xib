@@ -18,7 +18,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="398" height="438"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="778"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="398" height="438"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -44,11 +44,14 @@
                     <comboBox verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2Wl-gQ-b0R">
                         <rect key="frame" x="20" y="366" width="361" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="(e.g. Europe Vacation)" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="Ed7-gH-e7F">
+                        <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Europe Vacation" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="Ed7-gH-e7F">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </comboBoxCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="Ynz-nJ-56b" id="Rfw-XZ-W3q"/>
+                        </connections>
                     </comboBox>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cT8-GG-44U">
                         <rect key="frame" x="313" y="14" width="69" height="32"/>
@@ -59,6 +62,7 @@
                         </buttonCell>
                         <connections>
                             <action selector="recordText:" target="-2" id="iKk-Uf-FMN"/>
+                            <outlet property="nextKeyView" destination="2Wl-gQ-b0R" id="xuL-tp-BM2"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="H9A-EF-w5H">
@@ -80,14 +84,20 @@
                     <comboBox verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ynz-nJ-56b">
                         <rect key="frame" x="20" y="313" width="361" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="(e.g. Booking flights on Delta.com)" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="L2L-mZ-4N4">
+                        <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Booking flights online" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="L2L-mZ-4N4">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </comboBoxCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="cT8-GG-44U" id="plj-Pa-aXl"/>
+                        </connections>
                     </comboBox>
                 </subviews>
             </view>
+            <connections>
+                <outlet property="initialFirstResponder" destination="2Wl-gQ-b0R" id="N11-Ds-jwe"/>
+            </connections>
         </window>
     </objects>
 </document>

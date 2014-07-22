@@ -145,14 +145,14 @@ class Debrief(SpookMixin, Base):
     doing_report = Column(Unicode, index=True)
     audio_file = Column(Unicode, index=True)
     memory_id = Column(Integer, index=True)
-    memory_strength = Column(Unicode, index=True)
+    # memory_strength = Column(Unicode, index=True)
 
-    def __init__(self, experience_id, doing_report, audio_file, memory_id, memory_strength):
+    def __init__(self, experience_id, doing_report, audio_file, memory_id):
         self.experience_id = experience_id
         self.doing_report = doing_report
         self.audio_file = audio_file
         self.memory_id = memory_id
-        self.memory_strength = memory_strength
+        # self.memory_strength = memory_strength
 
     def __repr__(self):
         return "<Participant was: '%s'>" % self.doing_report

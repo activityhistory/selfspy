@@ -32,6 +32,16 @@ from datetime import datetime
 
 import mutagen.mp4
 
+from AVFoundation import AVAudioRecorder
+
+# fixing AVAudioRecorder.initwithURL_settings_error_()
+objc.registerMetaDataForSelector(b"AVAudioRecorder", b"initWithURL:settings:error:",
+        dict(
+            arguments={
+               4: dict(type_modifier=objc._C_OUT),
+            }
+        ))
+
 
 # Experience Sampling window controller
 class DebriefController(NSWindowController):
@@ -58,11 +68,11 @@ class DebriefController(NSWindowController):
     # images for audio recording button
     recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
     recordImage.setScalesWhenResized_(True)
-    recordImage.setSize_((13, 13))
+    recordImage.setSize_((11, 11))
 
     stopImage = NSImage.alloc().initByReferencingFile_('../Resources/stop.png')
     stopImage.setScalesWhenResized_(True)
-    stopImage.setSize_((13, 13))
+    stopImage.setSize_((11, 11))
 
     @IBAction
     def toggleAudioPlay_(self, sender):
@@ -99,8 +109,9 @@ class DebriefController(NSWindowController):
     def deleteAudio_(self, sender):
         controller = self.debriefController
 
-        if self.audio_file != '':
-            os.remove(self.audio_file)
+        if (self.audio_file != '') & (self.audio_file != None) :
+            if os.path.exists(self.audio_file):
+                os.remove(self.audio_file)
         self.audio_file = ''
 
         controller.recordButton.setEnabled_(True)
@@ -124,10 +135,11 @@ class DebriefController(NSWindowController):
             self.audio_file = imageName
             imageName = string.replace(imageName, "/", ":")
             imageName = imageName[1:]
-            print imageName
 
             s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
             s.executeAndReturnError_(None)
+
+            # self.recorder.stop()
 
             controller.recordButton.setImage_(self.recordImage)
 
@@ -144,6 +156,20 @@ class DebriefController(NSWindowController):
             s.executeAndReturnError_(None)
 
             self.debriefController.recordButton.setImage_(self.stopImage)
+
+            # audioPath = "/Users/adamrule/Desktop/test.m4a"
+            # audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
+            # audioURL = NSURL.fileURLWithPath_(audioPathStr)
+            # print str(audioURL)
+            #
+            # audioSettings = {"AVFormatIDKey": "kAudioFormatAppleIMA4"} # "AVSampleRateKey": 1600, "AVNumberOfChannelsKey": 1
+            # print audioSettings
+            # audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
+
+            # (self.recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioSettings, None)
+            # print self.recorder
+            # print error
+            # self.recorder.record()
 
     @IBAction
     def advanceExperienceWindow_(self, sender):

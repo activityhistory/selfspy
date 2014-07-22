@@ -376,17 +376,17 @@ class ActivityStore:
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
         doing_report = notification.object().debriefController.doingText.stringValue()
         audio_file = notification.object().debriefController.audio_file
-        memory_id = notification.object().debriefController.memoryStrength.selectedCell().tag()
-        memory_strength = notification.object().debriefController.memoryStrength.selectedCell().title()
+        memory_id = notification.object().debriefController.memoryStrength.intValue()
+        # memory_strength = notification.object().debriefController.memoryStrength.selectedCell().title()
 
-        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id, memory_strength))
+        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
         self.trycommit()
 
     def populateDebriefWindow_(self, notification):
         controller = notification.object().debriefController
         audio_file = controller.audio_file
         current_id = notification.object().experiences[notification.object().currentExperience]['id']
-        controller.memoryStrength.selectedCell().setState_(0)
+        controller.memoryStrength.setIntValue_(3)
 
         # populate page with responses to last debrief
         q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
@@ -396,7 +396,7 @@ class ActivityStore:
             controller.doingText.setStringValue_(q[-1].doing_report)
             controller.audio_file = q[-1].audio_file
             if q[-1].memory_id:
-                controller.memoryStrength.selectCellWithTag_(q[-1].memory_id)
+                controller.memoryStrength.setIntValue_(q[-1].memory_id)
 
             if (q[-1].audio_file != '') & (q[-1].audio_file != None):
                 controller.recordButton.setEnabled_(False)
@@ -405,22 +405,22 @@ class ActivityStore:
                 controller.deleteAudioButton.setHidden_(False)
             else:
                 controller.recordButton.setEnabled_(True)
-                controller.existAudioText.setStringValue_("Record your answer here:")
+                controller.existAudioText.setStringValue_("Record your answer:")
                 controller.playAudioButton.setHidden_(True)
                 controller.deleteAudioButton.setHidden_(True)
         else:
             controller.doingText.setStringValue_('')
             controller.audio_file = ''
             controller.recordButton.setEnabled_(True)
-            controller.existAudioText.setStringValue_("Record your answer here:")
+            controller.existAudioText.setStringValue_("Record your answer:")
             controller.playAudioButton.setHidden_(True)
             controller.deleteAudioButton.setHidden_(True)
 
     def getPriorExperiences_(self, notification):
-        prior_projects = self.session.query(Experience).distinct(Experience.project).order_by(Experience.id.desc()).limit(5).all()
-        prior_messages = self.session.query(Experience).distinct(Experience.message).order_by(Experience.id.desc()).limit(5).all()
+        prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
         for p in prior_projects:
             notification.object().projectText.addItemWithObjectValue_(p.project)
+        prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
         for m in prior_messages:
             notification.object().experienceText.addItemWithObjectValue_(m.message)
 
