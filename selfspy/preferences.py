@@ -35,7 +35,7 @@ class PreferencesController(NSWindowController):
     screenshotSizeMenu = IBOutlet()
     clearDataPopup = IBOutlet()
 
-    # notifications sent to Activity Store 
+    # notifications sent to Activity Store
     @IBAction
     def clearData_(self,sender):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
@@ -100,5 +100,8 @@ class PreferencesController(NSWindowController):
 
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+
+        self.prefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
+        self.prefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
     show = classmethod(show)

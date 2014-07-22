@@ -492,8 +492,11 @@ class Sniffer:
         self.app.activateIgnoringOtherApps_(True)
 
     def takeExperienceScreenshot_(self, notification):
+        mouseLoc = NSEvent.mouseLocation()
+        x = str(int(mouseLoc.x))
+        y = str(int(mouseLoc.y))
         folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
-        filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-experience'
+        filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + "_" + x + "_" + y + '-experience'
         path = os.path.join(folder,""+filename+".jpg")
 
         # -i makes the screenshot interactive
@@ -629,7 +632,8 @@ class Sniffer:
         }
 
         #Convert path to url for saving image
-        pathStr = NSString.stringByExpandingTildeInPath(path)
+        pathWithCursor = path[0:-4] + "_" + str(x) + "_" + str(y) + '.jpg'
+        pathStr = NSString.stringByExpandingTildeInPath(pathWithCursor)
         url = NSURL.fileURLWithPath_(pathStr)
 
         #Set image destination (where it will be saved)

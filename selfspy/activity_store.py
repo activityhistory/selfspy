@@ -531,7 +531,6 @@ class ActivityStore:
               folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
               filename = datetime.datetime.now().strftime("%y%m%d-%H%M%S%f")
               path = os.path.join(folder,""+filename+".jpg")
-              # print path
 
               self.sniffer.screenshot(path)
               self.last_screenshot = time.time()
@@ -540,8 +539,6 @@ class ActivityStore:
 
     def lookupThumbdrive(self, namefilter=""):
         for dir in os.listdir('/Volumes') :
-            # print dir
-            # print "namefilter: ", namefilter
             if namefilter in dir :
                 volume = os.path.join('/Volumes', dir)
                 if (os.path.ismount(volume)) :
