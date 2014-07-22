@@ -79,6 +79,13 @@ class ActivityStore:
         except OSError:
             pass
 
+        audio_directory = os.path.join(cfg.CURRENT_DIR, 'audio')
+        try:
+          if not(os.path.exists(audio_directory)):
+            os.makedirs(audio_directory)
+        except OSError:
+            pass
+
         self.session_maker = models.initialize(os.path.join(cfg.CURRENT_DIR, db_name))
 
         self.key_presses = []

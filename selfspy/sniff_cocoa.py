@@ -42,7 +42,6 @@ from Cocoa import (NSEvent,
                    NSNotificationCenter)
 
 from AVFoundation import *
-from ctypes import c_int, pointer
 
 import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
@@ -56,80 +55,10 @@ from datetime import datetime
 import mutagen.mp4
 
 from selfspy import locationTracking
+from selfspy import debriefer
+from selfspy import preferences
 
 start_time = NSDate.date()
-
-# Preferences window controller
-class PreferencesController(NSWindowController):
-
-    screenshotSizePopup = IBOutlet()
-    screenshotSizeMenu = IBOutlet()
-    clearDataPopup = IBOutlet()
-
-    @IBAction
-    def clearData_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
-
-    @IBAction
-    def changedScreenshot_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedScreenshot',self)
-
-    @IBAction
-    def changedMaxScreenshot_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshotPref',self)
-
-    @IBAction
-    def changedExperienceRate_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperiencePref',self)
-
-    def windowDidLoad(self):
-        NSWindowController.windowDidLoad(self)
-
-        # Set screenshot size options based on screen's native height
-        nativeHeight = int(NSScreen.mainScreen().frame().size.height)
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(nativeHeight)+' px', '', '')
-        menuitem.setTag_(nativeHeight)
-
-        self.prefController.screenshotSizeMenu.removeAllItems()
-        self.prefController.screenshotSizeMenu.addItem_(menuitem)
-
-        sizes = [1080,720,480]
-
-        for x in sizes:
-            if x < nativeHeight:
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(x)+' px', '', '')
-                menuitem.setTag_(x)
-                self.prefController.screenshotSizeMenu.addItem_(menuitem)
-
-        # update newly created screenshot size dropdown to select saved preference or default size
-        selectedSize = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        selectedMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(selectedSize)
-
-        if(selectedMenuItem):
-            self.prefController.screenshotSizePopup.selectItemWithTag_(selectedSize)
-        else:
-            nativeMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(nativeHeight)
-            NSUserDefaultsController.sharedUserDefaultsController().defaults().setInteger_forKey_(nativeHeight,'imageSize')
-            self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
-
-    def show(self):
-        try:
-            if self.prefController:
-                self.prefController.close()
-        except:
-            pass
-
-        # open window from NIB file, show front and center
-        self.prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
-        self.prefController.showWindow_(None)
-        self.prefController.window().makeKeyAndOrderFront_(None)
-        self.prefController.window().center()
-        self.prefController.retain()
-
-        # needed to show window on top of other applications
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
-
-    show = classmethod(show)
 
 
 # Experience Sampling window controller
@@ -196,199 +125,6 @@ class ExperienceController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
-
-    show = classmethod(show)
-
-
-# Experience Sampling window controller
-class DebriefController(NSWindowController):
-
-    mainPanel = IBOutlet()
-    doingText = IBOutlet()
-    progressLabel = IBOutlet()
-    progressButton = IBOutlet()
-    errorMessage = IBOutlet()
-    recordButton = IBOutlet()
-    existAudioText = IBOutlet()
-    playAudioButton = IBOutlet()
-    deleteAudioButton = IBOutlet()
-
-    experiences = None
-    currentExperience = -1
-    recordingAudio = False
-    playingAudio = False
-    audio_file = ''
-
-    recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
-    recordImage.setScalesWhenResized_(True)
-    recordImage.setSize_((13, 13))
-
-    stopImage = NSImage.alloc().initByReferencingFile_('../Resources/stop.png')
-    stopImage.setScalesWhenResized_(True)
-    stopImage.setSize_((13, 13))
-
-    @IBAction
-    def toggleAudioPlay_(self, sender):
-        if self.playingAudio:
-            self.playingAudio = False
-            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
-            s.executeAndReturnError_(None)
-
-            self.debriefController.playAudioButton.setTitle_("Play Audio")
-
-        else:
-            self.playingAudio = True
-
-            audio = mutagen.mp4.MP4(self.audio_file)
-            length = audio.info.length
-
-            s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
-            s.executeAndReturnError_(None)
-
-            s = objc.selector(self.stopAudioPlay,signature='v@:')
-            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(length, self, s, None, False)
-
-            self.debriefController.playAudioButton.setTitle_("Stop Audio")
-
-    def stopAudioPlay(self):
-        self.playingAudio = False
-        s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
-        s.executeAndReturnError_(None)
-
-        self.debriefController.playAudioButton.setTitle_("Play Audio")
-
-    @IBAction
-    def deleteAudio_(self, sender):
-        controller = self.debriefController
-
-        if self.audio_file != '':
-            os.remove(self.audio_file)
-        self.audio_file = ''
-
-        controller.recordButton.setEnabled_(True)
-        controller.existAudioText.setHidden_(True)
-        controller.playAudioButton.setHidden_(True)
-        controller.deleteAudioButton.setHidden_(True)
-
-    @IBAction
-    def toggleAudioRecording_(self, sender):
-        controller = self.debriefController
-
-        if self.recordingAudio:
-            self.recordingAudio = False
-
-            print "Stop Audio recording"
-            # seems to miss reading the name sometimes
-            imageName = str(controller.mainPanel.image().name())[0:-4]
-            if (imageName == None) | (imageName == ''):
-                imageName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
-            imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName + '.m4a'
-            self.audio_file = imageName
-            imageName = string.replace(imageName, "/", ":")
-            imageName = imageName[1:]
-            print imageName
-
-            s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
-            s.executeAndReturnError_(None)
-
-            controller.recordButton.setImage_(self.recordImage)
-
-            controller.recordButton.setEnabled_(False)
-            controller.existAudioText.setHidden_(False)
-            controller.playAudioButton.setHidden_(False)
-            controller.deleteAudioButton.setHidden_(False)
-
-        else:
-            self.recordingAudio = True
-
-            print "Start Audio Recording"
-            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
-            s.executeAndReturnError_(None)
-
-            self.debriefController.recordButton.setImage_(self.stopImage)
-
-    @IBAction
-    def advanceExperienceWindow_(self, sender):
-        controller = self.debriefController
-
-        # close if user clicked Finish on window with no experiences to comment
-        if self.currentExperience == -2:
-            self.debriefController.close()
-            return
-
-        l = len(self.experiences)
-        if (not self.experiences) or (l == 0):
-            controller.errorMessage.setHidden_(False)
-            controller.doingText.setEnabled_(False)
-            controller.recordButton.setEnabled_(False)
-            controller.progressLabel.setStringValue_("0/0")
-            controller.progressButton.setTitle_("Finish")
-            self.currentExperience -= 1
-            return
-
-        self.currentExperience += 1
-        i = self.currentExperience
-
-        if i > 0:
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordDebrief',self)
-
-        if i == l-1:
-            controller.progressButton.setTitle_("Finish")
-
-        if i < l:
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
-
-            path = self.experiences[i]['screenshot'][:]
-            path = os.path.expanduser(path)
-            experienceImage = NSImage.alloc().initByReferencingFile_(path)
-            width = experienceImage.size().width
-            height = experienceImage.size().height
-            ratio = width / height
-            if( width > 960 or height > 600 ):
-                if (ratio > 1.6):
-                    width = 960
-                    height = 960 / ratio
-                else:
-                    width = 600 * ratio
-                    height = 600
-            experienceImage.setScalesWhenResized_(True)
-            experienceImage.setSize_((width, height))
-            experienceImage.setName_(path.split("/")[-1])
-            print "name at setting point is " + path.split("/")[-1]
-            controller.mainPanel.setImage_(experienceImage)
-
-            controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
-
-        else:
-            self.debriefController.close()
-
-    def windowDidLoad(self):
-        NSWindowController.windowDidLoad(self)
-
-    def show(self):
-        try:
-            if self.debriefController:
-                self.debriefController.close()
-        except:
-            pass
-
-        # open window from NIB file, show front and center
-        self.debriefController = DebriefController.alloc().initWithWindowNibName_("Debriefer")
-        self.debriefController.showWindow_(None)
-        self.debriefController.window().makeKeyAndOrderFront_(None)
-        self.debriefController.window().center()
-        self.debriefController.retain()
-
-        self.currentExperience = -1
-
-        # needed to show window on top of other applications
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
-
-        # get random set of experiences
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getDebriefExperiences',self)
-
-        self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
 
@@ -502,7 +238,7 @@ class Sniffer:
 
             def showDebrief_(self, notification):
                 NSLog("Showing Daily Debrief Window...")
-                DebriefController.show()
+                debriefer.DebriefController.show()
 
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
@@ -510,7 +246,7 @@ class Sniffer:
 
             def showPreferences_(self, notification):
                 NSLog("Showing Preference Window...")
-                PreferencesController.show()
+                preferences.PreferencesController.show()
 
             def createStatusMenu(self):
                 NSLog("Creating app menu")
