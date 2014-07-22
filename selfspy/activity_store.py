@@ -154,7 +154,7 @@ class ActivityStore:
             s = objc.selector(self.gotExperience_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
 
-            s = objc.selector(self.getPrior_,signature='v@:@')
+            s = objc.selector(self.getPriorExperiences_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
             # Listen for events from the Debriefer window
@@ -362,25 +362,23 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def store_experience(self, message, screenshot):
-        self.session.add(Experience(message, screenshot))
+    def store_experience(self, project, message, screenshot):
+        self.session.add(Experience(project, message, screenshot))
         self.trycommit()
 
     def gotExperience_(self, notification):
+        project = notification.object().projectText.stringValue()
         message = notification.object().experienceText.stringValue()
         screenshot = notification.object().currentScreenshot
-        self.store_experience(message, screenshot)
+        self.store_experience(project, message, screenshot)
 
     def recordDebrief_(self, notification):
+        experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
         doing_report = notification.object().debriefController.doingText.stringValue()
         audio_file = notification.object().debriefController.audio_file
-        experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
+        memory_strength = notification.object().debriefController.memoryStrength.selectedCell().title()
 
-        # delete existing experience sample with experience_id
-
-        print str(experience_id) + " " + doing_report + " " + audio_file
-
-        self.session.add(Debrief(experience_id, doing_report, audio_file))
+        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_strength))
         self.trycommit()
 
     def populateDebriefWindow_(self, notification):
@@ -398,26 +396,29 @@ class ActivityStore:
 
             if (q[-1].audio_file != '') & (q[-1].audio_file != None):
                 controller.recordButton.setEnabled_(False)
-                controller.existAudioText.setHidden_(False)
+                controller.existAudioText.setStringValue_("You've recorded an answer:")
                 controller.playAudioButton.setHidden_(False)
                 controller.deleteAudioButton.setHidden_(False)
             else:
                 controller.recordButton.setEnabled_(True)
-                controller.existAudioText.setHidden_(True)
+                controller.existAudioText.setStringValue_("Record your answer here:")
                 controller.playAudioButton.setHidden_(True)
                 controller.deleteAudioButton.setHidden_(True)
         else:
             controller.doingText.setStringValue_('')
             controller.audio_file = ''
             controller.recordButton.setEnabled_(True)
-            controller.existAudioText.setHidden_(True)
+            controller.existAudioText.setStringValue_("Record your answer here:")
             controller.playAudioButton.setHidden_(True)
             controller.deleteAudioButton.setHidden_(True)
 
-    def getPrior_(self, notification):
-        prior_experiences = self.session.query(Experience).distinct(Experience.message).order_by(Experience.id.desc()).limit(5).all()
-        for e in prior_experiences:
-            notification.object().experienceText.addItemWithObjectValue_(e.message)
+    def getPriorExperiences_(self, notification):
+        prior_projects = self.session.query(Experience).distinct(Experience.project).order_by(Experience.id.desc()).limit(5).all()
+        prior_messages = self.session.query(Experience).distinct(Experience.message).order_by(Experience.id.desc()).limit(5).all()
+        for p in prior_projects:
+            notification.object().projectText.addItemWithObjectValue_(p.project)
+        for m in prior_messages:
+            notification.object().experienceText.addItemWithObjectValue_(m.message)
 
     def runExperienceLoop(self):
         experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')

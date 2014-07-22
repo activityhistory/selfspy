@@ -46,6 +46,7 @@ class DebriefController(NSWindowController):
     existAudioText = IBOutlet()
     playAudioButton = IBOutlet()
     deleteAudioButton = IBOutlet()
+    memoryStrength = IBOutlet()
 
     # instance variables
     experiences = None
@@ -103,7 +104,7 @@ class DebriefController(NSWindowController):
         self.audio_file = ''
 
         controller.recordButton.setEnabled_(True)
-        controller.existAudioText.setHidden_(True)
+        controller.existAudioText.setStringValue_("Record your answer here:")
         controller.playAudioButton.setHidden_(True)
         controller.deleteAudioButton.setHidden_(True)
 
@@ -131,7 +132,7 @@ class DebriefController(NSWindowController):
             controller.recordButton.setImage_(self.recordImage)
 
             controller.recordButton.setEnabled_(False)
-            controller.existAudioText.setHidden_(False)
+            controller.existAudioText.setStringValue_("You've recorded an answer:")
             controller.playAudioButton.setHidden_(False)
             controller.deleteAudioButton.setHidden_(False)
 

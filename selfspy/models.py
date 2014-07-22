@@ -126,30 +126,34 @@ class Click(SpookMixin, Base):
 
 
 class Experience(SpookMixin, Base):
+    project = Column(Unicode, index=True)
     message = Column(Unicode, index=True)
     screenshot = Column(Unicode, index=True)
 
-    def __init__(self, message, screenshot):
+    def __init__(self, project, message, screenshot):
+        self.project = project
         self.message = message
         self.screenshot = screenshot
 
     def __repr__(self):
-        return "<Experience message '%s'>" % self.message
+        return "<Experience message: '%s'>" % self.message
 
 class Debrief(SpookMixin, Base):
-    doing_report = Column(Unicode, index=True)
-    audio_file = Column(Unicode, index=True)
-
     experience_id = Column(Integer, ForeignKey('experience.id'), nullable=False, index=True)
     experience = relationship("Experience", backref=backref('debrief'))
 
-    def __init__(self, experience_id, doing_report, audio_file):
+    doing_report = Column(Unicode, index=True)
+    audio_file = Column(Unicode, index=True)
+    memory_strength = Column(Unicode, index=True)
+
+    def __init__(self, experience_id, doing_report, audio_file, memory_strength):
         self.experience_id = experience_id
         self.doing_report = doing_report
         self.audio_file = audio_file
+        self.memory_strength = memory_strength
 
     def __repr__(self):
-        return "<Participant was '%s'>" % self.doing_report
+        return "<Participant was: '%s'>" % self.doing_report
 
 
 class Location(SpookMixin, Base):

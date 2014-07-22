@@ -66,6 +66,7 @@ class ExperienceController(NSWindowController):
 
     currentScreenshot = None
 
+    projectText = IBOutlet()
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 

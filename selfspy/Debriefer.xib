@@ -9,8 +9,9 @@
                 <outlet property="deleteAudioButton" destination="9cU-vc-wUa" id="ltQ-pE-mJF"/>
                 <outlet property="doingText" destination="EcU-xD-byN" id="DhU-RN-UHG"/>
                 <outlet property="errorMessage" destination="OLR-Ww-MGY" id="3L3-6N-r9l"/>
-                <outlet property="existAudioText" destination="mds-Pi-1TB" id="jva-12-6HI"/>
+                <outlet property="existAudioText" destination="cP8-gU-56S" id="Xqj-4f-orE"/>
                 <outlet property="mainPanel" destination="c21-GK-PHL" id="uLi-JP-pd8"/>
+                <outlet property="memoryStrength" destination="UY4-u6-bnk" id="vql-YA-FPf"/>
                 <outlet property="playAudioButton" destination="leI-Jl-q4n" id="tNJ-P6-m7A"/>
                 <outlet property="progressButton" destination="Trf-dt-yta" id="nVl-KS-yZo"/>
                 <outlet property="progressLabel" destination="Hoh-CD-cXr" id="uaB-K4-t0d"/>
@@ -50,36 +51,36 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cP8-gU-56S">
-                        <rect key="frame" x="988" y="186" width="216" height="17"/>
+                        <rect key="frame" x="987" y="363" width="216" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record your answer:" id="KE0-FV-P5l">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record your answer here:" id="KE0-FV-P5l">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pcd-Xz-dLY">
-                        <rect key="frame" x="988" y="400" width="159" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KlP-gI-bHI">
+                        <rect key="frame" x="987" y="249" width="216" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Type your answer:" id="yRi-vD-D7Y">
-                            <font key="font" metaFont="system"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How strong is your memory?" id="QPV-TE-rKP">
+                            <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="AHE-GW-wrT">
-                        <rect key="frame" x="1083" y="215" width="41" height="17"/>
+                        <rect key="frame" x="1083" y="392" width="41" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="- or -" id="VvP-zH-WhD">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="disabledControlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EcU-xD-byN">
-                        <rect key="frame" x="990" y="240" width="240" height="152"/>
+                        <rect key="frame" x="989" y="417" width="240" height="152"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2vq-It-D1X">
+                        <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Enter answer here..." drawsBackground="YES" id="2vq-It-D1X">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -100,25 +101,16 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jqm-ee-EIg">
-                        <rect key="frame" x="988" y="452" width="244" height="51"/>
+                        <rect key="frame" x="987" y="566" width="244" height="51"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="What were you doing at this moment and what did you plan to do next?" id="Kty-d4-rss">
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="What were you doing at this time and what did you plan to do next?" id="Kty-d4-rss">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField hidden="YES" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mds-Pi-1TB">
-                        <rect key="frame" x="988" y="114" width="244" height="51"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="You've already recorded an answer for this experience:" id="XVD-y6-0cc">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JNC-wn-54q">
-                        <rect key="frame" x="1157" y="172" width="39" height="38"/>
+                        <rect key="frame" x="1197" y="349" width="39" height="38"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="round" bezelStyle="circular" image="record.png" imagePosition="only" alignment="left" borderStyle="border" imageScaling="proportionallyDown" id="zDe-W6-6Jc">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -129,7 +121,7 @@
                         </connections>
                     </button>
                     <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="leI-Jl-q4n">
-                        <rect key="frame" x="984" y="93" width="115" height="32"/>
+                        <rect key="frame" x="983" y="314" width="115" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Play Answer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="fpC-hQ-9j0">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -140,7 +132,7 @@
                         </connections>
                     </button>
                     <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9cU-vc-wUa">
-                        <rect key="frame" x="1114" y="93" width="130" height="32"/>
+                        <rect key="frame" x="1113" y="314" width="130" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Delete Answer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="msj-3U-eyD">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -150,6 +142,36 @@
                             <action selector="deleteAudio:" target="-2" id="yTk-II-3tM"/>
                         </connections>
                     </button>
+                    <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autorecalculatesCellSize="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UY4-u6-bnk">
+                        <rect key="frame" x="989" y="183" width="183" height="58"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        <size key="cellSize" width="183" height="18"/>
+                        <size key="intercellSpacing" width="4" height="2"/>
+                        <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="WGy-ke-NjE">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <cells>
+                            <column>
+                                <buttonCell type="radio" title="I Remember it specifically" imagePosition="left" alignment="left" tag="1" inset="2" id="Zuw-cR-fzg">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent">1</string>
+                                </buttonCell>
+                                <buttonCell type="radio" title="I Know from experience" imagePosition="left" alignment="left" inset="2" id="NgL-EA-iBo">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent">2</string>
+                                </buttonCell>
+                                <buttonCell type="radio" title="I am Guessing" imagePosition="left" alignment="left" inset="2" id="lui-Of-qRo">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent">3</string>
+                                </buttonCell>
+                            </column>
+                        </cells>
+                    </matrix>
                 </subviews>
             </view>
         </window>
