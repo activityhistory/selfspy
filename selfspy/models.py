@@ -129,11 +129,17 @@ class Experience(SpookMixin, Base):
     project = Column(Unicode, index=True)
     message = Column(Unicode, index=True)
     screenshot = Column(Unicode, index=True)
+    user_initiated = Column(Boolean, index=True)
+    ignored = Column(Boolean, index=True)
+    after_break = Column(Boolean, index=True)
 
-    def __init__(self, project, message, screenshot):
+    def __init__(self, project, message, screenshot, user_initiated = True, ignored = False, after_break = False):
         self.project = project
         self.message = message
         self.screenshot = screenshot
+        self.user_initiated = user_initiated
+        self.ignored = ignored
+        self.after_break = after_break
 
     def __repr__(self):
         return "<Experience message: '%s'>" % self.message

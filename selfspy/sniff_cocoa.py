@@ -70,6 +70,20 @@ class ExperienceController(NSWindowController):
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 
+    user_initiated = True
+    ignored = False
+
+
+    def overrideClose(self):
+        s = objc.selector(self.setIgnoredAndClose_,signature='v@:@')
+        self.expController.window().standardWindowButton_(NSWindowCloseButton).setTarget_(self.expController)
+        self.expController.window().standardWindowButton_(NSWindowCloseButton).setAction_(s)
+
+    def setIgnoredAndClose_(self, notification):
+        self.ignored = True
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('experienceReceived',self)
+        self.expController.close()
+
     @IBAction
     def recordText_(self, sender):
         message_value = self.experienceText.stringValue()
@@ -79,7 +93,6 @@ class ExperienceController(NSWindowController):
 
     @IBAction
     def takeExperienceScreenshot_(self,sender):
-        NSLog('Taking Experience Screenshot')
         NSNotificationCenter.defaultCenter().postNotificationName_object_('takeExperienceScreenshot',self)
 
     def windowDidLoad(self):
@@ -126,6 +139,10 @@ class ExperienceController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
+
+        self.overrideClose(self)
+
+        return self.expController
 
     show = classmethod(show)
 
@@ -450,7 +467,7 @@ class Sniffer:
                     if event.keyCode() is 36:
                         character = "Enter"
                         if modifiers == ['Cmd', 'Shift']:
-                            self.delegate.showExperience_(self)
+                            expController = self.delegate.showExperience_(self)
                     elif event.keyCode() is 51:
                         character = "Backspace"
                     self.key_hook(event.keyCode(),

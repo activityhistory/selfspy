@@ -362,15 +362,17 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def store_experience(self, project, message, screenshot):
-        self.session.add(Experience(project, message, screenshot))
+    def store_experience(self, project, message, screenshot, user_initiated, ignored):
+        self.session.add(Experience(project, message, screenshot, user_initiated, ignored))
         self.trycommit()
 
     def gotExperience_(self, notification):
         project = notification.object().projectText.stringValue()
         message = notification.object().experienceText.stringValue()
         screenshot = notification.object().currentScreenshot
-        self.store_experience(project, message, screenshot)
+        user_initiated = notification.object().user_initiated
+        ignored = notification.object().ignored
+        self.store_experience(project, message, screenshot, user_initiated, ignored)
 
     def recordDebrief_(self, notification):
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
@@ -428,7 +430,8 @@ class ActivityStore:
         experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
         if(experienceLoop):
             NSLog("Showing Experience Sampling Window on Cycle...")
-            sniffer.ExperienceController.show()
+            expController = sniffer.ExperienceController.show()
+            expController.user_initiated = False
             self.last_experience = time.time()
 
             s = objc.selector(self.runExperienceLoop,signature='v@:')
