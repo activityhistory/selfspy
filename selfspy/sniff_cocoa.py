@@ -100,7 +100,9 @@ class ExperienceController(NSWindowController):
 
     def show(self):
         try:
-            if self.expController:
+            if self.expController.window().isVisible():
+                if os.path.exists(self.path):
+                    os.remove(self.path)
                 self.expController.close()
         except:
             pass
@@ -117,9 +119,9 @@ class ExperienceController(NSWindowController):
         self.expController.window().center()
         self.expController.retain()
 
-        path = os.path.expanduser(self.currentScreenshot)
+        self.path = os.path.expanduser(self.currentScreenshot)
 
-        experienceImage = NSImage.alloc().initByReferencingFile_(path)
+        experienceImage = NSImage.alloc().initByReferencingFile_(self.path)
         width = experienceImage.size().width
         height = experienceImage.size().height
         ratio = width / height
