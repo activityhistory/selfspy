@@ -553,20 +553,20 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        # Get size of image
         height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
         width = self.screenRatio * height
 
+        scaleFactor = height/self.screenSize[1]
+
         mouseLoc = NSEvent.mouseLocation()
-        # Get cursor information
         x = int(mouseLoc.x *scale)
         y = int(mouseLoc.y *scale)
         # w = int(width *scale)
         # h = int(height *scale)
         w = 20
         h = 24
-        org_x = x
-        org_y = y
+        org_x = int(x * scaleFactor)
+        org_y = int((y-h) * scaleFactor)
 
         # print "cursor :", x, y, w, h
 
@@ -617,7 +617,7 @@ class Sniffer:
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
         Quartz.CGContextDrawImage(bitmapContext,
-          CG.CGRectMake(org_x, org_y, w, h),
+          CG.CGRectMake(org_x, org_y, w*scaleFactor, h*scaleFactor),
           cursorOverlay)
 
         #Recreate image from context
