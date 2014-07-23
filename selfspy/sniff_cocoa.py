@@ -539,7 +539,6 @@ class Sniffer:
       try:
         # record how long it takes to take screenshot
         start = time.time()
-        scale = 1.0
 
         # Set to capture entire screen, including multiple monitors
         if region is None:
@@ -559,14 +558,14 @@ class Sniffer:
         scaleFactor = height/self.screenSize[1]
 
         mouseLoc = NSEvent.mouseLocation()
-        x = int(mouseLoc.x *scale)
-        y = int(mouseLoc.y *scale)
+        x = int(mouseLoc.x)
+        y = int(mouseLoc.y)
         # w = int(width *scale)
         # h = int(height *scale)
-        w = 20
+        w = 16
         h = 24
-        org_x = int(x * scaleFactor)
-        org_y = int((y-h) * scaleFactor)
+        org_x = int((x) * scaleFactor)
+        org_y = int((y-h+5) * scaleFactor)
 
         # print "cursor :", x, y, w, h
 
@@ -575,8 +574,8 @@ class Sniffer:
 
         bitmapContext = Quartz.CGBitmapContextCreate(
           imageData, # image data we just allocated...
-          width*scale,
-          height*scale,
+          width,
+          height,
           8, # 8 bits per component
           4 * width, # bytes per pixel times number of pixels wide
           Quartz.CGImageGetColorSpace(image), # use the same colorspace as the original image
@@ -584,11 +583,16 @@ class Sniffer:
         )
 
         #Draw image on context at new scale
-        rect = CG.CGRectMake(0.0,0.0,width*scale,height*scale)
+        rect = CG.CGRectMake(0.0,0.0,width,height)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
 
         # Adding Mouse cursor to the screenshot
         # https://stackoverflow.com/questions/8008630/not-displaying-mouse-cursor
+        # cursor = NSCursor.currentSystemCursor().image()
+        # rect2 = CG.CGRectMake(org_x, org_y, w*scaleFactor, h*scaleFactor)
+        # image2 = cursor.CGImageForProposedRect_context_hints_(rect2, bitmapContext, None)
+        # print image2
+        # Quartz.CGContextDrawImage(bitmapContext, rect2, image2)
         # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]
         # # arrowCursor grabs the arrow cursor
         # # currentSystemCursor grabs the image of the current cursor,
