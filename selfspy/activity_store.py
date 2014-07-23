@@ -17,8 +17,10 @@ If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
+import sys
 import time
 import datetime
+import errno
 
 import sqlalchemy
 import urllib
@@ -86,7 +88,18 @@ class ActivityStore:
         except OSError:
             pass
 
-        self.session_maker = models.initialize(os.path.join(cfg.CURRENT_DIR, db_name))
+        try:
+            self.session_maker = models.initialize(os.path.join(cfg.CURRENT_DIR, db_name))
+        except sqlalchemy.exc.OperationalError:
+            print "Database operational error. Your storage device may be full. Exiting Selfspy..."
+
+            alert = NSAlert.alloc().init()
+            alert.addButtonWithTitle_("OK")
+            alert.setMessageText_("Database operational error. Your storage device may be full. Exiting Selfspy.")
+            alert.setAlertStyle_(NSWarningAlertStyle)
+            alert.runModal()
+
+            sys.exit()
 
         self.key_presses = []
         self.mouse_path = []
@@ -195,9 +208,20 @@ class ActivityStore:
                 self.session.commit()
                 break
             except sqlalchemy.exc.OperationalError:
-                time.sleep(1)
+                print "Database operational error. Your storage device may be full. Turning off Selfspy recording."
+                self.sniffer.delegate.toggleLogging_(self)
+                self.session.rollback()
+
+                alert = NSAlert.alloc().init()
+                alert.addButtonWithTitle_("OK")
+                alert.setMessageText_("Database operational error. Your storage device may be full. Turning off Selfspy recording.")
+                alert.setAlertStyle_(NSWarningAlertStyle)
+                alert.runModal()
+
+                break
             except:
-               self.session.rollback()
+                print "Rollback"
+                self.session.rollback()
 
     def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height):
         """ Receives a screen change and stores any changes. If the process or window has

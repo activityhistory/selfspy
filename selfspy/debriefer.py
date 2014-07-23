@@ -129,6 +129,7 @@ class DebriefController(NSWindowController):
             print "Stop Audio recording"
             # seems to miss reading the name sometimes
             imageName = str(controller.mainPanel.image().name())[0:-4]
+            print "Audio name should be " + imageName
             if (imageName == None) | (imageName == ''):
                 imageName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
             imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName + '.m4a'
@@ -218,7 +219,6 @@ class DebriefController(NSWindowController):
             experienceImage.setScalesWhenResized_(True)
             experienceImage.setSize_((width, height))
             experienceImage.setName_(path.split("/")[-1])
-            print "name at setting point is " + path.split("/")[-1]
             controller.mainPanel.setImage_(experienceImage)
 
             controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )

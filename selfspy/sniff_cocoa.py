@@ -18,6 +18,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import string
 import objc, re, os
+import errno
 
 from objc import IBAction, IBOutlet
 
@@ -492,47 +493,60 @@ class Sniffer:
         self.app.activateIgnoringOtherApps_(True)
 
     def takeExperienceScreenshot_(self, notification):
-        mouseLoc = NSEvent.mouseLocation()
-        x = str(int(mouseLoc.x))
-        y = str(int(mouseLoc.y))
-        folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
-        filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + "_" + x + "_" + y + '-experience'
-        path = os.path.join(folder,""+filename+".jpg")
+        try:
+            mouseLoc = NSEvent.mouseLocation()
+            x = str(int(mouseLoc.x))
+            y = str(int(mouseLoc.y))
+            folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
+            filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + "_" + x + "_" + y + '-experience'
+            path = os.path.join(folder,""+filename+".jpg")
 
-        # -i makes the screenshot interactive
-        # -C captures the mouse cursor.
-        # -x removes the screenshot sound
-        if notification.object().takeFullScreenshot:
-            command = "screencapture -x -C '" + path + "'"
-        else:
-            command = "screencapture -i -x -C '" + path + "'"
-            # delete current full-screen screenshot for this experience
-            os.system("rm "+ notification.object().currentScreenshot )
+            # -i makes the screenshot interactive
+            # -C captures the mouse cursor.
+            # -x removes the screenshot sound
+            if notification.object().takeFullScreenshot:
+                command = "screencapture -x -C '" + path + "'"
+            else:
+                command = "screencapture -i -x -C '" + path + "'"
+                # delete current full-screen screenshot for this experience
+                os.system("rm "+ notification.object().currentScreenshot )
 
-        print command
-        os.system(command)
+            print command
+            os.system(command)
 
-        notification.object().currentScreenshot = path
+            notification.object().currentScreenshot = path
 
-        if not notification.object().takeFullScreenshot:
+            if not notification.object().takeFullScreenshot:
 
-            path = os.path.expanduser(path)
+                path = os.path.expanduser(path)
 
-            experienceImage = NSImage.alloc().initByReferencingFile_(path)
-            width = experienceImage.size().width
-            height = experienceImage.size().height
-            ratio = width / height
-            if( width > 360 or height > 225 ):
-                if (ratio > 1.6):
-                    width = 360
-                    height = 360 / ratio
-                else:
-                    width = 225 * ratio
-                    height = 225
+                experienceImage = NSImage.alloc().initByReferencingFile_(path)
+                width = experienceImage.size().width
+                height = experienceImage.size().height
+                ratio = width / height
+                if( width > 360 or height > 225 ):
+                    if (ratio > 1.6):
+                        width = 360
+                        height = 360 / ratio
+                    else:
+                        width = 225 * ratio
+                        height = 225
 
-            experienceImage.setScalesWhenResized_(True)
-            experienceImage.setSize_((width, height))
-            notification.object().screenshotDisplay.setImage_(experienceImage)
+                experienceImage.setScalesWhenResized_(True)
+                experienceImage.setSize_((width, height))
+                notification.object().screenshotDisplay.setImage_(experienceImage)
+        except errno.ENOSPC:
+            NSLog("No space left on storage device. Turning off Selfspy recording.")
+            self.delegate.toggleLogging_(self,self)
+
+            alert = NSAlert.alloc().init()
+            alert.addButtonWithTitle_("OK")
+            alert.setMessageText_("No space left on storage device. Turning off Selfspy recording.")
+            alert.setAlertStyle_(NSWarningAlertStyle)
+            alert.runModal()
+
+        except:
+            NSLog("Could not save image")
 
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
@@ -659,7 +673,11 @@ class Sniffer:
         print 'took ' + str(height) + 'px image in ' + str(stop-start)[:5] + ' seconds'
 
       except KeyboardInterrupt:
+        print "Keyboard interrupt"
         AppHelper.stopEventLoop()
+      except errno.ENOSPC:
+          NSLog("No space left on storage device. Turning off Selfspy recording.")
+          self.delegate.toggleLogging_(self)
       except:
         NSLog("couldn't save image")
 
