@@ -42,8 +42,6 @@ from Cocoa import (NSEvent,
                    NSTimer,NSInvocation,
                    NSNotificationCenter)
 
-from AVFoundation import *
-
 import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
 import Quartz.CoreGraphics as CG

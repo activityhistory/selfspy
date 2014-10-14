@@ -20,7 +20,7 @@ import os
 import sys
 import time
 import datetime
-import errno
+import errno    #may not need this module
 
 import sqlalchemy
 import urllib
@@ -138,9 +138,12 @@ class ActivityStore:
         self.thumbdriveTimer.fire() # get location immediately
 
     def stopLoops(self):
-        self.screenshotTimer.invalidate()
-        self.experienceTimer.invalidate()
-        self.thumbdriveTimer.invalidate()
+        if self.screenshotTimer:
+            self.screenshotTimer.invalidate()
+        if self.experienceTimer:
+            self.experienceTimer.invalidate()
+        if self.thumbdriveTimer:
+            self.thumbdriveTimer.invalidate()
 
     def checkLoops_(self, notification):
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
@@ -184,6 +187,10 @@ class ActivityStore:
             s = objc.selector(self.checkLoops_,signature='v@:@')
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
+            # Listen for events from Sniff Cocoa
+            s = objc.selector(self.checkDrive_,signature='v@:')
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
+
 
     def run(self):
         self.session = self.session_maker()
@@ -209,7 +216,8 @@ class ActivityStore:
                 break
             except sqlalchemy.exc.OperationalError:
                 print "Database operational error. Your storage device may be full. Turning off Selfspy recording."
-                self.sniffer.delegate.toggleLogging_(self)
+                if(NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
+                        self.sniffer.delegate.toggleLogging_(self)
                 self.session.rollback()
 
                 alert = NSAlert.alloc().init()
@@ -445,10 +453,12 @@ class ActivityStore:
     def getPriorExperiences_(self, notification):
         prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
         for p in prior_projects:
-            notification.object().projectText.addItemWithObjectValue_(p.project)
+            if(p.project != ''):
+                notification.object().projectText.addItemWithObjectValue_(p.project)
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
         for m in prior_messages:
-            notification.object().experienceText.addItemWithObjectValue_(m.message)
+            if(m.message != ''):
+                notification.object().experienceText.addItemWithObjectValue_(m.message)
 
     def runExperienceLoop(self):
         experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
@@ -486,8 +496,8 @@ class ActivityStore:
             m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
         # .add_columns(Experience.id, Experience.created_at, Experience.message, Experience.screenshot)
         # get a random sample of up to 8 random experiences
-        if len(m) > 8:
-            e = random.sample(m, 8)
+        if len(m) > 7:
+            e = random.sample(m, 7)
         else:
             e = random.sample(m, len(m))
         notification.object().experiences = e
@@ -579,6 +589,10 @@ class ActivityStore:
             cfg.CURRENT_DIR = cfg.THUMBDRIVE_DIR
         else :
             cfg.CURRENT_DIR = os.path.expanduser(cfg.LOCAL_DIR)
+
+    def checkDrive_(self, notification):
+        self.lookupThumbdrive_()
+        self.defineCurrentDrive()
 
     def isThumbdrivePlugged(self):
         if (cfg.THUMBDRIVE_DIR != None and cfg.THUMBDRIVE_DIR != ""):

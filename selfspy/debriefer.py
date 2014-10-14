@@ -32,16 +32,6 @@ from datetime import datetime
 
 import mutagen.mp4
 
-from AVFoundation import AVAudioRecorder
-
-# fixing AVAudioRecorder.initwithURL_settings_error_()
-objc.registerMetaDataForSelector(b"AVAudioRecorder", b"initWithURL:settings:error:",
-        dict(
-            arguments={
-               4: dict(type_modifier=objc._C_OUT),
-            }
-        ))
-
 
 # Experience Sampling window controller
 class DebriefController(NSWindowController):
