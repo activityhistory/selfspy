@@ -23,7 +23,7 @@ import datetime
 import errno    #may not need this module
 
 import sqlalchemy
-import urllib
+import urllib   #may not be needed
 import re
 import random
 
@@ -76,14 +76,12 @@ class ActivityStore:
 
         screenshot_directory = os.path.join(cfg.CURRENT_DIR, 'screenshots')
         try:
-            if not(os.path.exists(screenshot_directory)):
-                os.makedirs(screenshot_directory)
+            os.makedirs(screenshot_directory)
         except OSError:
             pass
 
         audio_directory = os.path.join(cfg.CURRENT_DIR, 'audio')
         try:
-          if not(os.path.exists(audio_directory)):
             os.makedirs(audio_directory)
         except OSError:
             pass
@@ -153,43 +151,43 @@ class ActivityStore:
             self.stopLoops()
 
     def addObservers(self):
-            # Listen for events from the Preferences window
-            s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
+        # Listen for events from the Preferences window
+        s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
-            s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
+        s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
 
-            s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
+        s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
 
-            s = objc.selector(self.clearData_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
+        s = objc.selector(self.clearData_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
 
-            # Listen for events from the Experience samplin window
-            s = objc.selector(self.gotExperience_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
+        # Listen for events from the Experience samplin window
+        s = objc.selector(self.gotExperience_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
 
-            s = objc.selector(self.getPriorExperiences_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+        s = objc.selector(self.getPriorExperiences_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
-            # Listen for events from the Debriefer window
-            s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+        # Listen for events from the Debriefer window
+        s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
 
-            s = objc.selector(self.recordDebrief_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
+        s = objc.selector(self.recordDebrief_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
 
-            s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
+        s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
-            # Listen for events thrown by the Status bar menu
-            s = objc.selector(self.checkLoops_,signature='v@:@')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+        # Listen for events thrown by the Status bar menu
+        s = objc.selector(self.checkLoops_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
-            # Listen for events from Sniff Cocoa
-            s = objc.selector(self.checkDrive_,signature='v@:')
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
+        # Listen for events from Sniff Cocoa
+        s = objc.selector(self.checkDrive_,signature='v@:')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
 
 
     def run(self):

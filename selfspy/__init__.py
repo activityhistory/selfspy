@@ -33,10 +33,8 @@ from selfspy import config as cfg
 
 
 def parse_config():
-    conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False,
-                                          formatter_class=argparse.RawDescriptionHelpFormatter)
-    conf_parser.add_argument("-c", "--config",
-                             help="Config file with defaults. Command line parameters will override those given in the config file. The config file must start with a \"[Defaults]\" section, followed by [argument]=[value] on each line.", metavar="FILE")
+    conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+    conf_parser.add_argument("-c", "--config", help="Config file with defaults. Command line parameters will override those given in the config file. The config file must start with a \"[Defaults]\" section, followed by [argument]=[value] on each line.", metavar="FILE")
     args, remaining_argv = conf_parser.parse_known_args()
 
     defaults = {}
@@ -54,14 +52,12 @@ def parse_config():
 def main():
 
     # print header info
-    print "Selfspy started"
-    print(sys.version)
+    print "Selfspy started. Python version " + sys.version
 
-    # create folders for data storage
+    # create directories for data, catch OSError if they already exist
     args = vars(parse_config())
     args['data_dir'] = os.path.expanduser(args['data_dir'])
 
-    # create directories for data
     try:
         os.makedirs(args['data_dir'])
     except OSError:
@@ -69,15 +65,12 @@ def main():
 
     screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
     try:
-      if not(os.path.exists(screenshot_directory)):
         os.makedirs(screenshot_directory)
     except OSError:
         pass
 
-    # directory for storing audio files once recording is implemented
     audio_directory = os.path.join(args['data_dir'], 'audio')
     try:
-      if not(os.path.exists(audio_directory)):
         os.makedirs(audio_directory)
     except OSError:
         pass
@@ -91,7 +84,7 @@ def main():
         print 'Shutting down.'
         sys.exit(1)
 
-    # create main activity tracker
+    # create and start activity tracker
     astore = ActivityStore(cfg.DBNAME)
     cfg.LOCK.acquire()
 
