@@ -1,5 +1,5 @@
 """
-This file is a translation and heavy modification from Objective-C. 
+This file is a translation and heavy modification from Objective-C.
 The original copy-right:
 
 //  Copyright 2009 Matt Gallagher. All rights reserved.
