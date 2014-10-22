@@ -1,58 +1,42 @@
 ### What is Selfspy?
-This project is a fork of [selfspy](https://github.com/gurgeh/selfspy). We have modified the original project for research purposes by developing it into a Mac Application that captures additional, invasive information such as screenshots, document names and in the future, webcam pictures.
-
-Even though we keep most of the multi-platform code of the original selfspy, we're are not actively maintaining compatiblity with Unix/X11 and Windows. We are also working on advanced visualizations tools for the data and disabled for the statistics part of selfspy in the process of generating an application.
-
-Since Selfspy takes regular screenshots it can fill your hard drive pretty quickly. We recommend setting your Data storage to an external drive, such as a USB key or SD card. Simply copy the `selfspy.cfg` file to the root of your desired data storage volume and mount the device onto your computer. Selfspy will recognize the volume and save its data there.
-
 Selfspy is a daemon Mac OS X that continuously monitors and stores what you are doing on your computer. It was originally inspired by the [Quantified Self](http://en.wikipedia.org/wiki/Quantified_Self)-movement and [Stephen Wolfram's personal key logging](http://blog.stephenwolfram.com/2012/03/the-personal-analytics-of-my-life/).
 
+This project is a fork of [selfspy](https://github.com/gurgeh/selfspy). We have modified the original project for research purposes by developing it into a Mac Application that captures additional, invasive information such as screenshots, document names and URLs.
 
+Even though we keep most of the multi-platform code of the original selfspy, we're are not actively maintaining compatiblity with Unix/X11 and Windows. We are also working on advanced data visualizations tools and disabled the statistics part of Selfspy in the process of generating an application.
+
+Since Selfspy takes frequent screenshots it can fill your hard drive pretty quickly. We recommend setting your Data storage to an external drive, such as a USB key or SD card. Simply copy the `selfspy.cfg` file to the root of your desired data storage volume and mount the device onto your computer. When you start Selfspy, it will automatically recognize the volume and save its data there.
 
 ### Installing Selfspy
-We keep a compiled Mac OS X app in Releases, so go ahead and download it.
+We keep a compiled Mac OS X app in [Releases](https://github.com/aurelient/selfspy/releases), so go ahead and download it.
 
 To install manually, either clone the repository from Github (git clone git://github.com/aurelient/selfspy), or click on the Download link on http://github.com/aurelient/selfspy/ to get the latest Python source.
 
 With 10.9 you should do the following:
 
-1. Install xcode if you have not installed it already. Install the command line tools using:
+1. Install Xcode if you have not installed it already. Install the command line tools using:
 
 ```
 xcode-select --install
 ```
 
-Make sure you agree to its license agreement yet, do it know (e.g. by starting XCode.)
+and make sure you agree to Xcode's license agreement (e.g. by starting Xcode.)
 
-
-2. Download Selfspy 
+2. Download Selfspy and its dependencies
 
 ```
 git clone git://github.com/aurelient/selfspy
+pip install -r osx-requirements.txt
 cd selfspy
-pip install setuptools==3.4.1 && pip install -r requirements.txt
 python setup.py py2app
 ```
 
-
-2. If you do not have brew installed yet, do it now.
-
-3. brew install python
-
-4. brew doctor
-This will tell you modify your path with a oneliner. Do this. Then, open a new terminal session.
-
-This command sequence will build an .app in the /dist folder of your selfspy directory.
-
-Selfspy is only tested with Python 2.7 and has a few dependencies on other Python libraries that need to be satisfied. These are documented in the requirements.txt file.
+This command sequence will build an .app in the /dist folder of your selfspy directory. Selfspy is only tested with Python 2.7.
 
 Report issues here:
 https://github.com/aurelient/selfspy/issues
 
 #### Running on OS X
-To run Selfspy in OS X you also need to enable access for assistive devices.
-To do that in &lt;10.9 there is a checkbox in `System Preferences > Accessibility`,
-in 10.9 you have to add the correct application in
+To use the full capabilities of Selfspy in OS X (e.g. keylogging) you need to give it access as an assistive device.
+To do that in &lt;10.9 there is a checkbox in `System Preferences > Accessibility`, in 10.9 you have to add the correct application in
 `System Preferences > Privacy > Accessability`.
-
-You may also want to grant Full Keyboard Access to All Controls in `system Preference > Keyboard > Shortcuts` to make it easier to tab through Selfspy's windows.
