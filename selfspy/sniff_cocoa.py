@@ -1,6 +1,7 @@
-""" Copyright 2012 Bjarte Johansen
-Modified 2014 by Aurélien Tabard and Adam Rule
-This file is part of Selfspy
+"""
+Selfspy: Track your computer activity
+Copyright (C) 2012 Bjarte Johansen
+Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Keper
 
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -10,9 +11,10 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have
-received a copy of the GNU General Public License along with Selfspy.
-If not, see <http://www.gnu.org/licenses/>.
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
 
@@ -41,8 +43,6 @@ from Cocoa import (NSEvent,
                    NSURL, NSString,
                    NSTimer,NSInvocation,
                    NSNotificationCenter)
-
-#from AVFoundation import *
 
 import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
@@ -349,43 +349,6 @@ class Sniffer:
                 self.statusitem.setEnabled_(TRUE)
                 self.statusitem.retain()
 
-            # def createStatusButton(self):
-            #     NSLog("Creating status button")
-            #     statusbar = NSStatusBar.systemStatusBar()
-            #
-            #     # Create the statusbar item
-            #     self.statusitem2 = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
-            #     # self.statusitem.setTitle_(u"Selfspy")
-            #
-            #     # Load all images
-            #     self.bookmarkIcon = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
-            #     self.bookmarkIcon.setScalesWhenResized_(True)
-            #     self.bookmarkIcon.setSize_((20, 20))
-            #     self.statusitem2.setImage_(self.bookmarkIcon)
-            #
-            #     # Let it highlight upon clicking
-            #     self.statusitem2.setHighlightMode_(1)
-            #     # Set a tooltip
-            #     self.statusitem2.setToolTip_('Selfspy')
-            #
-            #     # https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/classes/NSButtonCell_Class/Reference/Reference.html
-            #     self.hel = NSButton.alloc().initWithFrame_ (((0.0, 0.0), (18.0, 22.0)))
-            #     self.hel.setBezelStyle_(6)
-            #     # self.hel.setTransparent_(True)
-            #     self.hel.setButtonType_(0)
-            #     self.hel.setBackgroundColor_(0)
-            #     self.hel.setBordered_(False)
-            #     self.hel.setTitle_( 'Bookmark' )
-            #     self.hel.setImage_(self.bookmarkIcon)
-            #     # self.hel.setTarget_( self )
-            #     self.hel.setAction_( "showExperience:" )
-            #
-            #     # Bind to the status item
-            #     self.statusitem2.setView_(self.hel)
-            #
-            #     self.statusitem2.setEnabled_(TRUE)
-            #     self.statusitem2.retain()
-
         return AppDelegate
 
     def run(self):
@@ -599,26 +562,6 @@ class Sniffer:
         #Draw image on context at new scale
         rect = CG.CGRectMake(0.0,0.0,width,height)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
-
-        # Adding Mouse cursor to the screenshot
-        # https://stackoverflow.com/questions/8008630/not-displaying-mouse-cursor
-        # cursor = NSCursor.currentSystemCursor().image()
-        # rect2 = CG.CGRectMake(org_x, org_y, w*scaleFactor, h*scaleFactor)
-        # image2 = cursor.CGImageForProposedRect_context_hints_(rect2, bitmapContext, None)
-        # print image2
-        # Quartz.CGContextDrawImage(bitmapContext, rect2, image2)
-        # NSImage *overlay = [[[NSCursor arrowCursor] image] copy]
-        # # arrowCursor grabs the arrow cursor
-        # # currentSystemCursor grabs the image of the current cursor,
-        # overlay = NSCursor.arrowCursor().image().copy()
-
-        # # Now convert NSImage into CGImage
-        # # Gave up on this, I don't understand why it doesn't work...
-        # # objc : [overlay CGImageForProposedRect: NULL context: NULL hints: NULL]
-        # # pyobjc : overlay(CGImageForProposedRect: NULL context: NULL hints: NULL]
-        # cursorRectangle = NSMakeRect(0, 0, w, h)
-        # overlay2 = overlay.CGImageForProposedRect_context_hints_(None,None,None)
-        # overlay2 = overlay.CGImageForProposedRect_context_(cursorRectangle,None)
 
         # Adding Mouse cursor to the screenshot
         # Alternative 1 : load a cursor image

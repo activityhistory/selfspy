@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-""" Copyright 2012 Bjarte Johansen
-Modified 2014 by Aurélien Tabard and Adam Rule
-This file is part of Selfspy
+"""
+Selfspy: Track your computer activity
+Copyright (C) 2012 Bjarte Johansen
+Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Keper
 
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -12,9 +13,10 @@ the Free Software Foundation, either version 3 of the License, or
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details. You should have
-received a copy of the GNU General Public License along with Selfspy.
-If not, see <http://www.gnu.org/licenses/>.
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
@@ -33,10 +35,13 @@ from selfspy import config as cfg
 
 
 def parse_config():
-    conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False,
-                                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    conf_parser = argparse.ArgumentParser(description=__doc__,
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
     conf_parser.add_argument("-c", "--config",
-                             help="Config file with defaults. Command line parameters will override those given in the config file. The config file must start with a \"[Defaults]\" section, followed by [argument]=[value] on each line.", metavar="FILE")
+        help="Config file with defaults. Command line parameters will override"\
+        " those given in the config file. The config file must start with a "\
+        "\"[Defaults]\" section, followed by [argument]=[value] on each line.",
+        metavar="FILE")
     args, remaining_argv = conf_parser.parse_known_args()
 
     defaults = {}
@@ -45,23 +50,25 @@ def parse_config():
         config.read([args.config])
         defaults = dict(config.items('Defaults'))
 
-    parser = argparse.ArgumentParser(description='Monitor your computer activities and store them in an encrypted database for later analysis or disaster recovery.', parents=[conf_parser])
+    parser = argparse.ArgumentParser(description='Monitor your computer'\
+    ' activities and store them in an encrypted database for later analysis'\
+    ' or disaster recovery.', parents=[conf_parser])
     parser.set_defaults(**defaults)
-    parser.add_argument('-d', '--data-dir', help='Data directory for selfspy, where the database is stored. Remember that Selfspy must have read/write access. Default is %s' % cfg.LOCAL_DIR, default=cfg.LOCAL_DIR)
+    parser.add_argument('-d', '--data-dir', help='Data directory for selfspy,'\
+    ' where the database is stored. Remember that Selfspy must have read/write'\
+    ' access. Default is %s' % cfg.LOCAL_DIR, default=cfg.LOCAL_DIR)
 
     return parser.parse_args()
 
 def main():
 
     # print header info
-    print "Selfspy started"
-    print(sys.version)
+    print "Selfspy started. Python version " + sys.version
 
-    # create folders for data storage
+    # create directories for data, catch OSError if they already exist
     args = vars(parse_config())
     args['data_dir'] = os.path.expanduser(args['data_dir'])
 
-    # create directories for data
     try:
         os.makedirs(args['data_dir'])
     except OSError:
@@ -69,15 +76,12 @@ def main():
 
     screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
     try:
-      if not(os.path.exists(screenshot_directory)):
         os.makedirs(screenshot_directory)
     except OSError:
         pass
 
-    # directory for storing audio files once recording is implemented
     audio_directory = os.path.join(args['data_dir'], 'audio')
     try:
-      if not(os.path.exists(audio_directory)):
         os.makedirs(audio_directory)
     except OSError:
         pass
@@ -87,11 +91,12 @@ def main():
     cfg.LOCK  = LockFile(lockname)
     if cfg.LOCK.is_locked():
         print '%s is locked! I am probably already running.' % lockname
-        print 'If you can find no selfspy process running, it is a stale lock and you can safely remove it.'
+        print 'If you can find no selfspy process running,
+        it is a stale lock and you can safely remove it.'
         print 'Shutting down.'
         sys.exit(1)
 
-    # create main activity tracker
+    # create and start activity tracker
     astore = ActivityStore(cfg.DBNAME)
     cfg.LOCK.acquire()
 
