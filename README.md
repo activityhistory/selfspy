@@ -16,12 +16,31 @@ To install manually, either clone the repository from Github (git clone git://gi
 
 With 10.9 you should do the following:
 
+1. Install xcode if you have not installed it already. Install the command line tools using:
+
+```
+xcode-select --install
+```
+
+Make sure you agree to its license agreement yet, do it know (e.g. by starting XCode.)
+
+
+2. Download Selfspy 
+
 ```
 git clone git://github.com/aurelient/selfspy
 cd selfspy
-sudo easy_install -U pyobjc-core
+pip install setuptools==3.4.1 && pip install -r requirements.txt
 python setup.py py2app
 ```
+
+
+2. If you do not have brew installed yet, do it now.
+
+3. brew install python
+
+4. brew doctor
+This will tell you modify your path with a oneliner. Do this. Then, open a new terminal session.
 
 This command sequence will build an .app in the /dist folder of your selfspy directory.
 

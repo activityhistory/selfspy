@@ -32,7 +32,7 @@ from datetime import datetime
 
 import mutagen.mp4
 
-from AVFoundation import AVAudioRecorder
+#from AVFoundation import AVAudioRecorder
 
 # fixing AVAudioRecorder.initwithURL_settings_error_()
 objc.registerMetaDataForSelector(b"AVAudioRecorder", b"initWithURL:settings:error:",

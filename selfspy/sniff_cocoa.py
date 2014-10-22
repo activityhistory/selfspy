@@ -24,7 +24,7 @@ from objc import IBAction, IBOutlet
 
 from Foundation import *
 from AppKit import *
-from PyObjCTools import NibClassBuilder, AppHelper
+from PyObjCTools import AppHelper
 
 import LaunchServices
 
@@ -42,7 +42,7 @@ from Cocoa import (NSEvent,
                    NSTimer,NSInvocation,
                    NSNotificationCenter)
 
-from AVFoundation import *
+#from AVFoundation import *
 
 import Quartz
 from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
