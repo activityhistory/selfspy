@@ -61,14 +61,12 @@ def parse_config():
     return parser.parse_args()
 
 def main():
-
-    # print header info
     print "Selfspy started. Python version " + sys.version
 
-    # create directories for data, catch OSError if they already exist
     args = vars(parse_config())
-    args['data_dir'] = os.path.expanduser(args['data_dir'])
 
+    # create directories for data, catch OSError if they already exist
+    args['data_dir'] = os.path.expanduser(args['data_dir'])
     try:
         os.makedirs(args['data_dir'])
     except OSError:
@@ -91,15 +89,14 @@ def main():
     cfg.LOCK  = LockFile(lockname)
     if cfg.LOCK.is_locked():
         print '%s is locked! I am probably already running.' % lockname
-        print 'If you can find no selfspy process running,
-        it is a stale lock and you can safely remove it.'
+        print 'If you can find no selfspy process running,'\
+        ' it is a stale lock and you can safely remove it.'
         print 'Shutting down.'
         sys.exit(1)
 
     # create and start activity tracker
     astore = ActivityStore(cfg.DBNAME)
     cfg.LOCK.acquire()
-
     try:
         astore.run()
     except SystemExit:

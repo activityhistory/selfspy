@@ -26,15 +26,14 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import Index, Column, Boolean, Integer, Unicode, Binary, ForeignKey, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
+ENCRYPTER = None
+Base = declarative_base()
+
 
 def initialize(fname):
     engine = create_engine('sqlite:///%s' % fname)
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine)
-
-ENCRYPTER = None
-
-Base = declarative_base()
 
 
 class SpookMixin(object):
@@ -59,7 +58,6 @@ class Process(SpookMixin, Base):
 
 class Window(SpookMixin, Base):
     title = Column(Unicode, index=True)
-
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('windows'))
 
@@ -153,17 +151,20 @@ class Debrief(SpookMixin, Base):
     doing_report = Column(Unicode, index=True)
     audio_file = Column(Unicode, index=True)
     memory_id = Column(Integer, index=True)
-    # memory_strength = Column(Unicode, index=True)
 
     def __init__(self, experience_id, doing_report, audio_file, memory_id):
         self.experience_id = experience_id
         self.doing_report = doing_report
         self.audio_file = audio_file
         self.memory_id = memory_id
-        # self.memory_strength = memory_strength
 
     def __repr__(self):
-        return "<Participant was: '%s'>" % self.doing_report
+        if(self.audio_file):
+            return "<Response recorded in: '%s'>" % self.audio_file
+        elif(self.doing_report):
+            return "<Participant was: '%s'>" % self.doing_report
+        else:
+            return "<No response recorded>"
 
 
 class Location(SpookMixin, Base):
