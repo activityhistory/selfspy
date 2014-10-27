@@ -43,7 +43,7 @@ from Cocoa import (NSEvent,
 
 import Quartz
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
-                    kCGNullWindowID)
+                    kCGWindowListOptionAll, kCGNullWindowID)
 import Quartz.CoreGraphics as CG
 
 import config as cfg
@@ -374,11 +374,22 @@ class Sniffer:
                 activeApps = self.workspace.runningApplications()
                 #Have to look into this if it is too slow on move and scoll,
                 #right now the check is done for everything.
+                regularApps = []
+                for app in activeApps:
+                    if app.activationPolicy() == 0:
+                        regularApps.append(app)
+
+                regularWindows = []
+                options = kCGWindowListOptionAll
+                windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+                for window in windowList:
+                    for app in regularApps:
+                        if window['kCGWindowOwnerName'] == app.localizedName() and window['kCGWindowLayer']>0:
+                            regularWindows.append(window)
+
                 for app in activeApps:
                     if app.isActive():
-                        options = kCGWindowListOptionOnScreenOnly
-                        windowList = CGWindowListCopyWindowInfo(options,
-                                                                kCGNullWindowID)
+
                         for window in windowList:
                             if (window['kCGWindowNumber'] == event.windowNumber()
                                 or (not event.windowNumber()
@@ -389,7 +400,9 @@ class Sniffer:
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],
-                                                 geometry['Height'])
+                                                 geometry['Height'],
+                                                 regularApps,
+                                                 regularWindows)
                                 break
                         break
 
