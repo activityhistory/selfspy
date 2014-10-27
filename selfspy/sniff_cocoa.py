@@ -32,20 +32,18 @@ import LaunchServices
 
 from Cocoa import (NSEvent,
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
-                   NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask, NSLeftMouseDownMask,
-                   NSRightMouseUp, NSRightMouseDown, NSRightMouseUpMask, NSRightMouseDownMask,
-                   NSMouseMoved, NSMouseMovedMask,
-                   NSScrollWheel, NSScrollWheelMask,
-                   NSFlagsChanged, NSFlagsChangedMask,
-                   NSAlternateKeyMask, NSCommandKeyMask, NSControlKeyMask,
-                   NSShiftKeyMask, NSAlphaShiftKeyMask,
-                   NSApplicationActivationPolicyProhibited,
-                   NSURL, NSString,
-                   NSTimer,NSInvocation,
-                   NSNotificationCenter)
+                   NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask,
+                   NSLeftMouseDownMask, NSRightMouseUp, NSRightMouseDown,
+                   NSRightMouseUpMask, NSRightMouseDownMask, NSMouseMoved,
+                   NSMouseMovedMask, NSScrollWheel, NSScrollWheelMask,
+                   NSFlagsChanged, NSFlagsChangedMask, NSAlternateKeyMask,
+                   NSCommandKeyMask, NSControlKeyMask, NSShiftKeyMask,
+                   NSAlphaShiftKeyMask, NSApplicationActivationPolicyProhibited,
+                   NSURL, NSString, NSTimer,NSInvocation, NSNotificationCenter)
 
 import Quartz
-from Quartz import CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly, kCGNullWindowID
+from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
+                    kCGNullWindowID)
 import Quartz.CoreGraphics as CG
 
 import config as cfg
@@ -66,15 +64,14 @@ start_time = NSDate.date()
 class ExperienceController(NSWindowController):
 
     currentScreenshot = None
+    user_initiated = True
+    ignored = False
 
     projectText = IBOutlet()
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 
-    user_initiated = True
-    ignored = False
-
-
+    # override window close to track when users close the experience window
     def overrideClose(self):
         s = objc.selector(self.setIgnoredAndClose_,signature='v@:@')
         self.expController.window().standardWindowButton_(NSWindowCloseButton).setTarget_(self.expController)
@@ -473,8 +470,6 @@ class Sniffer:
                 command = "screencapture -i -x -C '" + path + "'"
                 # delete current full-screen screenshot for this experience
                 os.system("rm "+ notification.object().currentScreenshot )
-
-            print command
             os.system(command)
 
             notification.object().currentScreenshot = path
@@ -531,24 +526,20 @@ class Sniffer:
 
         height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
         width = self.screenRatio * height
-
         scaleFactor = height/self.screenSize[1]
 
         mouseLoc = NSEvent.mouseLocation()
         x = int(mouseLoc.x)
         y = int(mouseLoc.y)
-        # w = int(width *scale)
-        # h = int(height *scale)
         w = 16
         h = 24
-        org_x = int((x) * scaleFactor)
-        org_y = int((y-h+5) * scaleFactor)
-
-        # print "cursor :", x, y, w, h
+        scale_x = int(x * scaleFactor)
+        scale_y = int((y-h+5) * scaleFactor)
+        scale_w = w*scaleFactor
+        scale_h = h*scaleFactor
 
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
-
         bitmapContext = Quartz.CGBitmapContextCreate(
           imageData, # image data we just allocated...
           width,
@@ -563,9 +554,7 @@ class Sniffer:
         rect = CG.CGRectMake(0.0,0.0,width,height)
         Quartz.CGContextDrawImage(bitmapContext, rect, image)
 
-        # Adding Mouse cursor to the screenshot
-        # Alternative 1 : load a cursor image
-        # Convert path to url for saving image
+        # Add Mouse cursor to the screenshot
         cursorPath = "../Resources/cursor.png"
         cursorPathStr = NSString.stringByExpandingTildeInPath(cursorPath)
         cursorURL = NSURL.fileURLWithPath_(cursorPathStr)
@@ -578,7 +567,7 @@ class Sniffer:
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
         Quartz.CGContextDrawImage(bitmapContext,
-          CG.CGRectMake(org_x, org_y, w*scaleFactor, h*scaleFactor),
+          CG.CGRectMake(scale_x, scale_y, scale_w, scale_h),
           cursorOverlay)
 
         #Recreate image from context

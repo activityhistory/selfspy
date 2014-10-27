@@ -86,8 +86,9 @@ class ActivityStore:
         except OSError:
             pass
 
+        db_name = os.path.join(cfg.CURRENT_DIR, db_name)
         try:
-            self.session_maker = models.initialize(os.path.join(cfg.CURRENT_DIR, db_name))
+            self.session_maker = models.initialize(db_name)
         except sqlalchemy.exc.OperationalError:
             print "Database operational error. Your storage device may be full. Exiting Selfspy..."
 
@@ -121,34 +122,6 @@ class ActivityStore:
         self.addObservers()
 
         self.started = NOW()
-
-    def startLoops(self):
-        # Timers for taking screenshots when idle, and showing experience-sample window
-        s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
-        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
-
-        s = objc.selector(self.runExperienceLoop,signature='v@:')
-        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
-
-        # Timer for checking if thumbdrive/memory card is available
-        s = objc.selector(self.defineCurrentDrive,signature='v@:')
-        self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
-        self.thumbdriveTimer.fire() # get location immediately
-
-    def stopLoops(self):
-        if self.screenshotTimer:
-            self.screenshotTimer.invalidate()
-        if self.experienceTimer:
-            self.experienceTimer.invalidate()
-        if self.thumbdriveTimer:
-            self.thumbdriveTimer.invalidate()
-
-    def checkLoops_(self, notification):
-        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
-        if(recording):
-            self.startLoops()
-        else:
-            self.stopLoops()
 
     def addObservers(self):
         # Listen for events from the Preferences window
@@ -189,7 +162,6 @@ class ActivityStore:
         s = objc.selector(self.checkDrive_,signature='v@:')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
 
-
     def run(self):
         self.session = self.session_maker()
 
@@ -200,6 +172,34 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
 
         self.sniffer.run()
+
+    def checkLoops_(self, notification):
+        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+        if(recording):
+            self.startLoops()
+        else:
+            self.stopLoops()
+
+    def startLoops(self):
+        # Timers for taking screenshots when idle, and showing experience-sample window
+        s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
+        self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
+
+        s = objc.selector(self.runExperienceLoop,signature='v@:')
+        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+
+        # Timer for checking if thumbdrive/memory card is available
+        s = objc.selector(self.defineCurrentDrive,signature='v@:')
+        self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
+        self.thumbdriveTimer.fire() # get location immediately
+
+    def stopLoops(self):
+        if self.screenshotTimer:
+            self.screenshotTimer.invalidate()
+        if self.experienceTimer:
+            self.experienceTimer.invalidate()
+        if self.thumbdriveTimer:
+            self.thumbdriveTimer.invalidate()
 
     def close(self):
         """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
@@ -213,10 +213,11 @@ class ActivityStore:
                 self.session.commit()
                 break
             except sqlalchemy.exc.OperationalError:
-                print "Database operational error. Your storage device may be full. Turning off Selfspy recording."
                 if(NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
-                        self.sniffer.delegate.toggleLogging_(self)
+                    self.sniffer.delegate.toggleLogging_(self)
                 self.session.rollback()
+
+                print "Database operational error. Your storage device may be full. Turning off Selfspy recording."
 
                 alert = NSAlert.alloc().init()
                 alert.addButtonWithTitle_("OK")
@@ -238,7 +239,7 @@ class ActivityStore:
             win_y is the y position of the window
             win_width is the width of the window
             win_height is the height of the window """
-        # print "got_screen_change"
+        # update current process, window, and geometry
         cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
         if not cur_process:
             cur_process = Process(process_name)
@@ -258,8 +259,7 @@ class ActivityStore:
             cur_window = Window(window_name, cur_process.id)
             self.session.add(cur_window)
 
-        # print self.current_window.proc_id, cur_process.id, self.current_window.win_id, cur_window.id
-        # print process_name, window_name, win_x, win_y, win_width, win_height
+        # if its a new window, commit changes and update ids
         if not (self.current_window.proc_id == cur_process.id
                 and self.current_window.win_id == cur_window.id):
             self.trycommit()
@@ -274,12 +274,12 @@ class ActivityStore:
         specials_in_row = 0
         lastpress = None
         newpresses = []
+
         for press in self.key_presses:
             key = press.key
             if specials_in_row and key != lastpress.key:
                 if specials_in_row > 1:
                     lastpress.key = '%s]x%d>' % (lastpress.key[:-2], specials_in_row)
-
                 newpresses.append(lastpress)
                 specials_in_row = 0
 
@@ -383,7 +383,7 @@ class ActivityStore:
         self.store_click(button, x, y)
 
     def got_mouse_move(self, x, y):
-        """ Queues mouse movements.
+        """ Queues mouse movements at 10Hz.
             x,y are the new coordinates on moving the mouse"""
         frequency = 10.0
         now = time.time()
@@ -409,7 +409,6 @@ class ActivityStore:
         doing_report = notification.object().debriefController.doingText.stringValue()
         audio_file = notification.object().debriefController.audio_file
         memory_id = notification.object().debriefController.memoryStrength.intValue()
-        # memory_strength = notification.object().debriefController.memoryStrength.selectedCell().title()
 
         self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
         self.trycommit()
@@ -492,7 +491,7 @@ class ActivityStore:
         m = []
         for row in q:
             m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
-        # .add_columns(Experience.id, Experience.created_at, Experience.message, Experience.screenshot)
+
         # get a random sample of up to 8 random experiences
         if len(m) > 7:
             e = random.sample(m, 7)

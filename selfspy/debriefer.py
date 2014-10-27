@@ -26,7 +26,7 @@ from objc import IBAction, IBOutlet
 from Foundation import *
 from AppKit import *
 
-from Cocoa import (NSURL, NSString, NSTimer,NSInvocation, NSNotificationCenter)
+from Cocoa import (NSURL, NSString, NSTimer, NSInvocation, NSNotificationCenter)
 
 import config as cfg
 
@@ -68,43 +68,34 @@ class DebriefController(NSWindowController):
     @IBAction
     def toggleAudioPlay_(self, sender):
         if self.playingAudio:
-            self.playingAudio = False
-            s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
-            s.executeAndReturnError_(None)
-
-            self.debriefController.playAudioButton.setTitle_("Play Audio")
+            self.stopAudioPlay()
 
         else:
             self.playingAudio = True
-
-            audio = mutagen.mp4.MP4(self.audio_file)
-            length = audio.info.length
-
+            self.debriefController.playAudioButton.setTitle_("Stop Audio")
             s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
             s.executeAndReturnError_(None)
 
+            # Stop playback once end of audio file is reached
+            length = mutagen.mp4.MP4(self.audio_file).info.length
             s = objc.selector(self.stopAudioPlay,signature='v@:')
-            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(length, self, s, None, False)
-
-            self.debriefController.playAudioButton.setTitle_("Stop Audio")
+            self.playbackTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(length, self, s, None, False)
 
     def stopAudioPlay(self):
         self.playingAudio = False
+        self.debriefController.playAudioButton.setTitle_("Play Audio")
         s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
         s.executeAndReturnError_(None)
 
-        self.debriefController.playAudioButton.setTitle_("Play Audio")
-
     @IBAction
     def deleteAudio_(self, sender):
-        controller = self.debriefController
-
         if (self.audio_file != '') & (self.audio_file != None) :
             if os.path.exists(self.audio_file):
                 os.remove(self.audio_file)
         self.audio_file = ''
 
+        # reset controls
+        controller = self.debriefController
         controller.recordButton.setEnabled_(True)
         controller.existAudioText.setStringValue_("Record your answer here:")
         controller.playAudioButton.setHidden_(True)
@@ -116,25 +107,21 @@ class DebriefController(NSWindowController):
 
         if self.recordingAudio:
             self.recordingAudio = False
-
             print "Stop Audio recording"
-            # seems to miss reading the name sometimes
-            imageName = str(controller.mainPanel.image().name())[0:-4]
-            print "Audio name should be " + imageName
-            if (imageName == None) | (imageName == ''):
-                imageName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
-            imageName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + imageName + '.m4a'
-            self.audio_file = imageName
-            imageName = string.replace(imageName, "/", ":")
-            imageName = imageName[1:]
 
-            s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + imageName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
+            audioName = str(controller.mainPanel.image().name())[0:-4]
+            if (audioName == None) | (audioName == ''): # seems to miss reading the image name sometimes
+                audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
+            audioName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + audioName + '.m4a'
+            self.audio_file = audioName
+            audioName = string.replace(audioName, "/", ":")
+            audioName = audioName[1:]
+
+            s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
             s.executeAndReturnError_(None)
 
-            # self.recorder.stop()
-
+            # reset controls
             controller.recordButton.setImage_(self.recordImage)
-
             controller.recordButton.setEnabled_(False)
             controller.existAudioText.setStringValue_("You've recorded an answer:")
             controller.playAudioButton.setHidden_(False)
@@ -142,36 +129,24 @@ class DebriefController(NSWindowController):
 
         else:
             self.recordingAudio = True
-
             print "Start Audio Recording"
+
             s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
             s.executeAndReturnError_(None)
 
             self.debriefController.recordButton.setImage_(self.stopImage)
 
-            # audioPath = "/Users/adamrule/Desktop/test.m4a"
-            # audioPathStr = NSString.stringByExpandingTildeInPath(audioPath)
-            # audioURL = NSURL.fileURLWithPath_(audioPathStr)
-            # print str(audioURL)
-            #
-            # audioSettings = {"AVFormatIDKey": "kAudioFormatAppleIMA4"} # "AVSampleRateKey": 1600, "AVNumberOfChannelsKey": 1
-            # print audioSettings
-            # audioDict = NSDictionary.dictionaryWithDictionary_(audioSettings)
-
-            # (self.recorder, error) = AVAudioRecorder.alloc().initWithURL_settings_error_(audioURL, audioSettings, None)
-            # print self.recorder
-            # print error
-            # self.recorder.record()
-
     @IBAction
     def advanceExperienceWindow_(self, sender):
         controller = self.debriefController
+        i = self.currentExperience
 
         # close if user clicked Finish on window with no experiences to comment
-        if self.currentExperience == -2:
-            self.debriefController.close()
+        if i == -1:
+            controller.close()
             return
 
+        # disable all controls if no experiences to debrief
         l = len(self.experiences)
         if (not self.experiences) or (l == 0):
             controller.errorMessage.setHidden_(False)
@@ -179,11 +154,8 @@ class DebriefController(NSWindowController):
             controller.recordButton.setEnabled_(False)
             controller.progressLabel.setStringValue_("0/0")
             controller.progressButton.setTitle_("Finish")
-            self.currentExperience -= 1
+            self.currentExperience = -1
             return
-
-        self.currentExperience += 1
-        i = self.currentExperience
 
         if i > 0:
             NSNotificationCenter.defaultCenter().postNotificationName_object_('recordDebrief',self)
@@ -194,8 +166,7 @@ class DebriefController(NSWindowController):
         if i < l:
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
 
-            path = self.experiences[i]['screenshot'][:]
-            path = os.path.expanduser(path)
+            path = os.path.expanduser(self.experiences[i]['screenshot'][:])
             experienceImage = NSImage.alloc().initByReferencingFile_(path)
             width = experienceImage.size().width
             height = experienceImage.size().height
@@ -213,6 +184,8 @@ class DebriefController(NSWindowController):
             controller.mainPanel.setImage_(experienceImage)
 
             controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
+
+            self.currentExperience += 1
 
         else:
             self.debriefController.close()
@@ -234,17 +207,16 @@ class DebriefController(NSWindowController):
         self.debriefController.window().center()
         self.debriefController.retain()
 
-        self.currentExperience = -1
-
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+        # get cmd-w to close window
+        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
+        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
         # get random set of experiences
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getDebriefExperiences',self)
 
+        self.currentExperience = 0
         self.advanceExperienceWindow_(self, self)
-
-        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
-        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
     show = classmethod(show)

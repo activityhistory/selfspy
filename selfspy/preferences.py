@@ -18,15 +18,14 @@ along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-import string
-import objc, re
+import objc
 
 from objc import IBAction, IBOutlet
 
 from Foundation import *
 from AppKit import *
 
-from Cocoa import (NSURL, NSString, NSTimer,NSInvocation, NSNotificationCenter)
+from Cocoa import NSNotificationCenter
 
 
 # Preferences window controller
@@ -55,36 +54,31 @@ class PreferencesController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperiencePref',self)
 
     def windowDidLoad(self):
-        controller = self.prefController
-
         NSWindowController.windowDidLoad(self)
 
         # Set screenshot size options based on screen's native height
+        self.prefController.screenshotSizeMenu.removeAllItems()
         nativeHeight = int(NSScreen.mainScreen().frame().size.height)
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(nativeHeight)+' px', '', '')
         menuitem.setTag_(nativeHeight)
-
-        controller.screenshotSizeMenu.removeAllItems()
-        controller.screenshotSizeMenu.addItem_(menuitem)
+        self.prefController.screenshotSizeMenu.addItem_(menuitem)
 
         sizes = [1080,720,480]
-
         for x in sizes:
             if x < nativeHeight:
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(x)+' px', '', '')
                 menuitem.setTag_(x)
-                controller.screenshotSizeMenu.addItem_(menuitem)
+                self.prefController.screenshotSizeMenu.addItem_(menuitem)
 
         # update newly created screenshot size dropdown to select saved preference or default size
         selectedSize = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        selectedMenuItem = controller.screenshotSizeMenu.itemWithTag_(selectedSize)
-
+        selectedMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(selectedSize)
         if(selectedMenuItem):
-            controller.screenshotSizePopup.selectItemWithTag_(selectedSize)
+            self.prefController.screenshotSizePopup.selectItemWithTag_(selectedSize)
         else:
-            nativeMenuItem = controller.screenshotSizeMenu.itemWithTag_(nativeHeight)
+            nativeMenuItem = self.prefController.screenshotSizeMenu.itemWithTag_(nativeHeight)
             NSUserDefaultsController.sharedUserDefaultsController().defaults().setInteger_forKey_(nativeHeight,'imageSize')
-            controller.screenshotSizePopup.selectItemWithTag_(nativeHeight)
+            self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
 
     def show(self):
         try:
@@ -103,6 +97,7 @@ class PreferencesController(NSWindowController):
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
+        # make window close on Cmd-w
         self.prefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
         self.prefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
