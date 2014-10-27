@@ -56,6 +56,7 @@ import mutagen.mp4
 
 from selfspy import locationTracking
 from selfspy import debriefer
+from selfspy import reviewer
 from selfspy import preferences
 
 start_time = NSDate.date()
@@ -261,6 +262,10 @@ class Sniffer:
                 NSLog("Showing Daily Debrief Window...")
                 debriefer.DebriefController.show()
 
+            def showReview_(self, notification):
+                NSLog("Showing Review Window...")
+                reviewer.ReviewController.show()
+
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
                 ExperienceController.show()
@@ -280,7 +285,7 @@ class Sniffer:
                 # Load all images
                 self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye-48.png')
                 self.icon.setScalesWhenResized_(True)
-                self.icon.setSize_((20, 20))
+                self.size_ = self.icon.setSize_((20, 20))
                 self.statusitem.setImage_(self.icon)
 
                 self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_gray-48.png')
@@ -330,6 +335,9 @@ class Sniffer:
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
+                self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')

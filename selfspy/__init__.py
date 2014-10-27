@@ -33,13 +33,13 @@ from Crypto.Cipher import Blowfish
 
 # Following code added by Jonas, should only not be commented for debugging
 
-#print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
-print("### current os.getcwd() : ", os.getcwd())
-sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
-#sys.path.append(os.getcwd())
-
-# remote debugging with PyCharm
-
+##print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
+#print("### current os.getcwd() : ", os.getcwd())
+#sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
+##sys.path.append(os.getcwd())
+#
+## remote debugging with PyCharm
+#
 #sys.path.append("/Applications/PyCharm.app/pycharm-debug.egg") # your PyCharm path
 #import pydevd
 #
@@ -61,7 +61,7 @@ def parse_config():
         " those given in the config file. The config file must start with a "\
         "\"[Defaults]\" section, followed by [argument]=[value] on each line.",
         metavar="FILE")
-    args, remaining_argv = conf_parser.parse_known_args()
+    args, maining_argv = conf_parser.parse_known_args()
 
     defaults = {}
     if args.config:

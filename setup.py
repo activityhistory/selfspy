@@ -20,7 +20,8 @@ DATA_FILES = ['./assets/eye-48.png',
               './assets/stop.png',
               './selfspy/Preferences.xib',
               './selfspy/Experience.xib',
-              './selfspy/Debriefer.xib']
+              './selfspy/Debriefer.xib',
+              './selfspy/Reviewer.xib']
 
 setup(
     name="selfspy",
