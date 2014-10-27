@@ -2,4 +2,9 @@ SQLAlchemy==0.7.6
 lockfile==0.9.1
 pycrypto==2.5
 keyring==1.2.2
+pyobjc-core==2.5.1
+pyobjc-framework-Quartz==2.5.1
+pyobjc-framework-Cocoa==2.5.1
+pyobjc-framework-CoreLocation==2.5.1
+pyobjc-framework-LaunchServices==2.5.1
 mutagen

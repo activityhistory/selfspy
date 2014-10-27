@@ -91,7 +91,7 @@ def main():
     cfg.LOCK  = LockFile(lockname)
     if cfg.LOCK.is_locked():
         print '%s is locked! I am probably already running.' % lockname
-        print 'If you can find no selfspy process running,
+        print 'If you can find no selfspy process running,\
         it is a stale lock and you can safely remove it.'
         print 'Shutting down.'
         sys.exit(1)
