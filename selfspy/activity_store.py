@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen

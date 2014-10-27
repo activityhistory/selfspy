@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This file is a translation and heavy modification from Objective-C.
 The original copy-right:
