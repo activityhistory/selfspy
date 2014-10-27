@@ -33,13 +33,13 @@ from Crypto.Cipher import Blowfish
 
 # Following code added by Jonas, should only not be commented for debugging
 
-#print("### current sys.path : ", sys.path)
-#print("### current os.getcwd() : ", os.getcwd())
-#sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
-##sys.path.append(os.getcwd())
-#
-## remote debugging with PyCharm
-#
+#print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
+print("### current os.getcwd() : ", os.getcwd())
+sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
+#sys.path.append(os.getcwd())
+
+# remote debugging with PyCharm
+
 #sys.path.append("/Applications/PyCharm.app/pycharm-debug.egg") # your PyCharm path
 #import pydevd
 #
@@ -92,6 +92,7 @@ def main():
         pass
 
     screenshot_directory = os.path.join(args['data_dir'], 'screenshots')
+    print("*** screenshot_directory will be stored in ", screenshot_directory)
     try:
         os.makedirs(screenshot_directory)
     except OSError:

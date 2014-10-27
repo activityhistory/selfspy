@@ -373,7 +373,7 @@ class Sniffer:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
             if(recording):
                 activeApps = self.workspace.runningApplications()
-                #Have to look into this if it is too slow on move and scoll,
+                #Have to look into this if it is too slow on move and scroll,
                 #right now the check is done for everything.
                 for app in activeApps:
                     if app.isActive():
@@ -385,12 +385,27 @@ class Sniffer:
                                 or (not event.windowNumber()
                                     and window['kCGWindowOwnerName'] == app.localizedName())):
                                 geometry = window['kCGWindowBounds']
+
+                                # get browser_url
+
+                                browser_url = 'NO_URL'
+
+                                if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+                                    #print('*#*# Found Browser URL: ', str(browser_url[0])[33:])
+                                if (window.get('kCGWindowOwnerName') == 'Safari'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+                                    print('*#*# Found Safari Browser URL: ', str(browser_url[0])[33:])
+
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u''),
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],
-                                                 geometry['Height'])
+                                                 geometry['Height'],
+                                                 str(browser_url[0])[33:])
                                 break
                         break
 

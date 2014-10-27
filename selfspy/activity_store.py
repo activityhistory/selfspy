@@ -231,7 +231,7 @@ class ActivityStore:
                 print "Rollback"
                 self.session.rollback()
 
-    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height):
+    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, browser_url):
         """ Receives a screen change and stores any changes. If the process or window has
             changed it will also store any queued pressed keys.
             process_name is the name of the process running the current window
@@ -255,9 +255,10 @@ class ActivityStore:
             self.session.add(cur_geometry)
 
         cur_window = self.session.query(Window).filter_by(title=window_name,
-                                                          process_id=cur_process.id).scalar()
+                                                          process_id=cur_process.id,
+                                                          browser_url=browser_url).scalar()
         if not cur_window:
-            cur_window = Window(window_name, cur_process.id)
+            cur_window = Window(window_name, cur_process.id, browser_url)
             self.session.add(cur_window)
 
         # if its a new window, commit changes and update ids
