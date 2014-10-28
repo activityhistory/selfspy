@@ -56,6 +56,19 @@ class Process(SpookMixin, Base):
         return "<Process '%s'>" % self.name
 
 
+class ProcessEvent(SpookMixin, Base):
+    process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
+    process = relationship("Process", backref=backref('processevents'))
+
+    event_type = Column(Unicode, index=True)
+
+    def __init__(self, process_id, event_type):
+        self.process_id = process_id
+        self.event_type = event_type
+
+    def __repr__(self):
+        return "<Process '%s' '%s' >" % (self.process_id, self.event_type)
+
 class Window(SpookMixin, Base):
     title = Column(Unicode, index=True)
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
