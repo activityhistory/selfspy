@@ -148,7 +148,9 @@ class DebriefController(NSWindowController):
             return
 
         # disable all controls if no experiences to debrief
-        l = len(self.experiences)
+        if self.experiences:
+            l = len(self.experiences)
+            print("+---> " + str(l) + "Experiences exist!")
         if (not self.experiences) or (l == 0):
             controller.errorMessage.setHidden_(False)
             controller.doingText.setEnabled_(False)
@@ -168,6 +170,8 @@ class DebriefController(NSWindowController):
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
 
             path = os.path.expanduser(self.experiences[i]['screenshot'][:])
+            print("+++ image path: ", path)
+            print("+++ image path without expand: ", self.experiences[i]['screenshot'][:])
             experienceImage = NSImage.alloc().initByReferencingFile_(path)
             width = experienceImage.size().width
             height = experienceImage.size().height
@@ -195,6 +199,13 @@ class DebriefController(NSWindowController):
         NSWindowController.windowDidLoad(self)
 
     def show(self):
+
+        if self.experiences:
+            l = len(self.experiences)
+            print("---+> " + l + "Experiences exist!")
+        else:
+            print("---+> no Experiences exist")
+
         try:
             if self.debriefController:
                 self.debriefController.close()

@@ -2,7 +2,7 @@
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
-Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Keper
+Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Kemper
 
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 
 import string
 import objc, re, os
+from os import listdir
+from os.path import isfile, join
 
 from objc import IBAction, IBOutlet
 
@@ -52,7 +54,7 @@ class ReviewController(NSWindowController):
 
     # instance variables
     experiences = None
-    currentExperience = -1
+    currentScreenshot = -1
     recordingAudio = False
     playingAudio = False
     audio_file = ''
@@ -140,36 +142,46 @@ class ReviewController(NSWindowController):
     @IBAction
     def advanceExperienceWindow_(self, sender):
         controller = self.reviewController
-        i = self.currentExperience
+        i = self.currentScreenshot
+        list_of_files = [ f for f in listdir(u'/Users/jonas/.selfspy/screenshots/') if isfile(join(u'/Users/jonas/.selfspy/screenshots/',f)) ]
+        #print(str(list_of_files))
 
         # close if user clicked Finish on window with no experiences to comment
-        if i == -1:
-            controller.close()
-            return
-
+        #if i == -1:
+        #    controller.close()
+        #    return
+#
         # disable all controls if no experiences to review
-        if self.experiences:
-            l = len(self.experiences)
-        if (not self.experiences) or (l == 0):
-            controller.errorMessage.setHidden_(False)
-            controller.doingText.setEnabled_(False)
-            controller.recordButton.setEnabled_(False)
-            controller.progressLabel.setStringValue_("0/0")
-            controller.progressButton.setTitle_("Finish")
-            self.currentExperience = -1
-            return
+        #if self.experiences:
+        #    l = len(self.experiences)
+        #    print("---> " + l + "Experiences exist!")
+        #if (not self.experiences) or (l == 0):
+        #    controller.errorMessage.setHidden_(False)
+        #    controller.doingText.setEnabled_(False)
+        #    controller.recordButton.setEnabled_(False)
+        #    controller.progressLabel.setStringValue_("0/0")
+        #    controller.progressButton.setTitle_("Finish")
+        #    self.currentScreenshot = -1
+        #    return
 
-        if i > 0:
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordReview',self)
+#        if i > 0:
+#            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordReview',self)
+#
+#        if i == l-1:
+#            controller.progressButton.setTitle_("Finish")
+#
 
-        if i == l-1:
-            controller.progressButton.setTitle_("Finish")
 
-        if i < l:
+        if True:
+            print("now trying to print something")
+            print("now trying to display", u'/Users/jonas/.selfspy/screenshots/' + list_of_files[i])
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
 
-            path = os.path.expanduser(self.experiences[i]['screenshot'][:])
-            experienceImage = NSImage.alloc().initByReferencingFile_(path)
+            #path = os.path.expanduser(self.experiences[i]['screenshot'][:])
+            #print("*** image path: ", path)
+            #print("*** image path without expand: ", self.experiences[i]['screenshot'][:])
+
+            experienceImage = NSImage.alloc().initByReferencingFile_(u'/Users/jonas/.selfspy/screenshots/' + list_of_files[i])
             width = experienceImage.size().width
             height = experienceImage.size().height
             ratio = width / height
@@ -182,20 +194,30 @@ class ReviewController(NSWindowController):
                     height = 600
             experienceImage.setScalesWhenResized_(True)
             experienceImage.setSize_((width, height))
-            experienceImage.setName_(path.split("/")[-1])
+            #experienceImage.setName_(path.split("/")[-1])
             controller.mainPanel.setImage_(experienceImage)
 
-            controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
+            #controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
 
-            self.currentExperience += 1
+            self.currentScreenshot += 5
+
 
         else:
-            self.reviewController.close()
+            controller.mainPanel.setImage_(None)
+            self.currentScreenshot += 1
+            #self.reviewController.close()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
     def show(self):
+
+        if self.experiences:
+            l = len(self.experiences)
+            print("---*> " + l + "Experiences exist!")
+        else:
+            print("---*> no Experiences exist")
+
         try:
             if self.reviewController:
                 self.reviewController.close()
@@ -218,7 +240,7 @@ class ReviewController(NSWindowController):
         # get random set of experiences
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getReviewExperiences',self)
 
-        self.currentExperience = 0
+        self.currentScreenshot = 0
         self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
