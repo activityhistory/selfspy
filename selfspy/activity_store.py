@@ -39,7 +39,7 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import Process, Window, Geometry, Click, Keys, Experience, Location, Debrief
+from selfspy.models import Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief
 
 
 NOW = datetime.datetime.now
@@ -168,10 +168,9 @@ class ActivityStore:
         s = objc.selector(self.checkDrive_,signature='v@:')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
 
-        # this code may not be needed if we just track apps and windows with the handler
-        # Listen for Application events
-        s = objc.selector(self.gotAppNotification_,signature='v@:')
-        NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, s, 'NSWorkspaceDidLaunchApplicationNotification', None)
+        # Listen for close of Selfspy
+        s = objc.selector(self.gotCloseNotification_,signature='v@:')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'closeNotification', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -213,7 +212,7 @@ class ActivityStore:
             self.thumbdriveTimer.invalidate()
 
     def close(self):
-        """ stops the sniffer and stores the latest keys. To be used on shutdown of program"""
+        """ stops the sniffer and stores the latest keys and close of programs. To be used on shutdown of program"""
         self.sniffer.cancel()
         self.store_keys()
 
@@ -251,24 +250,47 @@ class ActivityStore:
             win_width is the width of the window
             win_height is the height of the window """
         for app in regularApps:
+            db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
+            if not db_process:
+                db_process = Process(app.localizedName())
+                self.session.add(db_process)
+
             if app not in self.current_apps:
+                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
+                if db_process:
+                    process_id = db_process.id
+                else:
+                    process_id = 0
+                process_event = ProcessEvent(process_id, "Open")
+                self.session.add(process_event)
+
                 self.current_apps.append(app)
                 print "App: " + app.localizedName() + " just started"
 
         for app in self.current_apps:
             if app not in regularApps:
-                self.current_apps.remove(app)
+                print "Found Missing App"
+                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
+                if db_process:
+                    process_id = db_process.id
+                else:
+                    process_id = 0
+                process_event = ProcessEvent(process_id, "Close")
+                self.session.add(process_event)
+
                 print "App: " + app.localizedName() + " just closed"
+                self.current_apps.remove(app)
 
-        for window in regularWindows:
-            if window not in self.current_windows:
-                self.current_windows.append(window)
-                print "Window: " + window['kCGWindowOwnerName'] + " just opened in layer " + str(window['kCGWindowLayer']) + " and workspace " + str(window['kCGWindowName'])
-
-        for window in self.current_windows:
-            if window not in regularWindows:
-                self.current_windows.remove(window)
-                print "Window: " + window['kCGWindowOwnerName'] + " just closed " + str(window['kCGWindowLayer'])
+        # turn off window tracking for now
+        # for window in regularWindows:
+        #     if window not in self.current_windows:
+        #         self.current_windows.append(window)
+        #         print "Window: " + window['kCGWindowOwnerName'] + " just opened in layer " + str(window['kCGWindowLayer'])
+        #
+        # for window in self.current_windows:
+        #     if window not in regularWindows:
+        #         self.current_windows.remove(window)
+        #         print "Window: " + window['kCGWindowOwnerName'] + " just closed " + str(window['kCGWindowLayer'])
 
         # update current process, window, and geometry
         cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
@@ -635,17 +657,13 @@ class ActivityStore:
         else :
             return False
 
-    # This method may not be needed if we track apps and windows from the handler
-    def gotAppNotification_(self, notification):
-        appName = notification.userInfo().objectForKey_("NSWorkspaceApplicationKey").localizedName()
-        print "You started " + str(appName)
-        apps = NSWorkspace.sharedWorkspace().runningApplications()
-        print len(apps)
-        for app in apps:
-            if app.ownsMenuBar():
-                print app.localizedName()
-
-        # options = kCGWindowListOptionOnScreenOnly
-        # windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
-        # for window in windowList:
-        #     print str(window.get('kCGWindowName', u''))
+    # Method to add "Close" entry to DB for each app open at the close of Selfspy, not yet working
+    def gotCloseNotification_(self, notification):
+        for app in self.current_apps:
+            db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
+            if db_process:
+                process_id = db_process.id
+            else:
+                process_id = 0
+            process_event = ProcessEvent(process_id, "Close")
+            self.session.add(process_event)

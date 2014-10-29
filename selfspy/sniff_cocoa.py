@@ -211,6 +211,8 @@ class Sniffer:
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the application terminates it does not run the rest the
                 # original main, only the code that has crossed the pyobc bridge.
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('closeNotification',self)
+
                 if cfg.LOCK.is_locked():
                     cfg.LOCK.release()
                 NSLog("Exiting Selfspy...")
