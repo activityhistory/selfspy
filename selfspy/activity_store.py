@@ -31,7 +31,10 @@ import random
 from Foundation import *
 from AppKit import *
 
-from Cocoa import NSNotificationCenter, NSTimer
+from Cocoa import NSNotificationCenter, NSTimer, NSWorkspace
+import Quartz
+from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
+                    kCGNullWindowID)
 
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
@@ -105,6 +108,8 @@ class ActivityStore:
         self.mouse_path = []
 
         self.current_window = Display()
+        self.current_apps = []
+        self.current_windows = []
 
         self.last_scroll = {button: 0 for button in SCROLL_BUTTONS}
 
@@ -162,6 +167,11 @@ class ActivityStore:
         # Listen for events from Sniff Cocoa
         s = objc.selector(self.checkDrive_,signature='v@:')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
+
+        # this code may not be needed if we just track apps and windows with the handler
+        # Listen for Application events
+        s = objc.selector(self.gotAppNotification_,signature='v@:')
+        NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, s, 'NSWorkspaceDidLaunchApplicationNotification', None)
 
     def run(self):
         self.session = self.session_maker()
@@ -231,7 +241,7 @@ class ActivityStore:
                 print "Rollback"
                 self.session.rollback()
 
-    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, browser_url):
+    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, browser_url, regularApps, regularWindows):
         """ Receives a screen change and stores any changes. If the process or window has
             changed it will also store any queued pressed keys.
             process_name is the name of the process running the current window
@@ -240,6 +250,26 @@ class ActivityStore:
             win_y is the y position of the window
             win_width is the width of the window
             win_height is the height of the window """
+        for app in regularApps:
+            if app not in self.current_apps:
+                self.current_apps.append(app)
+                print "App: " + app.localizedName() + " just started"
+
+        for app in self.current_apps:
+            if app not in regularApps:
+                self.current_apps.remove(app)
+                print "App: " + app.localizedName() + " just closed"
+
+        for window in regularWindows:
+            if window not in self.current_windows:
+                self.current_windows.append(window)
+                print "Window: " + window['kCGWindowOwnerName'] + " just opened in layer " + str(window['kCGWindowLayer']) + " and workspace " + str(window['kCGWindowName'])
+
+        for window in self.current_windows:
+            if window not in regularWindows:
+                self.current_windows.remove(window)
+                print "Window: " + window['kCGWindowOwnerName'] + " just closed " + str(window['kCGWindowLayer'])
+
         # update current process, window, and geometry
         cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
         if not cur_process:
@@ -604,3 +634,18 @@ class ActivityStore:
                 return False
         else :
             return False
+
+    # This method may not be needed if we track apps and windows from the handler
+    def gotAppNotification_(self, notification):
+        appName = notification.userInfo().objectForKey_("NSWorkspaceApplicationKey").localizedName()
+        print "You started " + str(appName)
+        apps = NSWorkspace.sharedWorkspace().runningApplications()
+        print len(apps)
+        for app in apps:
+            if app.ownsMenuBar():
+                print app.localizedName()
+
+        # options = kCGWindowListOptionOnScreenOnly
+        # windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+        # for window in windowList:
+        #     print str(window.get('kCGWindowName', u''))

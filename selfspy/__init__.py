@@ -33,10 +33,10 @@ from Crypto.Cipher import Blowfish
 
 # Following code added by Jonas, should only not be commented for debugging
 
-##print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
-#print("### current os.getcwd() : ", os.getcwd())
-#sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
-##sys.path.append(os.getcwd())
+#print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
+print("### current os.getcwd() : ", os.getcwd())
+sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
+#sys.path.append(os.getcwd())
 #
 ## remote debugging with PyCharm
 #
