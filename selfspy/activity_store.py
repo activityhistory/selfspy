@@ -38,7 +38,7 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief
+from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief
 
 
 NOW = datetime.datetime.now
@@ -108,6 +108,7 @@ class ActivityStore:
 
         self.current_window = Display()
         self.current_apps = []
+        self.active_app = ''
         self.current_windows = []
 
         self.last_scroll = {button: 0 for button in SCROLL_BUTTONS}
@@ -162,6 +163,9 @@ class ActivityStore:
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+
+        s = objc.selector(self.noteRecordingState_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'noteRecordingState', None)
 
         # Listen for events from Sniff Cocoa
         s = objc.selector(self.checkDrive_,signature='v@:')
@@ -251,8 +255,9 @@ class ActivityStore:
         for app in regularApps:
             db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
             if not db_process:
-                db_process = Process(app.localizedName())
-                self.session.add(db_process)
+                process_to_add = Process(app.localizedName())
+                self.session.add(process_to_add)
+                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
 
             if app not in self.current_apps:
                 db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
@@ -265,6 +270,11 @@ class ActivityStore:
 
                 self.current_apps.append(app)
                 print "App: " + app.localizedName() + " just started"
+
+            if app.isActive() and app.localizedName() != self.active_app:
+                process_event = ProcessEvent(db_process.id, "Active")
+                self.session.add(process_event)
+                self.active_app = app.localizedName()
 
         for app in self.current_apps:
             if app not in regularApps:
@@ -665,3 +675,15 @@ class ActivityStore:
                 process_id = 0
             process_event = ProcessEvent(process_id, "Close")
             self.session.add(process_event)
+
+        recording_event = RecordingEvent(NOW(), "Off")
+        self.session.add(recording_event)
+        self.trycommit()
+
+    def noteRecordingState_(self, notification):
+        value = "On"
+        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+        if not recording:
+            value = "Off"
+        recording_event = RecordingEvent(NOW(), value)
+        self.session.add(recording_event)
