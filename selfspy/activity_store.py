@@ -38,7 +38,7 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief
+from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief, Bookmark
 
 
 NOW = datetime.datetime.now
@@ -143,7 +143,7 @@ class ActivityStore:
         s = objc.selector(self.clearData_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
 
-        # Listen for events from the Experience samplin window
+        # Listen for events from the Experience sampling window
         s = objc.selector(self.gotExperience_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
 
@@ -163,6 +163,9 @@ class ActivityStore:
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+
+        s = objc.selector(self.recordBookmark_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordBookmark', None)
 
         s = objc.selector(self.noteRecordingState_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'noteRecordingState', None)
@@ -689,3 +692,7 @@ class ActivityStore:
             value = "Off"
         recording_event = RecordingEvent(NOW(), value)
         self.session.add(recording_event)
+
+    def recordBookmark_(self, notification):
+        bookmark = Bookmark(NOW())
+        self.session.add(bookmark)

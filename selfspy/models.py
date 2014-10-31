@@ -57,6 +57,15 @@ class RecordingEvent(SpookMixin, Base):
     def __repr__(self):
         return "<Recording turned '%s' >" % self.event_type
 
+class Bookmark(SpookMixin, Base):
+    time = Column(Unicode, index=True)
+
+    def __init__(self, time):
+        self.time = time
+
+    def __repr__(self):
+        return "<Bookmark at '%s' >" % self.time
+
 
 class Process(SpookMixin, Base):
     name = Column(Unicode, index=True, unique=True)

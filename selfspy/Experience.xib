@@ -33,9 +33,6 @@
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </comboBoxCell>
-                        <connections>
-                            <outlet property="nextKeyView" destination="cT8-GG-44U" id="Kie-Jt-CYs"/>
-                        </connections>
                     </comboBox>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cT8-GG-44U">
                         <rect key="frame" x="311" y="11" width="69" height="32"/>
@@ -48,7 +45,6 @@ DQ
                         </buttonCell>
                         <connections>
                             <action selector="recordText:" target="-2" id="iKk-Uf-FMN"/>
-                            <outlet property="nextKeyView" destination="Ynz-nJ-56b" id="xj8-0z-k91"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="H9A-EF-w5H">
@@ -63,9 +59,6 @@ DQ
                     </button>
                 </subviews>
             </view>
-            <connections>
-                <outlet property="initialFirstResponder" destination="cT8-GG-44U" id="kYl-hm-l2C"/>
-            </connections>
             <point key="canvasLocation" x="543" y="351"/>
         </window>
     </objects>
