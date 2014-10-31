@@ -501,6 +501,9 @@ class Sniffer:
                         character = "Enter"
                         if modifiers == ['Cmd', 'Shift']:
                             self.delegate.bookmark_(self)
+                    elif event.keyCode() is 42:
+                        if modifiers == ['Cmd', 'Shift']:
+                            self.delegate.toggleAudioRecording_(self)
                     elif event.keyCode() is 51:
                         character = "Backspace"
                     self.key_hook(event.keyCode(),
