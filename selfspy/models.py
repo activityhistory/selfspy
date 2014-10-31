@@ -58,6 +58,15 @@ class RecordingEvent(SpookMixin, Base):
     def __repr__(self):
         return "<Recording turned '%s' >" % self.event_type
 
+class Bookmark(SpookMixin, Base):
+    time = Column(Unicode, index=True)
+
+    def __init__(self, time):
+        self.time = time
+
+    def __repr__(self):
+        return "<Bookmark at '%s' >" % self.time
+
 
 class Process(SpookMixin, Base):
     name = Column(Unicode, index=True, unique=True)
@@ -154,15 +163,16 @@ class Click(SpookMixin, Base):
 
 
 class Experience(SpookMixin, Base):
-    project = Column(Unicode, index=True)
+    # project = Column(Unicode, index=True)
     message = Column(Unicode, index=True)
     screenshot = Column(Unicode, index=True)
     user_initiated = Column(Boolean, index=True)
     ignored = Column(Boolean, index=True)
     after_break = Column(Boolean, index=True)
 
-    def __init__(self, project, message, screenshot, user_initiated = True, ignored = False, after_break = False):
-        self.project = project
+    # removed project
+    def __init__(self, message, screenshot, user_initiated = True, ignored = False, after_break = False):
+        # self.project = project
         self.message = message
         self.screenshot = screenshot
         self.user_initiated = user_initiated

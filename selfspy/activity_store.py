@@ -39,7 +39,7 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief
+from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief, Bookmark
 
 
 NOW = datetime.datetime.now
@@ -144,7 +144,7 @@ class ActivityStore:
         s = objc.selector(self.clearData_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
 
-        # Listen for events from the Experience samplin window
+        # Listen for events from the Experience sampling window
         s = objc.selector(self.gotExperience_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
 
@@ -167,6 +167,9 @@ class ActivityStore:
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
+
+        s = objc.selector(self.recordBookmark_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordBookmark', None)
 
         s = objc.selector(self.noteRecordingState_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'noteRecordingState', None)
@@ -462,17 +465,18 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def store_experience(self, project, message, screenshot, user_initiated, ignored):
-        self.session.add(Experience(project, message, screenshot, user_initiated, ignored))
+    # removed project
+    def store_experience(self, message, screenshot, user_initiated, ignored):
+        self.session.add(Experience( message, screenshot, user_initiated, ignored))
         self.trycommit()
 
     def gotExperience_(self, notification):
-        project = notification.object().projectText.stringValue()
+        # project = notification.object().projectText.stringValue()
         message = notification.object().experienceText.stringValue()
         screenshot = notification.object().currentScreenshot
         user_initiated = notification.object().user_initiated
         ignored = notification.object().ignored
-        self.store_experience(project, message, screenshot, user_initiated, ignored)
+        self.store_experience(message, screenshot, user_initiated, ignored)
 
     def recordDebrief_(self, notification):
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
@@ -556,10 +560,11 @@ class ActivityStore:
         #    controller.deleteAudioButton.setHidden_(True)
 
     def getPriorExperiences_(self, notification):
-        prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
-        for p in prior_projects:
-            if(p.project != ''):
-                notification.object().projectText.addItemWithObjectValue_(p.project)
+        # remove project
+        # prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
+        # for p in prior_projects:
+        #     if(p.project != ''):
+        #         notification.object().projectText.addItemWithObjectValue_(p.project)
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
         for m in prior_messages:
             if(m.message != ''):
@@ -733,3 +738,7 @@ class ActivityStore:
             value = "Off"
         recording_event = RecordingEvent(NOW(), value)
         self.session.add(recording_event)
+
+    def recordBookmark_(self, notification):
+        bookmark = Bookmark(NOW())
+        self.session.add(bookmark)

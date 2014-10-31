@@ -69,7 +69,7 @@ class ExperienceController(NSWindowController):
     user_initiated = True
     ignored = False
 
-    projectText = IBOutlet()
+    # projectText = IBOutlet()
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 
@@ -175,6 +175,7 @@ class Sniffer:
             statusbar = None
             state = 'pause'
             screenshot = True
+            recordingAudio = False
 
             def applicationDidFinishLaunching_(self, notification):
                 NSLog("Application did finish launching...")
@@ -262,6 +263,39 @@ class Sniffer:
                     else:
                         self.statusitem.setImage_(self.iconGray)
 
+            def bookmark_(self, notification):
+                self.statusitem.setImage_(self.iconBook)
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
+
+                s = objc.selector(self.changeIcon,signature='v@:')
+                self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, s, None, False)
+
+            def toggleAudioRecording_(self, notification):
+                if self.recordingAudio:
+                    self.recordingAudio = False
+                    print "Stop Audio recording"
+
+                    audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-live'
+                    audioName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + audioName + '.m4a'
+                    audioName = string.replace(audioName, "/", ":")
+                    audioName = audioName[1:]
+
+                    s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
+                    s.executeAndReturnError_(None)
+
+                    self.changeIcon()
+                    self.menu.itemWithTitle_("Stop Audio Recording").setTitle_("Record Audio")
+
+                else:
+                    self.recordingAudio = True
+                    print "Start Audio Recording"
+
+                    s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
+                    s.executeAndReturnError_(None)
+
+                    self.statusitem.setImage_(self.iconRecord)
+                    self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
+
             def showDebrief_(self, notification):
                 NSLog("Showing Daily Debrief Window...")
                 debriefer.DebriefController.show()
@@ -304,6 +338,14 @@ class Sniffer:
                 self.iconGrayPhoto.setScalesWhenResized_(True)
                 self.iconGrayPhoto.setSize_((20, 20))
 
+                self.iconBook = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
+                self.iconBook.setScalesWhenResized_(True)
+                self.iconBook.setSize_((20, 20))
+
+                self.iconRecord = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
+                self.iconRecord.setScalesWhenResized_(True)
+                self.iconRecord.setSize_((20, 20))
+
                 self.changeIcon()
 
                 # Let it highlight upon clicking
@@ -331,6 +373,15 @@ class Sniffer:
                     menuitem.setEnabled_(False)
                 self.menu.addItem_(menuitem)
                 self.screenshotMenuItem = menuitem
+
+                menuitem = NSMenuItem.separatorItem()
+                self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
+                self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Audio', 'toggleAudioRecording:', '')
+                self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
@@ -473,7 +524,10 @@ class Sniffer:
                     if event.keyCode() is 36:
                         character = "Enter"
                         if modifiers == ['Cmd', 'Shift']:
-                            expController = self.delegate.showExperience_(self)
+                            self.delegate.bookmark_(self)
+                    elif event.keyCode() is 42:
+                        if modifiers == ['Cmd', 'Shift']:
+                            self.delegate.toggleAudioRecording_(self)
                     elif event.keyCode() is 51:
                         character = "Backspace"
                     self.key_hook(event.keyCode(),
