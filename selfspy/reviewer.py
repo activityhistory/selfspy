@@ -25,6 +25,7 @@ from os import listdir
 from os.path import isfile, join
 
 from objc import IBAction, IBOutlet
+from sqlalchemy.sql import select
 
 from Foundation import *
 from AppKit import *
@@ -43,6 +44,7 @@ class ReviewController(NSWindowController):
     # outlets for UI elements
     mainPanel = IBOutlet()
     doingText = IBOutlet()
+    dynamicReviewTable = IBOutlet()
     progressLabel = IBOutlet()
     progressButton = IBOutlet()
     errorMessage = IBOutlet()
@@ -55,6 +57,7 @@ class ReviewController(NSWindowController):
     # instance variables
     experiences = None
     currentScreenshot = -1
+    dateQuery = ""
     recordingAudio = False
     playingAudio = False
     audio_file = ''
@@ -124,7 +127,6 @@ class ReviewController(NSWindowController):
             s.executeAndReturnError_(None)
 
             # reset controls
-            controller.recordButton.setImage_(self.recordImage)
             controller.recordButton.setEnabled_(False)
             controller.existAudioText.setStringValue_("You've recorded an answer:")
             controller.playAudioButton.setHidden_(False)
@@ -137,51 +139,26 @@ class ReviewController(NSWindowController):
             s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
             s.executeAndReturnError_(None)
 
-            self.reviewController.recordButton.setImage_(self.stopImage)
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
         controller = self.reviewController
         i = self.currentScreenshot
-        list_of_files = [ f for f in listdir(u'/Users/jonas/.selfspy/screenshots/') if isfile(join(u'/Users/jonas/.selfspy/screenshots/',f)) ]
-        #print(str(list_of_files))
+        list_of_files = [ f for f in listdir(u'/Users/jonas/.selfspy/screenshots/') if isfile(join(u'/Users/jonas/.selfspy/screenshots/',f)) ] # TODO make it not only work for jonas
 
-        # close if user clicked Finish on window with no experiences to comment
-        #if i == -1:
-        #    controller.close()
-        #    return
-#
-        # disable all controls if no experiences to review
-        #if self.experiences:
-        #    l = len(self.experiences)
-        #    print("---> " + l + "Experiences exist!")
-        #if (not self.experiences) or (l == 0):
-        #    controller.errorMessage.setHidden_(False)
-        #    controller.doingText.setEnabled_(False)
-        #    controller.recordButton.setEnabled_(False)
-        #    controller.progressLabel.setStringValue_("0/0")
-        #    controller.progressButton.setTitle_("Finish")
-        #    self.currentScreenshot = -1
-        #    return
+        if (i <= len(list_of_files)):
 
-#        if i > 0:
-#            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordReview',self)
-#
-#        if i == l-1:
-#            controller.progressButton.setTitle_("Finish")
-#
-
-
-        if True:
-            print("now trying to print something")
-            print("now trying to display", u'/Users/jonas/.selfspy/screenshots/' + list_of_files[i])
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
 
-            #path = os.path.expanduser(self.experiences[i]['screenshot'][:])
-            #print("*** image path: ", path)
-            #print("*** image path without expand: ", self.experiences[i]['screenshot'][:])
+            s = list_of_files[i]
 
-            experienceImage = NSImage.alloc().initByReferencingFile_(u'/Users/jonas/.selfspy/screenshots/' + list_of_files[i])
+            self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
+
+            experienceImage = NSImage.alloc().initByReferencingFile_(u'/Users/jonas/.selfspy/screenshots/' + s)
+            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
+
+            print("### dynamicReviewTable is: " + str(controller.dynamicReviewTable))
+
             width = experienceImage.size().width
             height = experienceImage.size().height
             ratio = width / height
@@ -194,10 +171,7 @@ class ReviewController(NSWindowController):
                     height = 600
             experienceImage.setScalesWhenResized_(True)
             experienceImage.setSize_((width, height))
-            #experienceImage.setName_(path.split("/")[-1])
             controller.mainPanel.setImage_(experienceImage)
-
-            #controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
 
             self.currentScreenshot += 5
 
@@ -214,10 +188,6 @@ class ReviewController(NSWindowController):
 
         if self.experiences:
             l = len(self.experiences)
-            print("---*> " + l + "Experiences exist!")
-        else:
-            print("---*> no Experiences exist")
-
         try:
             if self.reviewController:
                 self.reviewController.close()

@@ -170,8 +170,6 @@ class DebriefController(NSWindowController):
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
 
             path = os.path.expanduser(self.experiences[i]['screenshot'][:])
-            print("+++ image path: ", path)
-            print("+++ image path without expand: ", self.experiences[i]['screenshot'][:])
             experienceImage = NSImage.alloc().initByReferencingFile_(path)
             width = experienceImage.size().width
             height = experienceImage.size().height
@@ -202,10 +200,6 @@ class DebriefController(NSWindowController):
 
         if self.experiences:
             l = len(self.experiences)
-            print("---+> " + l + "Experiences exist!")
-        else:
-            print("---+> no Experiences exist")
-
         try:
             if self.debriefController:
                 self.debriefController.close()

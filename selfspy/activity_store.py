@@ -161,6 +161,9 @@ class ActivityStore:
         s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
+        s = objc.selector(self.populateReviewWindow_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateReviewWindow', None)
+
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
@@ -208,12 +211,15 @@ class ActivityStore:
         self.thumbdriveTimer.fire() # get location immediately
 
     def stopLoops(self):
-        if self.screenshotTimer:
-            self.screenshotTimer.invalidate()
-        if self.experienceTimer:
-            self.experienceTimer.invalidate()
-        if self.thumbdriveTimer:
-            self.thumbdriveTimer.invalidate()
+        try:
+            if self.screenshotTimer:
+                self.screenshotTimer.invalidate()
+            if self.experienceTimer:
+                self.experienceTimer.invalidate()
+            if self.thumbdriveTimer:
+                self.thumbdriveTimer.invalidate()
+        except(AttributeError):
+            pass
 
     def close(self):
         """ stops the sniffer and stores the latest keys and close of programs. To be used on shutdown of program"""
@@ -510,6 +516,44 @@ class ActivityStore:
             controller.existAudioText.setStringValue_("Record your answer:")
             controller.playAudioButton.setHidden_(True)
             controller.deleteAudioButton.setHidden_(True)
+
+    def populateReviewWindow_(self, notification):
+        controller = notification.object().reviewController
+
+        # populate page with data from database
+        q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
+
+        #print("Now QUERYING for " + controller.dateQuery + "%")
+
+        concat = ''
+
+        for window in q:
+            try:
+                #print(u"###!!!!!!!!!!######### Data from database: " + str(window))
+                concat = concat + "\n" + str(window)
+            except UnicodeEncodeError:
+                #print("Not decodable! Unicode Error ...")
+                pass
+
+            controller.doingText.setStringValue_(concat)
+#
+        #    if (q[-1].audio_file != '') & (q[-1].audio_file != None):
+        #        controller.recordButton.setEnabled_(False)
+        #        controller.existAudioText.setStringValue_("You've recorded an answer:")
+        #        controller.playAudioButton.setHidden_(False)
+        #        controller.deleteAudioButton.setHidden_(False)
+        #    else:
+        #        controller.recordButton.setEnabled_(True)
+        #        controller.existAudioText.setStringValue_("Record your answer:")
+        #        controller.playAudioButton.setHidden_(True)
+        #        controller.deleteAudioButton.setHidden_(True)
+        #else:
+        #    controller.doingText.setStringValue_('')
+        #    controller.audio_file = ''
+        #    controller.recordButton.setEnabled_(True)
+        #    controller.existAudioText.setStringValue_("Record your answer:")
+        #    controller.playAudioButton.setHidden_(True)
+        #    controller.deleteAudioButton.setHidden_(True)
 
     def getPriorExperiences_(self, notification):
         prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
