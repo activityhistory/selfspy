@@ -47,6 +47,18 @@ class SpookMixin(object):
     created_at = Column(Unicode, default=datetime.datetime.now, index=True)
 
 
+class RecordingEvent(SpookMixin, Base):
+    event_type = Column(Unicode, index=True)
+    time = Column(Unicode, index=True)
+
+    def __init__(self, time, event_type):
+        self.time = time
+        self.event_type = event_type
+
+    def __repr__(self):
+        return "<Recording turned '%s' >" % self.event_type
+
+
 class Process(SpookMixin, Base):
     name = Column(Unicode, index=True, unique=True)
 

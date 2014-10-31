@@ -207,6 +207,7 @@ class Sniffer:
                 # self.createStatusButton()
 
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('noteRecordingState',self)
 
             def applicationWillTerminate_(self, application):
                 # need to release the lock here as when the application terminates it does not run the rest the
@@ -225,6 +226,7 @@ class Sniffer:
                 NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(recording,'recording')
 
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('noteRecordingState',self)
 
                 #change text and enabled status of screenshot menu item
                 if recording:
