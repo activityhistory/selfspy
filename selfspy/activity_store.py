@@ -454,17 +454,18 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    def store_experience(self, project, message, screenshot, user_initiated, ignored):
-        self.session.add(Experience(project, message, screenshot, user_initiated, ignored))
+    # removed project
+    def store_experience(self, message, screenshot, user_initiated, ignored):
+        self.session.add(Experience( message, screenshot, user_initiated, ignored))
         self.trycommit()
 
     def gotExperience_(self, notification):
-        project = notification.object().projectText.stringValue()
+        # project = notification.object().projectText.stringValue()
         message = notification.object().experienceText.stringValue()
         screenshot = notification.object().currentScreenshot
         user_initiated = notification.object().user_initiated
         ignored = notification.object().ignored
-        self.store_experience(project, message, screenshot, user_initiated, ignored)
+        self.store_experience(message, screenshot, user_initiated, ignored)
 
     def recordDebrief_(self, notification):
         experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
@@ -510,10 +511,11 @@ class ActivityStore:
             controller.deleteAudioButton.setHidden_(True)
 
     def getPriorExperiences_(self, notification):
-        prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
-        for p in prior_projects:
-            if(p.project != ''):
-                notification.object().projectText.addItemWithObjectValue_(p.project)
+        # remove project
+        # prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
+        # for p in prior_projects:
+        #     if(p.project != ''):
+        #         notification.object().projectText.addItemWithObjectValue_(p.project)
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
         for m in prior_messages:
             if(m.message != ''):

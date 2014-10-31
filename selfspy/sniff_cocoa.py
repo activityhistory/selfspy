@@ -67,7 +67,7 @@ class ExperienceController(NSWindowController):
     user_initiated = True
     ignored = False
 
-    projectText = IBOutlet()
+    # projectText = IBOutlet()
     experienceText = IBOutlet()
     screenshotDisplay = IBOutlet()
 
