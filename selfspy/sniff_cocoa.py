@@ -30,7 +30,7 @@ from PyObjCTools import AppHelper
 
 import LaunchServices
 
-from Cocoa import (NSEvent,
+from Cocoa import (NSEvent, NSScreen,
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask,
                    NSLeftMouseDownMask, NSRightMouseUp, NSRightMouseDown,
@@ -596,14 +596,22 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
+        scr = NSScreen.screens()
+        xmin = 0
+        ymin = 0
+        for s in scr:
+            if s.frame().origin.x < xmin:
+                xmin = s.frame().origin.x
+            if s.frame().origin.y < ymin:
+                ymin = s.frame().origin.y
+
         nativeHeight = CGImageGetHeight(image)*1.0
         nativeWidth = CGImageGetWidth(image)*1.0
         nativeRatio = nativeWidth/nativeHeight
 
-        print str(nativeHeight) + " ," + str(nativeWidth)
-
-        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        width = self.screenRatio * height
+        prefHeight = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+        height = int(prefHeight/scr[0].frame().size.height*nativeHeight)
+        width = int(nativeRatio * height)
         heightScaleFactor = height/nativeHeight
         widthScaleFactor = width/nativeWidth
 
@@ -612,8 +620,8 @@ class Sniffer:
         y = int(mouseLoc.y)
         w = 16
         h = 24
-        scale_x = int(x * widthScaleFactor)
-        scale_y = int((y-h+5) * heightScaleFactor)
+        scale_x = int((x-xmin) * widthScaleFactor)
+        scale_y = int((y-h+5-ymin) * heightScaleFactor)
         scale_w = w*widthScaleFactor
         scale_h = h*heightScaleFactor
 
