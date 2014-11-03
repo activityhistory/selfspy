@@ -44,7 +44,6 @@ class ReviewController(NSWindowController):
     # outlets for UI elements
     mainPanel = IBOutlet()
     doingText = IBOutlet()
-    dynamicReviewTable = IBOutlet()
     progressLabel = IBOutlet()
     progressButton = IBOutlet()
     errorMessage = IBOutlet()
@@ -70,6 +69,18 @@ class ReviewController(NSWindowController):
     stopImage = NSImage.alloc().initByReferencingFile_('../Resources/stop.png')
     stopImage.setScalesWhenResized_(True)
     stopImage.setSize_((11, 11))
+
+    # dynamic review filter table
+
+    tableView = IBOutlet()
+    arrayController = objc.IBOutlet()
+    list = []
+    results = [ NSDictionary.dictionaryWithDictionary_(x) for x in list]
+    dict = {}
+    dict['Data'] = "foo"
+    dict['Datab'] = "4242"
+    results.append(NSDictionary.dictionaryWithDictionary_(dict))
+    results.append(NSDictionary.dictionaryWithDictionary_(dict))
 
     @IBAction
     def toggleAudioPlay_(self, sender):
@@ -142,13 +153,12 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
+
         controller = self.reviewController
         i = self.currentScreenshot
         list_of_files = [ f for f in listdir(u'/Users/jonas/.selfspy/screenshots/') if isfile(join(u'/Users/jonas/.selfspy/screenshots/',f)) ] # TODO make it not only work for jonas
 
         if (i <= len(list_of_files)):
-
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
 
             s = list_of_files[i]
 
@@ -156,8 +166,6 @@ class ReviewController(NSWindowController):
 
             experienceImage = NSImage.alloc().initByReferencingFile_(u'/Users/jonas/.selfspy/screenshots/' + s)
             NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
-
-            print("### dynamicReviewTable is: " + str(controller.dynamicReviewTable))
 
             width = experienceImage.size().width
             height = experienceImage.size().height
@@ -173,6 +181,7 @@ class ReviewController(NSWindowController):
             experienceImage.setSize_((width, height))
             controller.mainPanel.setImage_(experienceImage)
 
+            self.populateExperienceTable(self)
             self.currentScreenshot += 5
 
 
@@ -181,8 +190,19 @@ class ReviewController(NSWindowController):
             self.currentScreenshot += 1
             #self.reviewController.close()
 
+    def populateExperienceTable(self, self2=None):
+        dict = {}
+        dict['Data'] = "foo"
+        dict['Datab'] = "4242"
+        self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
+        self.reviewController.arrayController.rearrangeObjects()
+
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
+
+    def awakeFromNib(self):
+        if self.tableView:
+            self.tableView.setTarget_(self)
 
     def show(self):
 
@@ -211,6 +231,12 @@ class ReviewController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getReviewExperiences',self)
 
         self.currentScreenshot = 0
+
+        desc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',False)
+        descriptiorArray = [desc]
+        self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
+        self.reviewController.arrayController.rearrangeObjects()
+
         self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)

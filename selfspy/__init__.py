@@ -44,8 +44,8 @@ sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/self
 #import pydevd
 #
 #pydevd.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
-
-# End of debugging code
+#
+## End of debugging code
 
 from selfspy.activity_store import ActivityStore
 from selfspy import config as cfg

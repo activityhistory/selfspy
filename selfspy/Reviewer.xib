@@ -6,12 +6,13 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ReviewController">
             <connections>
+                <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
                 <outlet property="doingText" destination="EcU-xD-byN" id="DhU-RN-UHG"/>
-                <outlet property="dynamicReviewTable" destination="beq-tF-GIw" id="HpV-cQ-RCF"/>
                 <outlet property="errorMessage" destination="OLR-Ww-MGY" id="3L3-6N-r9l"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
                 <outlet property="progressButton" destination="Trf-dt-yta" id="nVl-KS-yZo"/>
                 <outlet property="progressLabel" destination="Hoh-CD-cXr" id="uaB-K4-t0d"/>
+                <outlet property="tableView" destination="beq-tF-GIw" id="bac-Kh-gKM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
             </connections>
         </customObject>
@@ -60,6 +61,10 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
+                        <rect key="frame" x="56" y="27" width="871" height="604"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
+                    </imageView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YOG-hU-cyb">
                         <rect key="frame" x="996" y="64" width="240" height="393"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="SXu-jc-F7G">
@@ -73,7 +78,7 @@
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
                                         <tableColumn width="116" minWidth="40" maxWidth="1000" id="Q3u-T0-hJ0">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Data1">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -98,14 +103,14 @@
                                                             </textFieldCell>
                                                         </textField>
                                                     </subviews>
-                                                    <connections>
-                                                        <outlet property="textField" destination="n0g-H1-g2e" id="l3z-bA-Acq"/>
-                                                    </connections>
                                                 </tableCellView>
                                             </prototypeCellViews>
+                                            <connections>
+                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.Datab" id="oFJ-PL-qhX"/>
+                                            </connections>
                                         </tableColumn>
                                         <tableColumn width="116" minWidth="40" maxWidth="1000" id="3lY-Nr-jN7">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Data2">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -130,11 +135,11 @@
                                                             </textFieldCell>
                                                         </textField>
                                                     </subviews>
-                                                    <connections>
-                                                        <outlet property="textField" destination="mA9-Zc-cYH" id="bhM-nY-rC5"/>
-                                                    </connections>
                                                 </tableCellView>
                                             </prototypeCellViews>
+                                            <connections>
+                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.Data" id="psx-Yy-gWj"/>
+                                            </connections>
                                         </tableColumn>
                                     </tableColumns>
                                 </tableView>
@@ -154,13 +159,14 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
-                        <rect key="frame" x="56" y="27" width="871" height="604"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
-                    </imageView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="502" y="442.5"/>
+            <point key="canvasLocation" x="496" y="245.5"/>
         </window>
+        <arrayController id="35e-tI-NTw">
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.results" id="unG-1M-8PH"/>
+            </connections>
+        </arrayController>
     </objects>
 </document>
