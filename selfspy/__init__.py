@@ -38,13 +38,13 @@ print("### current os.getcwd() : ", os.getcwd())
 sys.path.append('/Users/jonas/Desktop/Uni/UCSD/DLab/SelfSpyProject/last_try/selfspy/') # your project folder
 #sys.path.append(os.getcwd())
 #
-## remote debugging with PyCharm
-#
+# remote debugging with PyCharm
+
 #sys.path.append("/Applications/PyCharm.app/pycharm-debug.egg") # your PyCharm path
 #import pydevd
 #
 #pydevd.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
-#
+
 ## End of debugging code
 
 from selfspy.activity_store import ActivityStore

@@ -81,6 +81,7 @@ class ReviewController(NSWindowController):
     dict['Datab'] = "4242"
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
+    queryResponse = []
 
     @IBAction
     def toggleAudioPlay_(self, sender):
@@ -160,6 +161,9 @@ class ReviewController(NSWindowController):
 
         if (i <= len(list_of_files)):
 
+            if i == 0:
+                self.populateExperienceTable(self)
+
             s = list_of_files[i]
 
             self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
@@ -181,7 +185,6 @@ class ReviewController(NSWindowController):
             experienceImage.setSize_((width, height))
             controller.mainPanel.setImage_(experienceImage)
 
-            self.populateExperienceTable(self)
             self.currentScreenshot += 5
 
 
@@ -190,12 +193,47 @@ class ReviewController(NSWindowController):
             self.currentScreenshot += 1
             #self.reviewController.close()
 
+
     def populateExperienceTable(self, self2=None):
-        dict = {}
-        dict['Data'] = "foo"
-        dict['Datab'] = "4242"
-        self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
-        self.reviewController.arrayController.rearrangeObjects()
+
+        list_of_files = [ f for f in listdir(u'/Users/jonas/.selfspy/screenshots/') if isfile(join(u'/Users/jonas/.selfspy/screenshots/',f)) ] # TODO make it not only work for jonas
+
+        print("### populateExperienceTable , list of files 0 is ", list_of_files[0])
+
+        for s in list_of_files:
+            self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
+
+            NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
+
+
+            concat = ''
+
+            #print("populateExperienceTable, self.queryResponse: ", self.queryResponse)
+
+
+            if len(self.queryResponse) > 0:
+                try:
+                    #print("### query response is ", str(self.queryResponse))
+
+                    dict = {}
+
+                    #print("concat is ", concat)
+
+                    dict['Datab'] = str(self.queryResponse)
+
+                    self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
+
+                except UnicodeEncodeError:
+                    pass
+
+
+
+            self.queryResponse = []
+        try:
+            self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
+            self.reviewController.arrayController.rearrangeObjects()
+        except UnboundLocalError:
+            pass
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)

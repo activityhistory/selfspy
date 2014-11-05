@@ -164,6 +164,9 @@ class ActivityStore:
         s = objc.selector(self.populateReviewWindow_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateReviewWindow', None)
 
+        s = objc.selector(self.queryMetadata_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
+
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
@@ -527,37 +530,30 @@ class ActivityStore:
         # populate page with data from database
         q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
 
-        #print("Now QUERYING for " + controller.dateQuery + "%")
-
         concat = ''
 
         for window in q:
             try:
-                #print(u"###!!!!!!!!!!######### Data from database: " + str(window))
                 concat = concat + "\n" + str(window)
             except UnicodeEncodeError:
-                #print("Not decodable! Unicode Error ...")
                 pass
 
             controller.doingText.setStringValue_(concat)
-#
-        #    if (q[-1].audio_file != '') & (q[-1].audio_file != None):
-        #        controller.recordButton.setEnabled_(False)
-        #        controller.existAudioText.setStringValue_("You've recorded an answer:")
-        #        controller.playAudioButton.setHidden_(False)
-        #        controller.deleteAudioButton.setHidden_(False)
-        #    else:
-        #        controller.recordButton.setEnabled_(True)
-        #        controller.existAudioText.setStringValue_("Record your answer:")
-        #        controller.playAudioButton.setHidden_(True)
-        #        controller.deleteAudioButton.setHidden_(True)
-        #else:
-        #    controller.doingText.setStringValue_('')
-        #    controller.audio_file = ''
-        #    controller.recordButton.setEnabled_(True)
-        #    controller.existAudioText.setStringValue_("Record your answer:")
-        #    controller.playAudioButton.setHidden_(True)
-        #    controller.deleteAudioButton.setHidden_(True)
+
+    def queryMetadata_(self, notification):
+        controller = notification.object().reviewController
+
+        # populate page with data from database
+        #print("queryMetadata_ ... controller.dateQuery is ", controller.dateQuery)
+
+        try:
+            q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
+            if len(q) > 0:
+                #print("got this: ", q)
+                controller.queryResponse.append(str(q))
+                #print(" ### queryMeta: controller.queryResponse: ", controller.queryResponse)
+        except UnicodeEncodeError:
+                pass
 
     def getPriorExperiences_(self, notification):
         # remove project
