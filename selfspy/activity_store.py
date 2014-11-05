@@ -547,10 +547,13 @@ class ActivityStore:
         #print("queryMetadata_ ... controller.dateQuery is ", controller.dateQuery)
 
         try:
-            q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
+            q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.process_id).all()
+            #q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
             if len(q) > 0:
-                #print("got this: ", q)
-                controller.queryResponse.append(str(q))
+                p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
+                print("got this: ", p)
+                pass
+                controller.queryResponse.append(str(p[0][1]))
                 #print(" ### queryMeta: controller.queryResponse: ", controller.queryResponse)
         except UnicodeEncodeError:
                 pass

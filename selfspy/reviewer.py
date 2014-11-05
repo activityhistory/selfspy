@@ -213,13 +213,14 @@ class ReviewController(NSWindowController):
 
             if len(self.queryResponse) > 0:
                 try:
-                    #print("### query response is ", str(self.queryResponse))
+                    print("### query response is ", str(self.queryResponse))
 
                     dict = {}
 
                     #print("concat is ", concat)
 
-                    dict['Datab'] = str(self.queryResponse)
+                    lenstr = len(self.queryResponse)
+                    dict['Datab'] = str(self.queryResponse)[2:lenstr-3]
 
                     self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
 
