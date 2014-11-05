@@ -551,10 +551,15 @@ class ActivityStore:
             #q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
             if len(q) > 0:
                 p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
-                #print("got this: ", p)
-                pass
-                controller.queryResponse.append(str(p[0][1]))
-                #print(" ### queryMeta: controller.queryResponse: ", controller.queryResponse)
+                if str(p[0][1]) == "Safari" or str(p[0][1]) == "Google Chrome":
+                    u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
+                    controller.queryResponse.append(str(p[0][1]))
+                    controller.queryResponse2.append(str(u[0][1]))
+                else:
+                    #print("got this: ", p)
+                    pass
+                    controller.queryResponse.append(str(p[0][1]))
+                    #print(" ### queryMeta: controller.queryResponse: ", controller.queryResponse)
         except UnicodeEncodeError:
                 pass
 

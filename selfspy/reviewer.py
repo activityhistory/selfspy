@@ -82,6 +82,7 @@ class ReviewController(NSWindowController):
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
     queryResponse = []
+    queryResponse2 = []
 
     @IBAction
     def toggleAudioPlay_(self, sender):
@@ -221,6 +222,7 @@ class ReviewController(NSWindowController):
 
                     lenstr = len(self.queryResponse)
                     dict['Datab'] = str(self.queryResponse)[2:lenstr-3]
+                    dict['Data'] = str(self.queryResponse2)[2:lenstr-3]
                     if dict not in self.results:
                         self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
 
@@ -230,6 +232,7 @@ class ReviewController(NSWindowController):
 
 
             self.queryResponse = []
+            self.queryResponse2 = []
         try:
             self.results.append(NSDictionary.dictionaryWithDictionary_(dict))
             self.reviewController.arrayController.rearrangeObjects()
