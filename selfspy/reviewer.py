@@ -79,7 +79,9 @@ class ReviewController(NSWindowController):
     dict = {}
     dict['Data'] = "foo"
     dict['Datab'] = "4242"
+    dict['checkb'] = False
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
+    dict['checkb'] = True
     results.append(NSDictionary.dictionaryWithDictionary_(dict))
     queryResponse = []
     queryResponse2 = []
@@ -155,6 +157,12 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
+
+        for value in self.results:
+            try:
+                print value['checkb']
+            except KeyError:
+                print "NO BOOLEAN"
 
         controller = self.reviewController
         i = self.currentScreenshot
