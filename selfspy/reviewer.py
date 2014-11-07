@@ -48,7 +48,7 @@ class ReviewController(NSWindowController):
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
     d = NSMutableDictionary({'Data': "abc", 'Datab': "def", 'checkb': NSNumber.numberWithBool_(0)})
-    results.append(NSDictionary.dictionaryWithDictionary_(d))
+    results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
     queryResponse = []
     queryResponse2 = []
@@ -93,15 +93,12 @@ class ReviewController(NSWindowController):
     def advanceExperienceWindow_(self, sender):
 
         # Debugging Boolean values
-        #self.printBools(self)
+        self.printBools(self)
 
         list_of_files = self.generateScreenshotList(self)
 
         i = self.currentScreenshot
         if (i < len(list_of_files)):
-
-            if i == 0:
-                self.populateExperienceTable(self)
 
             s = list_of_files[i]
 
@@ -120,7 +117,6 @@ class ReviewController(NSWindowController):
 
         list_of_files = self.generateScreenshotList(self)
 
-
         for s in list_of_files:
             self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
 
@@ -131,7 +127,7 @@ class ReviewController(NSWindowController):
             if lenstr > 0:
                  d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3], 'Datab': str(self.queryResponse)[2:lenstr-3], 'checkb': NSNumber.numberWithBool_(1)})
                  if d not in self.results:
-                    self.results.append(NSDictionary.dictionaryWithDictionary_(d))
+                    self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
             self.queryResponse = []
             self.queryResponse2 = []
@@ -176,6 +172,7 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
 
+        self.populateExperienceTable(self)
         self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
