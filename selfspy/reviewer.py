@@ -26,7 +26,7 @@ from os.path import isfile, join
 from objc import IBAction, IBOutlet
 from AppKit import *
 
-SCREENSHOT_REVIEW_INTERVAL = 5
+SCREENSHOT_REVIEW_INTERVAL = 1
 
 # Review window controller
 class ReviewController(NSWindowController):
@@ -47,8 +47,6 @@ class ReviewController(NSWindowController):
     NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
-    d = NSMutableDictionary({'Data': "abc", 'Datab': "def", 'checkb': NSNumber.numberWithBool_(0)})
-    results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
     queryResponse = []
     queryResponse2 = []
@@ -88,14 +86,15 @@ class ReviewController(NSWindowController):
         experienceImage.setSize_((width, height))
         self.reviewController.mainPanel.setImage_(experienceImage)
 
+    def generateDictEntry(self, a=None, b=None, c=None):
+        return NSMutableDictionary({'Data': a,
+                                    'Datab': b,
+                                    'checkb': c})
+
     @IBAction
     def advanceExperienceWindow_(self, sender):
 
-        # Debugging Boolean values
-        #self.printBools(self)
-
         list_of_files = self.generateScreenshotList(self)
-
 
         screenshot_found = False
         while (not screenshot_found):
@@ -112,9 +111,9 @@ class ReviewController(NSWindowController):
                 lenstr = len(self.queryResponse)
 
                 if lenstr > 0:
-                     d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3],
-                                              'Datab': str(self.queryResponse)[2:lenstr-3],
-                                              'checkb': NSNumber.numberWithBool_(1)})
+                     d = self.generateDictEntry(a=str(self.queryResponse2)[2:lenstr-3],
+                                                b=str(self.queryResponse)[2:lenstr-3],
+                                                c=NSNumber.numberWithBool_(1))
                      if d in self.results:
                          screenshot_found = True
                          self.displayScreenshot(self, s=s)
@@ -127,11 +126,11 @@ class ReviewController(NSWindowController):
 
 
             else:
-                screenshot_found = True
+                screenshot_found = True # so that it stops searching
                 self.reviewController.close()
 
 
-    def populateExperienceTable(self, self2=None):
+    def populateExperienceTable(self):
 
         list_of_files = self.generateScreenshotList(self)
 
@@ -143,9 +142,10 @@ class ReviewController(NSWindowController):
             lenstr = len(self.queryResponse)
 
             if lenstr > 0:
-                 d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3],
-                                          'Datab': str(self.queryResponse)[2:lenstr-3],
-                                          'checkb': NSNumber.numberWithBool_(0)})
+                 d = self.generateDictEntry(self,
+                                            a=str(self.queryResponse2)[2:lenstr-3],
+                                            b=str(self.queryResponse)[2:lenstr-3],
+                                            c=NSNumber.numberWithBool_(0))
                  if d not in self.results:
                     self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
@@ -193,6 +193,5 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         self.populateExperienceTable(self)
-        #self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
