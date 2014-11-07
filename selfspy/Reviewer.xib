@@ -7,11 +7,8 @@
         <customObject id="-2" userLabel="File's Owner" customClass="ReviewController">
             <connections>
                 <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
-                <outlet property="doingText" destination="EcU-xD-byN" id="DhU-RN-UHG"/>
-                <outlet property="errorMessage" destination="OLR-Ww-MGY" id="3L3-6N-r9l"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
                 <outlet property="progressButton" destination="Trf-dt-yta" id="nVl-KS-yZo"/>
-                <outlet property="progressLabel" destination="Hoh-CD-cXr" id="uaB-K4-t0d"/>
                 <outlet property="tableView" destination="beq-tF-GIw" id="bac-Kh-gKM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
             </connections>
@@ -68,7 +65,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="fi8-pQ-biE" id="beq-tF-GIw">
-                                    <rect key="frame" x="0.0" y="0.0" width="238" height="19"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="299" height="19"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -112,13 +109,13 @@
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                             </tableHeaderCell>
-                                            <buttonCell key="dataCell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" inset="2" id="PNY-dE-9lc">
+                                            <buttonCell key="dataCell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" inset="2" id="bmb-cS-ToU">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <connections>
-                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.checkb" id="wDz-iJ-iph"/>
+                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.checkb" id="fLu-uZ-qME"/>
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>

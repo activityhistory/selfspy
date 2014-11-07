@@ -538,8 +538,6 @@ class ActivityStore:
             except UnicodeEncodeError:
                 pass
 
-            controller.doingText.setStringValue_(concat)
-
     def queryMetadata_(self, notification):
         controller = notification.object().reviewController
 
