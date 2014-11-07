@@ -70,7 +70,6 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name):
-        print "ActivityStore ", self, db_name
 
         # We check if a selfspy thumbdrive is plugged in and available
         # if so this is where we're storing the screenshots and DB
@@ -524,24 +523,14 @@ class ActivityStore:
 
     def queryMetadata_(self, notification):
         controller = notification.object().reviewController
-
-        # populate page with data from database
-        #print("queryMetadata_ ... controller.dateQuery is ", controller.dateQuery)
-
         try:
             q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.process_id).all()
-            #q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
             if len(q) > 0:
                 p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
-                if str(p[0][1]) == "Safari" or str(p[0][1]) == "Google Chrome":
+                if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
                     u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
-                    controller.queryResponse.append(str(p[0][1]))
-                    controller.queryResponse2.append(str(u[0][1]))
-                else:
-                    #print("got this: ", p)
-                    pass
-                    controller.queryResponse.append(str(p[0][1]))
-                    #print(" ### queryMeta: controller.queryResponse: ", controller.queryResponse)
+                    controller.queryResponse2.append(u[0][1])
+                controller.queryResponse.append(p[0][1])
         except UnicodeEncodeError:
                 pass
 

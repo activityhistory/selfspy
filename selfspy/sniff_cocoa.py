@@ -31,7 +31,7 @@ from PyObjCTools import AppHelper
 
 import LaunchServices
 
-from Cocoa import (NSEvent,
+from Cocoa import (NSEvent, NSScreen,
                    NSKeyDown, NSKeyDownMask, NSKeyUp, NSKeyUpMask,
                    NSLeftMouseUp, NSLeftMouseDown, NSLeftMouseUpMask,
                    NSLeftMouseDownMask, NSRightMouseUp, NSRightMouseDown,
@@ -44,7 +44,7 @@ from Cocoa import (NSEvent,
 
 import Quartz
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
-                    kCGWindowListOptionAll, kCGNullWindowID)
+                    kCGWindowListOptionAll, kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
 import Quartz.CoreGraphics as CG
 
 import config as cfg
@@ -232,36 +232,37 @@ class Sniffer:
                 #change text and enabled status of screenshot menu item
                 if recording:
                   self.loggingMenuItem.setTitle_("Pause Recording")
-                  self.screenshotMenuItem.setEnabled_(True)
+                  # self.screenshotMenuItem.setEnabled_(True)
                 else:
                   self.loggingMenuItem.setTitle_("Start Recording")
-                  self.screenshotMenuItem.setEnabled_(False)
+                  # self.screenshotMenuItem.setEnabled_(False)
                 self.changeIcon()
 
-            def toggleScreenshots_(self, notification):
-                NSLog("toggleScreenshots")
-                screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
-                if screen:
-                  self.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
-                else:
-                  self.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
-                screen = not screen
-                NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(screen,'screenshots')
-                self.changeIcon()
+            # def toggleScreenshots_(self, notification):
+            #     NSLog("toggleScreenshots")
+            #     screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+            #     if screen:
+            #       self.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
+            #     else:
+            #       self.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
+            #     screen = not screen
+            #     NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(screen,'screenshots')
+            #     self.changeIcon()
 
             def changeIcon(self):
                 record = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
                 screenshots = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
                 if(record):
-                    if(screenshots):
-                        self.statusitem.setImage_(self.iconPhoto)
-                    else:
-                        self.statusitem.setImage_(self.icon)
+                    self.statusitem.setImage_(self.icon)
+                    # if(screenshots):
+                    #     self.statusitem.setImage_(self.iconPhoto)
+                    # else:
                 else:
-                    if(screenshots):
-                        self.statusitem.setImage_(self.iconGrayPhoto)
-                    else:
-                        self.statusitem.setImage_(self.iconGray)
+                    self.statusitem.setImage_(self.iconGray)
+                    # if(screenshots):
+                    #     self.statusitem.setImage_(self.iconGrayPhoto)
+                    # else:
+
 
             def bookmark_(self, notification):
                 self.statusitem.setImage_(self.iconBook)
@@ -280,7 +281,7 @@ class Sniffer:
                     audioName = string.replace(audioName, "/", ":")
                     audioName = audioName[1:]
 
-                    s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
+                    s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set numDocuments to count of documents \n set mydocument to document numDocuments \n tell document numDocuments \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n set numDocuments to count of documents \n if (numDocuments = 0) then \n quit \n end if \n end tell")
                     s.executeAndReturnError_(None)
 
                     self.changeIcon()
@@ -290,7 +291,7 @@ class Sniffer:
                     self.recordingAudio = True
                     print "Start Audio Recording"
 
-                    s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
+                    s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n delay 0.1 \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
                     s.executeAndReturnError_(None)
 
                     self.statusitem.setImage_(self.iconRecord)
@@ -321,28 +322,28 @@ class Sniffer:
                 # self.statusitem.setTitle_(u"Selfspy")
 
                 # Load all images
-                self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye-48.png')
+                self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye.png')
                 self.icon.setScalesWhenResized_(True)
                 self.size_ = self.icon.setSize_((20, 20))
                 self.statusitem.setImage_(self.icon)
 
-                self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_gray-48.png')
+                self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_grey.png')
                 self.iconGray.setScalesWhenResized_(True)
                 self.iconGray.setSize_((20, 20))
 
-                self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo-48.png')
-                self.iconPhoto.setScalesWhenResized_(True)
-                self.iconPhoto.setSize_((20, 20))
+                # self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo-48.png')
+                # self.iconPhoto.setScalesWhenResized_(True)
+                # self.iconPhoto.setSize_((20, 20))
+                #
+                # self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo_gray-48.png')
+                # self.iconGrayPhoto.setScalesWhenResized_(True)
+                # self.iconGrayPhoto.setSize_((20, 20))
 
-                self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo_gray-48.png')
-                self.iconGrayPhoto.setScalesWhenResized_(True)
-                self.iconGrayPhoto.setSize_((20, 20))
-
-                self.iconBook = NSImage.alloc().initByReferencingFile_('../Resources/bookmark-64.png')
+                self.iconBook = NSImage.alloc().initByReferencingFile_('../Resources/eye_bookmark.png')
                 self.iconBook.setScalesWhenResized_(True)
                 self.iconBook.setSize_((20, 20))
 
-                self.iconRecord = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
+                self.iconRecord = NSImage.alloc().initByReferencingFile_('../Resources/eye_mic.png')
                 self.iconRecord.setScalesWhenResized_(True)
                 self.iconRecord.setSize_((20, 20))
 
@@ -365,14 +366,14 @@ class Sniffer:
                 self.menu.addItem_(menuitem)
                 self.loggingMenuItem = menuitem
 
-                if NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots'):
-                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Screenshots', 'toggleScreenshots:', '')
-                else :
-                  menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Screenshots', 'toggleScreenshots:', '')
-                if(not NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
-                    menuitem.setEnabled_(False)
-                self.menu.addItem_(menuitem)
-                self.screenshotMenuItem = menuitem
+                # if NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots'):
+                #   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Screenshots', 'toggleScreenshots:', '')
+                # else :
+                #   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Screenshots', 'toggleScreenshots:', '')
+                # if(not NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
+                #     menuitem.setEnabled_(False)
+                # self.menu.addItem_(menuitem)
+                # self.screenshotMenuItem = menuitem
 
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
@@ -386,11 +387,11 @@ class Sniffer:
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
-                self.menu.addItem_(menuitem)
-
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
+                # self.menu.addItem_(menuitem)
+                #
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
+                # self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
                 self.menu.addItem_(menuitem)
@@ -619,19 +620,34 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        height = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        width = self.screenRatio * height
-        scaleFactor = height/self.screenSize[1]
+        scr = NSScreen.screens()
+        xmin = 0
+        ymin = 0
+        for s in scr:
+            if s.frame().origin.x < xmin:
+                xmin = s.frame().origin.x
+            if s.frame().origin.y < ymin:
+                ymin = s.frame().origin.y
+
+        nativeHeight = CGImageGetHeight(image)*1.0
+        nativeWidth = CGImageGetWidth(image)*1.0
+        nativeRatio = nativeWidth/nativeHeight
+
+        prefHeight = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
+        height = int(prefHeight/scr[0].frame().size.height*nativeHeight)
+        width = int(nativeRatio * height)
+        heightScaleFactor = height/nativeHeight
+        widthScaleFactor = width/nativeWidth
 
         mouseLoc = NSEvent.mouseLocation()
         x = int(mouseLoc.x)
         y = int(mouseLoc.y)
         w = 16
         h = 24
-        scale_x = int(x * scaleFactor)
-        scale_y = int((y-h+5) * scaleFactor)
-        scale_w = w*scaleFactor
-        scale_h = h*scaleFactor
+        scale_x = int((x-xmin) * widthScaleFactor)
+        scale_y = int((y-h+5-ymin) * heightScaleFactor)
+        scale_w = w*widthScaleFactor
+        scale_h = h*heightScaleFactor
 
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))

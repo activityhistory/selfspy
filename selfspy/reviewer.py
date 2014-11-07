@@ -91,8 +91,8 @@ class ReviewController(NSWindowController):
 
 
     def generateDictEntry(self, checked=None):
-        return NSMutableDictionary({'Data': str(self.queryResponse2)[2:len(self.queryResponse2)-3],
-                                    'Datab': str(self.queryResponse)[2:len(self.queryResponse)-3],
+        return NSMutableDictionary({'Data': self.queryResponse2[0] if len(self.queryResponse2) > 0 else "",
+                                    'Datab': self.queryResponse[0] if len(self.queryResponse) > 0 else "",
                                     'checkb': NSNumber.numberWithBool_(checked)})
 
 
