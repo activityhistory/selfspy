@@ -1,5 +1,6 @@
 *.pyc
 *.egg-info
+*.key
 build/
 dist/selfspy.app*
 
