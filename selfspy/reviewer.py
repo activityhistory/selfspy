@@ -33,14 +33,12 @@ class ReviewController(NSWindowController):
 
     # outlets for UI elements
     mainPanel = IBOutlet()
-    doingText = IBOutlet()
     tableView = IBOutlet()
     arrayController = IBOutlet()
 
     # instance variables
     currentScreenshot = -1
     dateQuery = ""
-    audio_file = ''
 
     # dynamic review table
     list = []
@@ -48,6 +46,7 @@ class ReviewController(NSWindowController):
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
 
+    # let activity_store write query results in those
     queryResponse = []
     queryResponse2 = []
 
@@ -87,36 +86,35 @@ class ReviewController(NSWindowController):
         self.reviewController.mainPanel.setImage_(experienceImage)
 
     def generateDictEntry(self, a=None, b=None, c=None):
-        return NSMutableDictionary({'Data': a,
-                                    'Datab': b,
-                                    'checkb': c})
+        lenstr = len(b)
+        return NSMutableDictionary({'Data': str(a)[2:lenstr-3],
+                                    'Datab': str(b)[2:lenstr-3],
+                                    'checkb': NSNumber.numberWithBool_(c)})
+
+    def generateDateQuery(self, s=None):
+        self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
 
         list_of_files = self.generateScreenshotList(self)
-
         screenshot_found = False
+
         while (not screenshot_found):
-            i = self.currentScreenshot
-            if (i < len(list_of_files)):
+            if (self.currentScreenshot < len(list_of_files)):
 
-                s = list_of_files[i]
+                self.generateDateQuery(list_of_files[self.currentScreenshot])
 
-                self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
-
-
+                # send message to activity_store so it can do the database query
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
 
-                lenstr = len(self.queryResponse)
-
-                if lenstr > 0:
-                     d = self.generateDictEntry(a=str(self.queryResponse2)[2:lenstr-3],
-                                                b=str(self.queryResponse)[2:lenstr-3],
-                                                c=NSNumber.numberWithBool_(1))
+                if len(self.queryResponse) > 0:
+                     d = self.generateDictEntry(a=self.queryResponse2,
+                                                b=self.queryResponse,
+                                                c=1)
                      if d in self.results:
                          screenshot_found = True
-                         self.displayScreenshot(self, s=s)
+                         self.displayScreenshot(self, s=list_of_files[self.currentScreenshot])
 
                 self.queryResponse = []
                 self.queryResponse2 = []
@@ -135,17 +133,15 @@ class ReviewController(NSWindowController):
         list_of_files = self.generateScreenshotList(self)
 
         for s in list_of_files:
-            self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
+            self.generateDateQuery(self, s=s)
 
             NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
 
-            lenstr = len(self.queryResponse)
-
-            if lenstr > 0:
+            if len(self.queryResponse) > 0:
                  d = self.generateDictEntry(self,
-                                            a=str(self.queryResponse2)[2:lenstr-3],
-                                            b=str(self.queryResponse)[2:lenstr-3],
-                                            c=NSNumber.numberWithBool_(0))
+                                            a=self.queryResponse2,
+                                            b=self.queryResponse,
+                                            c=0)
                  if d not in self.results:
                     self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
