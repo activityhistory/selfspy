@@ -150,7 +150,6 @@ class DebriefController(NSWindowController):
         # disable all controls if no experiences to debrief
         if self.experiences:
             l = len(self.experiences)
-            print("+---> " + str(l) + "Experiences exist!")
         if (not self.experiences) or (l == 0):
             controller.errorMessage.setHidden_(False)
             controller.doingText.setEnabled_(False)
@@ -198,8 +197,6 @@ class DebriefController(NSWindowController):
 
     def show(self):
 
-        if self.experiences:
-            l = len(self.experiences)
         try:
             if self.debriefController:
                 self.debriefController.close()
