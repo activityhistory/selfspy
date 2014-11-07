@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 """
@@ -30,8 +31,26 @@ from lockfile import LockFile
 import hashlib
 from Crypto.Cipher import Blowfish
 
+# Following code added by Jonas, should only not be commented for debugging
+
+#print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
+#print("### current os.getcwd() : ", os.getcwd())
+#sys.path.append(os.getcwd() + '/../../../..') # your project folder
+#sys.path.append(os.getcwd())
+#
+# remote debugging with PyCharm
+
+#sys.path.append("/Applications/PyCharm.app/pycharm-debug.egg") # your PyCharm path
+#import pydevd
+#
+#pydevd.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
+
+## End of debugging code
+
 from selfspy.activity_store import ActivityStore
 from selfspy import config as cfg
+
+
 
 
 def parse_config():
@@ -42,7 +61,7 @@ def parse_config():
         " those given in the config file. The config file must start with a "\
         "\"[Defaults]\" section, followed by [argument]=[value] on each line.",
         metavar="FILE")
-    args, remaining_argv = conf_parser.parse_known_args()
+    args, maining_argv = conf_parser.parse_known_args()
 
     defaults = {}
     if args.config:
@@ -61,7 +80,7 @@ def parse_config():
     return parser.parse_args()
 
 def main():
-    print "Selfspy started. Python version " + sys.version
+    #print "Selfspy started. Python version " + sys.version # TODO find out why this makes it crash
 
     args = vars(parse_config())
 
