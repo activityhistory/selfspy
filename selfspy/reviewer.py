@@ -37,7 +37,7 @@ class ReviewController(NSWindowController):
     arrayController = IBOutlet()
 
     # instance variables
-    currentScreenshot = -1
+    currentScreenshot = 0
     dateQuery = ""
 
     # dynamic review table
@@ -46,9 +46,10 @@ class ReviewController(NSWindowController):
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
 
-    # let activity_store write query results in those
+    # let activity_store write query results into those
     queryResponse = []
     queryResponse2 = []
+
 
     # For Debugging purposes
     def printBools(self, self2=None):
@@ -58,15 +59,18 @@ class ReviewController(NSWindowController):
             except KeyError:
                 print "NO BOOLEAN"
 
+
     def getScreenshotPath(self, self2=None):
         path = os.path.expanduser(u'~/.selfspy/screenshots/')
         # TODO will this now still work on a thumbdrive?
         return path
 
+
     def generateScreenshotList(self, self2=None):
         path = self.getScreenshotPath(self)
         list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
         return list_of_files
+
 
     def displayScreenshot(self, self2=None, s=None):
         experienceImage = NSImage.alloc().initByReferencingFile_(self.getScreenshotPath(self) + s)
@@ -85,14 +89,16 @@ class ReviewController(NSWindowController):
         experienceImage.setSize_((width, height))
         self.reviewController.mainPanel.setImage_(experienceImage)
 
-    def generateDictEntry(self, a=None, b=None, c=None):
-        lenstr = len(b)
-        return NSMutableDictionary({'Data': str(a)[2:lenstr-3],
-                                    'Datab': str(b)[2:lenstr-3],
-                                    'checkb': NSNumber.numberWithBool_(c)})
+
+    def generateDictEntry(self, checked=None):
+        return NSMutableDictionary({'Data': str(self.queryResponse2)[2:len(self.queryResponse2)-3],
+                                    'Datab': str(self.queryResponse)[2:len(self.queryResponse)-3],
+                                    'checkb': NSNumber.numberWithBool_(checked)})
+
 
     def generateDateQuery(self, s=None):
         self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
+
 
     @IBAction
     def advanceExperienceWindow_(self, sender):
@@ -109,16 +115,13 @@ class ReviewController(NSWindowController):
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
 
                 if len(self.queryResponse) > 0:
-                     d = self.generateDictEntry(a=self.queryResponse2,
-                                                b=self.queryResponse,
-                                                c=1)
+                     d = self.generateDictEntry(checked=1)
                      if d in self.results:
                          screenshot_found = True
                          self.displayScreenshot(self, s=list_of_files[self.currentScreenshot])
 
                 self.queryResponse = []
                 self.queryResponse2 = []
-
 
                 self.currentScreenshot += SCREENSHOT_REVIEW_INTERVAL
 
@@ -135,13 +138,11 @@ class ReviewController(NSWindowController):
         for s in list_of_files:
             self.generateDateQuery(self, s=s)
 
+            # send message to activity_store so it can do the database query
             NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
 
             if len(self.queryResponse) > 0:
-                 d = self.generateDictEntry(self,
-                                            a=self.queryResponse2,
-                                            b=self.queryResponse,
-                                            c=0)
+                 d = self.generateDictEntry(self, checked=0)
                  if d not in self.results:
                     self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
@@ -164,7 +165,7 @@ class ReviewController(NSWindowController):
         try:
             if self.reviewController:
                 self.reviewController.close()
-        except:
+        except AttributeError:
             pass
 
         # open window from NIB file, show front and center
@@ -176,13 +177,12 @@ class ReviewController(NSWindowController):
 
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+
         # get cmd-w to close window
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
-
-        self.currentScreenshot = 0
-
+        # get arrayController read for Table
         desc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',False)
         descriptiorArray = [desc]
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
