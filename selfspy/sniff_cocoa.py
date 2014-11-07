@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
@@ -55,7 +56,10 @@ import mutagen.mp4
 
 from selfspy import locationTracking
 from selfspy import debriefer
+from selfspy import reviewer
 from selfspy import preferences
+
+from urlparse import urlparse
 
 start_time = NSDate.date()
 
@@ -299,6 +303,10 @@ class Sniffer:
                 NSLog("Showing Daily Debrief Window...")
                 debriefer.DebriefController.show()
 
+            def showReview_(self, notification):
+                NSLog("Showing Review Window...")
+                reviewer.ReviewController.show()
+
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
                 ExperienceController.show()
@@ -318,7 +326,7 @@ class Sniffer:
                 # Load all images
                 self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye.png')
                 self.icon.setScalesWhenResized_(True)
-                self.icon.setSize_((20, 20))
+                self.size_ = self.icon.setSize_((20, 20))
                 self.statusitem.setImage_(self.icon)
 
                 self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_grey.png')
@@ -387,6 +395,9 @@ class Sniffer:
                 # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
                 # self.menu.addItem_(menuitem)
 
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
+                self.menu.addItem_(menuitem)
+
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
@@ -428,7 +439,7 @@ class Sniffer:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
             if(recording):
                 activeApps = self.workspace.runningApplications()
-                #Have to look into this if it is too slow on move and scoll,
+                #Have to look into this if it is too slow on move and scroll,
                 #right now the check is done for everything.
                 regularApps = []
                 for app in activeApps:
@@ -451,12 +462,28 @@ class Sniffer:
                                 or (not event.windowNumber()
                                     and window['kCGWindowOwnerName'] == app.localizedName())):
                                 geometry = window['kCGWindowBounds']
+
+                                # get browser_url
+
+                                browser_url = 'NO_URL'
+
+                                if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+                                if (window.get('kCGWindowOwnerName') == 'Safari'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+
+                                browser_url = str(browser_url[0])[33:]
+                                browser_url = urlparse(browser_url).hostname
+
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u''),
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],
                                                  geometry['Height'],
+                                                 browser_url,
                                                  regularApps,
                                                  regularWindows)
                                 break

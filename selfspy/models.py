@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
@@ -92,12 +93,14 @@ class ProcessEvent(SpookMixin, Base):
 
 class Window(SpookMixin, Base):
     title = Column(Unicode, index=True)
+    browser_url = Column(Unicode, index=True)
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('windows'))
 
-    def __init__(self, title, process_id):
+    def __init__(self, title, process_id, browser_url):
         self.title = title
         self.process_id = process_id
+        self.browser_url = browser_url
 
     def __repr__(self):
         return "<Window '%s'>" % (self.title)

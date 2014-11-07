@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
@@ -147,7 +148,8 @@ class DebriefController(NSWindowController):
             return
 
         # disable all controls if no experiences to debrief
-        l = len(self.experiences)
+        if self.experiences:
+            l = len(self.experiences)
         if (not self.experiences) or (l == 0):
             controller.errorMessage.setHidden_(False)
             controller.doingText.setEnabled_(False)
@@ -194,6 +196,7 @@ class DebriefController(NSWindowController):
         NSWindowController.windowDidLoad(self)
 
     def show(self):
+
         try:
             if self.debriefController:
                 self.debriefController.close()

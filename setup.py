@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import platform
 import sys
@@ -19,7 +20,8 @@ DATA_FILES = ['./assets/eye.png',
               './assets/stop.png',
               './selfspy/Preferences.xib',
               './selfspy/Experience.xib',
-              './selfspy/Debriefer.xib']
+              './selfspy/Debriefer.xib',
+              './selfspy/Reviewer.xib']
 
 setup(
     name="selfspy",

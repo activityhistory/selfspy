@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
@@ -69,7 +70,6 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name):
-        print "ActivityStore ", self, db_name
 
         # We check if a selfspy thumbdrive is plugged in and available
         # if so this is where we're storing the screenshots and DB
@@ -160,6 +160,9 @@ class ActivityStore:
         s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
+        s = objc.selector(self.queryMetadata_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
+
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
@@ -210,12 +213,15 @@ class ActivityStore:
         self.thumbdriveTimer.fire() # get location immediately
 
     def stopLoops(self):
-        if self.screenshotTimer:
-            self.screenshotTimer.invalidate()
-        if self.experienceTimer:
-            self.experienceTimer.invalidate()
-        if self.thumbdriveTimer:
-            self.thumbdriveTimer.invalidate()
+        try:
+            if self.screenshotTimer:
+                self.screenshotTimer.invalidate()
+            if self.experienceTimer:
+                self.experienceTimer.invalidate()
+            if self.thumbdriveTimer:
+                self.thumbdriveTimer.invalidate()
+        except(AttributeError):
+            pass
 
     def close(self):
         """ stops the sniffer and stores the latest keys and close of programs. To be used on shutdown of program"""
@@ -246,7 +252,7 @@ class ActivityStore:
                 print "Rollback"
                 self.session.rollback()
 
-    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, regularApps, regularWindows):
+    def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, browser_url, regularApps, regularWindows):
         """ Receives a screen change and stores any changes. If the process or window has
             changed it will also store any queued pressed keys.
             process_name is the name of the process running the current window
@@ -319,9 +325,10 @@ class ActivityStore:
             self.session.add(cur_geometry)
 
         cur_window = self.session.query(Window).filter_by(title=window_name,
-                                                          process_id=cur_process.id).scalar()
+                                                          process_id=cur_process.id,
+                                                          browser_url=browser_url).scalar()
         if not cur_window:
-            cur_window = Window(window_name, cur_process.id)
+            cur_window = Window(window_name, cur_process.id, browser_url)
             self.session.add(cur_window)
 
         # if its a new window, commit changes and update ids
@@ -512,6 +519,20 @@ class ActivityStore:
             controller.existAudioText.setStringValue_("Record your answer:")
             controller.playAudioButton.setHidden_(True)
             controller.deleteAudioButton.setHidden_(True)
+
+
+    def queryMetadata_(self, notification):
+        controller = notification.object().reviewController
+        try:
+            q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.process_id).all()
+            if len(q) > 0:
+                p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
+                if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
+                    u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
+                    controller.queryResponse2.append(u[0][1])
+                controller.queryResponse.append(p[0][1])
+        except UnicodeEncodeError:
+                pass
 
     def getPriorExperiences_(self, notification):
         # remove project
