@@ -24,32 +24,6 @@
                 <rect key="frame" x="0.0" y="0.0" width="1314" height="673"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Trf-dt-yta">
-                        <rect key="frame" x="1117" y="16" width="119" height="32"/>
-                        <buttonCell key="cell" type="push" title="Next Sample" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rhj-JY-ZH7">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="advanceExperienceWindow:" target="-2" id="FPg-qU-KJ3"/>
-                        </connections>
-                    </button>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Hoh-CD-cXr">
-                        <rect key="frame" x="1089" y="27" width="28" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="1/8" id="zx9-cz-gMR">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EcU-xD-byN">
-                        <rect key="frame" x="996" y="465" width="240" height="152"/>
-                        <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Or type your answer..." drawsBackground="YES" id="2vq-It-D1X">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
                     <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OLR-Ww-MGY">
                         <rect key="frame" x="313" y="310" width="368" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="You have no Experiences from today that can be reviewed" id="eVe-0P-mx1">
@@ -59,7 +33,7 @@
                         </textFieldCell>
                     </textField>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YOG-hU-cyb">
-                        <rect key="frame" x="935" y="64" width="301" height="393"/>
+                        <rect key="frame" x="947" y="64" width="347" height="569"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="SXu-jc-F7G">
                             <rect key="frame" x="1" y="17" width="238" height="117"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -71,8 +45,23 @@
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn width="99.40625" minWidth="40" maxWidth="1000" id="Q3u-T0-hJ0">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Datab">
+                                        <tableColumn width="27.51953125" minWidth="10" maxWidth="3.4028234663852886e+38" id="l1Z-2I-fbO">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
+                                                <font key="font" metaFont="smallSystem"/>
+                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                            </tableHeaderCell>
+                                            <buttonCell key="dataCell" type="check" bezelStyle="regularSquare" imagePosition="left" inset="2" id="bmb-cS-ToU">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                            <connections>
+                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.checkb" id="fLu-uZ-qME"/>
+                                            </connections>
+                                        </tableColumn>
+                                        <tableColumn width="140.48046875" minWidth="40" maxWidth="1000" id="Q3u-T0-hJ0">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Application">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -87,8 +76,8 @@
                                                 <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.Datab" id="oFJ-PL-qhX"/>
                                             </connections>
                                         </tableColumn>
-                                        <tableColumn width="101.33203125" minWidth="40" maxWidth="1000" id="3lY-Nr-jN7">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Data">
+                                        <tableColumn width="168.03515625" minWidth="40" maxWidth="1000" id="3lY-Nr-jN7">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="URL">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -101,21 +90,6 @@
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <connections>
                                                 <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.Data" id="psx-Yy-gWj"/>
-                                            </connections>
-                                        </tableColumn>
-                                        <tableColumn width="90" minWidth="10" maxWidth="3.4028234663852886e+38" id="l1Z-2I-fbO">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
-                                            </tableHeaderCell>
-                                            <buttonCell key="dataCell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" inset="2" id="bmb-cS-ToU">
-                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                            <connections>
-                                                <binding destination="35e-tI-NTw" name="value" keyPath="arrangedObjects.checkb" id="fLu-uZ-qME"/>
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>
@@ -140,6 +114,16 @@
                         <rect key="frame" x="56" y="27" width="871" height="604"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
                     </imageView>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Trf-dt-yta">
+                        <rect key="frame" x="1158" y="16" width="142" height="32"/>
+                        <buttonCell key="cell" type="push" title="Next Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rhj-JY-ZH7">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="advanceExperienceWindow:" target="-2" id="FPg-qU-KJ3"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="496" y="245.5"/>

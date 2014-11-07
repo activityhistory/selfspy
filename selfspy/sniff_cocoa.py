@@ -59,6 +59,8 @@ from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
 
+from urlparse import urlparse
+
 start_time = NSDate.date()
 
 
@@ -472,13 +474,16 @@ class Sniffer:
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                     browser_url = s.executeAndReturnError_(None)
 
+                                browser_url = str(browser_url[0])[33:]
+                                browser_url = urlparse(browser_url).hostname
+
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u''),
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],
                                                  geometry['Height'],
-                                                 str(browser_url[0])[33:],
+                                                 browser_url,
                                                  regularApps,
                                                  regularWindows)
                                 break
