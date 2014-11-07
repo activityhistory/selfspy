@@ -161,9 +161,6 @@ class ActivityStore:
         s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
-        s = objc.selector(self.populateReviewWindow_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateReviewWindow', None)
-
         s = objc.selector(self.queryMetadata_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
 
@@ -524,19 +521,6 @@ class ActivityStore:
             controller.playAudioButton.setHidden_(True)
             controller.deleteAudioButton.setHidden_(True)
 
-    def populateReviewWindow_(self, notification):
-        controller = notification.object().reviewController
-
-        # populate page with data from database
-        q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).all()
-
-        concat = ''
-
-        for window in q:
-            try:
-                concat = concat + "\n" + str(window)
-            except UnicodeEncodeError:
-                pass
 
     def queryMetadata_(self, notification):
         controller = notification.object().reviewController

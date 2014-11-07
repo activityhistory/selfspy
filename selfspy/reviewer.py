@@ -26,7 +26,7 @@ from os.path import isfile, join
 from objc import IBAction, IBOutlet
 from AppKit import *
 
-SCREENSHOT_REVIEW_INTERVAL = 100
+SCREENSHOT_REVIEW_INTERVAL = 5
 
 # Review window controller
 class ReviewController(NSWindowController):
@@ -73,7 +73,6 @@ class ReviewController(NSWindowController):
 
     def displayScreenshot(self, self2=None, s=None):
         experienceImage = NSImage.alloc().initByReferencingFile_(self.getScreenshotPath(self) + s)
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
 
         width = experienceImage.size().width
         height = experienceImage.size().height
@@ -93,24 +92,43 @@ class ReviewController(NSWindowController):
     def advanceExperienceWindow_(self, sender):
 
         # Debugging Boolean values
-        self.printBools(self)
+        #self.printBools(self)
 
         list_of_files = self.generateScreenshotList(self)
 
-        i = self.currentScreenshot
-        if (i < len(list_of_files)):
 
-            s = list_of_files[i]
+        screenshot_found = False
+        while (not screenshot_found):
+            i = self.currentScreenshot
+            if (i < len(list_of_files)):
 
-            self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
+                s = list_of_files[i]
 
-            self.displayScreenshot(self, s=s)
-
-            self.currentScreenshot += SCREENSHOT_REVIEW_INTERVAL
+                self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
 
 
-        else:
-            self.reviewController.close()
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
+
+                lenstr = len(self.queryResponse)
+
+                if lenstr > 0:
+                     d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3],
+                                              'Datab': str(self.queryResponse)[2:lenstr-3],
+                                              'checkb': NSNumber.numberWithBool_(1)})
+                     if d in self.results:
+                         screenshot_found = True
+                         self.displayScreenshot(self, s=s)
+
+                self.queryResponse = []
+                self.queryResponse2 = []
+
+
+                self.currentScreenshot += SCREENSHOT_REVIEW_INTERVAL
+
+
+            else:
+                screenshot_found = True
+                self.reviewController.close()
 
 
     def populateExperienceTable(self, self2=None):
@@ -125,7 +143,9 @@ class ReviewController(NSWindowController):
             lenstr = len(self.queryResponse)
 
             if lenstr > 0:
-                 d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3], 'Datab': str(self.queryResponse)[2:lenstr-3], 'checkb': NSNumber.numberWithBool_(1)})
+                 d = NSMutableDictionary({'Data': str(self.queryResponse2)[2:lenstr-3],
+                                          'Datab': str(self.queryResponse)[2:lenstr-3],
+                                          'checkb': NSNumber.numberWithBool_(0)})
                  if d not in self.results:
                     self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
@@ -173,6 +193,6 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         self.populateExperienceTable(self)
-        self.advanceExperienceWindow_(self, self)
+        #self.advanceExperienceWindow_(self, self)
 
     show = classmethod(show)
