@@ -19,7 +19,6 @@ along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-import string
 import os
 from os import listdir
 from os.path import isfile, join
@@ -27,77 +26,79 @@ from os.path import isfile, join
 from objc import IBAction, IBOutlet
 from AppKit import *
 
-import config as cfg
+SCREENSHOT_REVIEW_INTERVAL = 100
 
-from datetime import datetime
-
-import mutagen.mp4
-
-# Experience Sampling window controller
+# Review window controller
 class ReviewController(NSWindowController):
 
     # outlets for UI elements
     mainPanel = IBOutlet()
     doingText = IBOutlet()
-    #progressLabel = IBOutlet()
-    progressButton = IBOutlet()
-    #errorMessage = IBOutlet()
-    #recordButton = IBOutlet()
-    #existAudioText = IBOutlet()
-    #playAudioButton = IBOutlet()
-    #deleteAudioButton = IBOutlet()
-    #memoryStrength = IBOutlet()
     tableView = IBOutlet()
     arrayController = IBOutlet()
 
     # instance variables
-    #experiences = None
     currentScreenshot = -1
     dateQuery = ""
-    #recordingAudio = False
-    #playingAudio = False
     audio_file = ''
 
-    # images for audio recording button
-    #recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
-    #recordImage.setScalesWhenResized_(True)
-    #recordImage.setSize_((11, 11))
-#
-    #stopImage = NSImage.alloc().initByReferencingFile_('../Resources/stop.png')
-    #stopImage.setScalesWhenResized_(True)
-    #stopImage.setSize_((11, 11))
-
-    # dynamic review filter table
-
+    # dynamic review table
     list = []
     NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
-    #dict = NSMutableDictionary()
     d = NSMutableDictionary({'Data': "abc", 'Datab': "def", 'checkb': NSNumber.numberWithBool_(0)})
     results.append(NSDictionary.dictionaryWithDictionary_(d))
-    #dict['checkb'] = True
-    results.append(NSDictionary.dictionaryWithDictionary_(d))
+
     queryResponse = []
     queryResponse2 = []
 
-    @IBAction
-    def advanceExperienceWindow_(self, sender):
-
+    # For Debugging purposes
+    def printBools(self, self2=None):
         for value in self.results:
             try:
                 print value['checkb']
             except KeyError:
                 print "NO BOOLEAN"
 
-        controller = self.reviewController
-        i = self.currentScreenshot
-
+    def getScreenshotPath(self, self2=None):
         path = os.path.expanduser(u'~/.selfspy/screenshots/')
-        list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
         # TODO will this now still work on a thumbdrive?
+        return path
 
-        if (i <= len(list_of_files)):
+    def generateScreenshotList(self, self2=None):
+        path = self.getScreenshotPath(self)
+        list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
+        return list_of_files
+
+    def displayScreenshot(self, self2=None, s=None):
+        experienceImage = NSImage.alloc().initByReferencingFile_(self.getScreenshotPath(self) + s)
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
+
+        width = experienceImage.size().width
+        height = experienceImage.size().height
+        ratio = width / height
+        if( width > 960 or height > 600 ):
+            if (ratio > 1.6):
+                width = 960
+                height = 960 / ratio
+            else:
+                width = 600 * ratio
+                height = 600
+        experienceImage.setScalesWhenResized_(True)
+        experienceImage.setSize_((width, height))
+        self.reviewController.mainPanel.setImage_(experienceImage)
+
+    @IBAction
+    def advanceExperienceWindow_(self, sender):
+
+        # Debugging Boolean values
+        #self.printBools(self)
+
+        list_of_files = self.generateScreenshotList(self)
+
+        i = self.currentScreenshot
+        if (i < len(list_of_files)):
 
             if i == 0:
                 self.populateExperienceTable(self)
@@ -106,37 +107,18 @@ class ReviewController(NSWindowController):
 
             self.dateQuery = '20' + s[0:2] + '-' + s[2:4] + '-' + s[4:6] + ' ' + s[7:9] + ':' + s[9:11] + ':' + s[11:13] + '.'
 
-            experienceImage = NSImage.alloc().initByReferencingFile_(u'/Users/jonas/.selfspy/screenshots/' + s)
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateReviewWindow',self)
+            self.displayScreenshot(self, s=s)
 
-            width = experienceImage.size().width
-            height = experienceImage.size().height
-            ratio = width / height
-            if( width > 960 or height > 600 ):
-                if (ratio > 1.6):
-                    width = 960
-                    height = 960 / ratio
-                else:
-                    width = 600 * ratio
-                    height = 600
-            experienceImage.setScalesWhenResized_(True)
-            experienceImage.setSize_((width, height))
-            controller.mainPanel.setImage_(experienceImage)
-
-            self.currentScreenshot += 5
+            self.currentScreenshot += SCREENSHOT_REVIEW_INTERVAL
 
 
         else:
-            controller.mainPanel.setImage_(None)
-            self.currentScreenshot += 1
-            #self.reviewController.close()
+            self.reviewController.close()
 
 
     def populateExperienceTable(self, self2=None):
 
-        path = os.path.expanduser(u'~/.selfspy/screenshots/')
-        list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
-        # TODO will this now still work on a thumbdrive?
+        list_of_files = self.generateScreenshotList(self)
 
 
         for s in list_of_files:
