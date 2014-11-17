@@ -10,6 +10,7 @@ bin/
 lib/
 include/
 selfspy.spec
+sept.selfspy/
 
 selfspy/*18942.py
 selfspy/*orig
