@@ -44,7 +44,7 @@ from Cocoa import (NSEvent, NSScreen,
 
 import Quartz
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
-                    kCGWindowListOptionAll, kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
+                    kCGWindowListOptionAll, kCGWindowListExcludeDesktopElements, kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
 import Quartz.CoreGraphics as CG
 
 import config as cfg
@@ -438,47 +438,46 @@ class Sniffer:
         try:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
             if(recording):
+                # get list of apps with regular activation
                 activeApps = self.workspace.runningApplications()
-                #Have to look into this if it is too slow on move and scroll,
-                #right now the check is done for everything.
                 regularApps = []
                 for app in activeApps:
                     if app.activationPolicy() == 0:
                         regularApps.append(app)
 
+                # get a list of all named windows associated with regular apps
                 regularWindows = []
                 options = kCGWindowListOptionAll
                 windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
                 for window in windowList:
-                    for app in regularApps:
-                        if window['kCGWindowOwnerName'] == app.localizedName() and window['kCGWindowLayer']>0:
-                            regularWindows.append(window)
+                    name = window.get('kCGWindowName', u'').encode('ascii', 'replace')
+                    owner = window['kCGWindowOwnerName']
+                    if (name and name != "Focus Proxy" and name != "Clipboard"):
+                        for app in regularApps:
+                            if owner == app.localizedName():
+                                regularWindows.append(window)
+                                break
 
+                # get active app, window, and url
                 for app in activeApps:
                     if app.isActive():
-
                         for window in windowList:
-                            if (window['kCGWindowNumber'] == event.windowNumber()
-                                or (not event.windowNumber()
-                                    and window['kCGWindowOwnerName'] == app.localizedName())):
+                            if (window['kCGWindowNumber'] == event.windowNumber() or (not event.windowNumber() and window['kCGWindowOwnerName'] == app.localizedName())):
                                 geometry = window['kCGWindowBounds']
 
                                 # get browser_url
-
                                 browser_url = 'NO_URL'
-
                                 if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
                                     browser_url = s.executeAndReturnError_(None)
                                 if (window.get('kCGWindowOwnerName') == 'Safari'):
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                     browser_url = s.executeAndReturnError_(None)
-
                                 browser_url = str(browser_url[0])[33:]
                                 browser_url = urlparse(browser_url).hostname
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
-                                                 window.get('kCGWindowName', u''),
+                                                 window.get('kCGWindowName', u'').encode('ascii', 'replace'),
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],

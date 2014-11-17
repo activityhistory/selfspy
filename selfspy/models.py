@@ -106,6 +106,20 @@ class Window(SpookMixin, Base):
         return "<Window '%s'>" % (self.title)
 
 
+class WindowEvent(SpookMixin, Base):
+    window_id = Column(Integer, ForeignKey('window.id'), nullable=False, index=True)
+    window = relationship("Window", backref=backref('windowevents'))
+
+    event_type = Column(Unicode, index=True)
+
+    def __init__(self, window_id, event_type):
+        self.window_id = window_id
+        self.event_type = event_type
+
+    def __repr__(self):
+        return "<Window '%s' '%s' >" % (self.window_id, self.event_type)
+
+
 class Geometry(SpookMixin, Base):
     xpos = Column(Integer, nullable=False)
     ypos = Column(Integer, nullable=False)

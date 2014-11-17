@@ -39,7 +39,9 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Geometry, Click, Keys, Experience, Location, Debrief, Bookmark
+from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, WindowEvent, Geometry, Click, Keys, Experience, Location, Debrief, Bookmark
+
+from urlparse import urlparse
 
 
 NOW = datetime.datetime.now
@@ -252,6 +254,24 @@ class ActivityStore:
                 print "Rollback"
                 self.session.rollback()
 
+    def get_window_info(self, win):
+        window_name = win.get('kCGWindowName', u'').encode('ascii', 'replace')
+        process = self.session.query(Process).filter_by(name=win['kCGWindowOwnerName']).scalar()
+        if process:
+            pid = process.id
+        else:
+            pid = 0
+        url = 'NO_URL'
+        if (win.get('kCGWindowOwnerName') == 'Google Chrome'):
+            s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
+            url = s.executeAndReturnError_(None)
+        if (win.get('kCGWindowOwnerName') == 'Safari'):
+            s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
+            url = s.executeAndReturnError_(None)
+        url = str(url[0])[33:]
+        url = urlparse(url).hostname
+        return (window_name, pid, url)
+
     def got_screen_change(self, process_name, window_name, win_x, win_y, win_width, win_height, browser_url, regularApps, regularWindows):
         """ Receives a screen change and stores any changes. If the process or window has
             changed it will also store any queued pressed keys.
@@ -261,60 +281,93 @@ class ActivityStore:
             win_y is the y position of the window
             win_width is the width of the window
             win_height is the height of the window """
+        # app tracking
         for app in regularApps:
             db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
             if not db_process:
                 process_to_add = Process(app.localizedName())
                 self.session.add(process_to_add)
+                self.trycommit()
                 db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
 
             if app not in self.current_apps:
-                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
-                if db_process:
-                    process_id = db_process.id
-                else:
-                    process_id = 0
+                process_id = db_process.id
                 process_event = ProcessEvent(process_id, "Open")
                 self.session.add(process_event)
-
+                self.trycommit()
                 self.current_apps.append(app)
-                print "App: " + app.localizedName() + " just started"
 
             if app.isActive() and app.localizedName() != self.active_app:
                 process_event = ProcessEvent(db_process.id, "Active")
                 self.session.add(process_event)
-                self.active_app = app.localizedName()
+                self.trycommit()
+                self.active_app = app
 
         for app in self.current_apps:
             if app not in regularApps:
-                print "Found Missing App"
-                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
-                if db_process:
-                    process_id = db_process.id
-                else:
-                    process_id = 0
+                process_id = self.session.query(Process).filter_by(name=app.localizedName()).scalar().id
                 process_event = ProcessEvent(process_id, "Close")
                 self.session.add(process_event)
-
-                print "App: " + app.localizedName() + " just closed"
+                self.trycommit()
                 self.current_apps.remove(app)
 
-        # turn off window tracking for now
-        # for window in regularWindows:
-        #     if window not in self.current_windows:
-        #         self.current_windows.append(window)
-        #         print "Window: " + window['kCGWindowOwnerName'] + " just opened in layer " + str(window['kCGWindowLayer'])
-        #
-        # for window in self.current_windows:
-        #     if window not in regularWindows:
-        #         self.current_windows.remove(window)
-        #         print "Window: " + window['kCGWindowOwnerName'] + " just closed " + str(window['kCGWindowLayer'])
+        # window tracking, issue reading and writing to database
+        for window in regularWindows:
+            win_name, pid, url = self.get_window_info(window)
+            print "Got window info"
+            db_window = self.session.query(Window).filter_by(title=win_name, process_id=pid, browser_url=url).scalar()
+            if not db_window:
+                print str(win_name) + " " + str(pid) + " " + str(url)
+                window_to_add = Window(win_name, pid, url)
+                self.session.add(window_to_add)
+                self.trycommit()
+                db_window = self.session.query(Window).filter_by(title=win_name, process_id=pid, browser_url=url).scalar()
+            if window not in self.current_windows:
+                window_id = db_window.id
+                print "Got window id of new window"
+                window_event = WindowEvent(window_id, "Open")
+                self.session.add(window_event)
+                self.trycommit()
+                self.current_windows.append(window)
 
-        # update current process, window, and geometry
+            geometry = window['kCGWindowBounds']
+            db_geometry = self.session.query(Geometry).filter_by(xpos=geometry['X'],
+                                                                  ypos=geometry['Y'],
+                                                                  width=geometry['Width'],
+                                                                  height=geometry['Height']).scalar()
+            if not db_geometry:
+                geometry_to_add = Geometry(geometry['X'], geometry['Y'], geometry['Width'], geometry['Height'])
+                self.session.add(geometry_to_add)
+
+            
+
+
+        for window in self.current_windows:
+            win_name, pid, url = self.get_window_info(window)
+            if window not in regularWindows:
+                db_window = self.session.query(Window).filter_by(title=win_name, process_id=pid, browser_url=url).scalar()
+                if db_window:
+                    window_id = db_window.id
+                else:
+                    window_id = 0
+                window_event = WindowEvent(window_id, "Close")
+                self.session.add(window_event)
+                self.trycommit()
+                self.current_windows.remove(window)
+
+        # check for current process, window, and geometry
+        # if any of these are new, update currents, store keys, and take screenshot
         cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
         if not cur_process:
             cur_process = Process(process_name)
             self.session.add(cur_process)
+
+        cur_window = self.session.query(Window).filter_by(title=window_name,
+                                                          process_id=cur_process.id,
+                                                          browser_url=browser_url ).scalar()
+        if not cur_window:
+            cur_window = Window(window_name, cur_process.id, browser_url)
+            self.session.add(cur_window)
 
         cur_geometry = self.session.query(Geometry).filter_by(xpos=win_x,
                                                               ypos=win_y,
@@ -323,13 +376,6 @@ class ActivityStore:
         if not cur_geometry:
             cur_geometry = Geometry(win_x, win_y, win_width, win_height)
             self.session.add(cur_geometry)
-
-        cur_window = self.session.query(Window).filter_by(title=window_name,
-                                                          process_id=cur_process.id,
-                                                          browser_url=browser_url).scalar()
-        if not cur_window:
-            cur_window = Window(window_name, cur_process.id, browser_url)
-            self.session.add(cur_window)
 
         # if its a new window, commit changes and update ids
         if not (self.current_window.proc_id == cur_process.id
@@ -535,11 +581,6 @@ class ActivityStore:
                 pass
 
     def getPriorExperiences_(self, notification):
-        # remove project
-        # prior_projects = self.session.query(Experience).distinct(Experience.project).group_by(Experience.project).order_by(Experience.id.desc()).limit(5)
-        # for p in prior_projects:
-        #     if(p.project != ''):
-        #         notification.object().projectText.addItemWithObjectValue_(p.project)
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
         for m in prior_messages:
             if(m.message != ''):
