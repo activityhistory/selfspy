@@ -35,7 +35,7 @@ from Crypto.Cipher import Blowfish
 
 #print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
 #print("### current os.getcwd() : ", os.getcwd())
-#sys.path.append(os.getcwd() + '/../../../..') # your project folder
+sys.path.append(os.getcwd() + '/../../../..') # your project folder
 #sys.path.append(os.getcwd())
 #
 # remote debugging with PyCharm
