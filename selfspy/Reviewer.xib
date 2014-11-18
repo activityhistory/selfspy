@@ -8,7 +8,6 @@
             <connections>
                 <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
-                <outlet property="progressButton" destination="Trf-dt-yta" id="nVl-KS-yZo"/>
                 <outlet property="tableView" destination="beq-tF-GIw" id="bac-Kh-gKM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
             </connections>
@@ -39,7 +38,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="fi8-pQ-biE" id="beq-tF-GIw">
-                                    <rect key="frame" x="0.0" y="0.0" width="299" height="19"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="345" height="19"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -121,7 +120,21 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="advanceExperienceWindow:" target="-2" id="FPg-qU-KJ3"/>
+                            <action selector="advanceReviewWindow:" target="-2" id="Ypg-JP-c5K"/>
+                        </connections>
+                    </button>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
+                        <rect key="frame" x="110" y="31" width="688" height="21"/>
+                        <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="4hp-KR-siz"/>
+                    </slider>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xvb-jc-29T">
+                        <rect key="frame" x="941" y="16" width="165" height="32"/>
+                        <buttonCell key="cell" type="push" title="Previous Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="h91-OQ-UKi">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="revertReviewWindow:" target="-2" id="DvZ-Sj-QdG"/>
                         </connections>
                     </button>
                 </subviews>

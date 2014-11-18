@@ -37,7 +37,7 @@ class ReviewController(NSWindowController):
     arrayController = IBOutlet()
 
     # instance variables
-    currentScreenshot = 0
+    currentScreenshot = -1
     dateQuery = ""
 
     # dynamic review table
@@ -101,13 +101,20 @@ class ReviewController(NSWindowController):
 
 
     @IBAction
-    def advanceExperienceWindow_(self, sender):
+    def advanceReviewWindow_(self, sender):
+        self.moveReviewWindow(direction=1)
 
+    @IBAction
+    def revertReviewWindow_(self, sender):
+        self.moveReviewWindow(direction=-1)
+
+    def moveReviewWindow(self, direction):
         list_of_files = self.generateScreenshotList(self)
         screenshot_found = False
 
         while (not screenshot_found):
-            if (self.currentScreenshot < len(list_of_files)):
+            self.currentScreenshot = self.currentScreenshot + (SCREENSHOT_REVIEW_INTERVAL * direction)
+            if (0 <= self.currentScreenshot < len(list_of_files)):
 
                 self.generateDateQuery(list_of_files[self.currentScreenshot])
 
@@ -122,9 +129,6 @@ class ReviewController(NSWindowController):
 
                 self.queryResponse = []
                 self.queryResponse2 = []
-
-                self.currentScreenshot += SCREENSHOT_REVIEW_INTERVAL
-
 
             else:
                 screenshot_found = True # so that it stops searching
