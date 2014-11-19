@@ -339,6 +339,9 @@ class ActivityStore:
             if not cur_process:
                 cur_process = Process(process_name)
                 self.session.add(cur_process)
+                self.trycommit()
+                cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
+
             if cur_process.name != self.active_app:
                 process_event = ProcessEvent(cur_process.id, "Active")
                 self.session.add(process_event)
