@@ -309,7 +309,10 @@ class ActivityStore:
                 process_event = ProcessEvent(process_id, "Close")
                 self.session.add(process_event)
                 self.trycommit()
-                self.current_apps.remove(app)
+                try:
+                    self.current_apps.remove(app)
+                except ValueError:
+                    print("Error: Can not remove app from list. It does not seem to exist.")
 
         # window tracking, issue reading and writing to database
         for window in regularWindows:
@@ -353,7 +356,10 @@ class ActivityStore:
                 window_event = WindowEvent(window_id, "Close")
                 self.session.add(window_event)
                 self.trycommit()
-                self.current_windows.remove(window)
+                try:
+                    self.current_windows.remove(window)
+                except ValueError:
+                    print("Error: Can not remove window from list. It does not seem to exist.")
 
         # check for current process, window, and geometry
         # if any of these are new, update currents, store keys, and take screenshot
