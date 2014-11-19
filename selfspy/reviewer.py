@@ -27,6 +27,7 @@ from objc import IBAction, IBOutlet
 from AppKit import *
 
 SCREENSHOT_REVIEW_INTERVAL = 1
+UI_SLIDER_MAX_VALUE = 100
 
 # Review window controller
 class ReviewController(NSWindowController):
@@ -49,6 +50,12 @@ class ReviewController(NSWindowController):
     # let activity_store write query results into those
     queryResponse = []
     queryResponse2 = []
+
+    # timeline
+    timeline_value = 0
+    slider_max = 1
+    slider_min = 0
+    normalized_max_value = 0
 
 
     # For Debugging purposes
@@ -125,7 +132,10 @@ class ReviewController(NSWindowController):
                      d = self.generateDictEntry(checked=1)
                      if d in self.results:
                          screenshot_found = True
-                         self.displayScreenshot(self, s=list_of_files[self.currentScreenshot])
+                         filename = s=list_of_files[self.currentScreenshot]
+                         self.displayScreenshot(self, s=filename)
+                         normalized_current_value = self.mapFilenameDateToNumber(s=filename) - self.slider_min
+                         self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
 
                 self.queryResponse = []
                 self.queryResponse2 = []
@@ -134,13 +144,22 @@ class ReviewController(NSWindowController):
                 screenshot_found = True # so that it stops searching
                 self.reviewController.close()
 
+    def mapFilenameDateToNumber(self, s=None):
+        return int('20' + s[0:2] + s[2:4] + s[4:6] + s[7:9] + s[9:11] + s[11:13])
 
     def populateExperienceTable(self):
 
         list_of_files = self.generateScreenshotList(self)
 
+        self.slider_min = self.mapFilenameDateToNumber(self, s=list_of_files[0])
+
         for s in list_of_files:
             self.generateDateQuery(self, s=s)
+            helper = self.mapFilenameDateToNumber(self, s=s)
+            if self.slider_max < helper:
+                self.slider_max = helper
+            if self.slider_min > helper:
+                self.slider_min = helper
 
             # send message to activity_store so it can do the database query
             NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
@@ -153,6 +172,9 @@ class ReviewController(NSWindowController):
 
             self.queryResponse = []
             self.queryResponse2 = []
+
+        self.normalized_max_value = self.slider_max - self.slider_min
+
         try:
             self.reviewController.arrayController.rearrangeObjects()
         except UnboundLocalError:

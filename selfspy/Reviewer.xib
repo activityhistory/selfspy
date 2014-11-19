@@ -123,10 +123,6 @@
                             <action selector="advanceReviewWindow:" target="-2" id="Ypg-JP-c5K"/>
                         </connections>
                     </button>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
-                        <rect key="frame" x="110" y="31" width="688" height="21"/>
-                        <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="4hp-KR-siz"/>
-                    </slider>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xvb-jc-29T">
                         <rect key="frame" x="941" y="16" width="165" height="32"/>
                         <buttonCell key="cell" type="push" title="Previous Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="h91-OQ-UKi">
@@ -137,6 +133,13 @@
                             <action selector="revertReviewWindow:" target="-2" id="DvZ-Sj-QdG"/>
                         </connections>
                     </button>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
+                        <rect key="frame" x="54" y="0.0" width="875" height="27"/>
+                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="100" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="100" allowsTickMarkValuesOnly="YES" sliderType="linear" id="4hp-KR-siz"/>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
+                        </connections>
+                    </slider>
                 </subviews>
             </view>
             <point key="canvasLocation" x="496" y="245.5"/>
