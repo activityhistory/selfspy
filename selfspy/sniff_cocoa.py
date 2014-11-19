@@ -416,6 +416,7 @@ class Sniffer:
                 options = kCGWindowListOptionAll
                 windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
                 chromeChecked = False
+                safariChecked = False
                 for window in windowList:
                     window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                     owner = window['kCGWindowOwnerName']
@@ -440,12 +441,26 @@ class Sniffer:
                                         y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
                                         regularWindows.append({'process': 'Google Chrome', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
                                     chromeChecked = True
+                                elif owner == 'Safari' and not safariChecked:
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set tabs_info to {} \n set winlist to every window \n repeat with win in winlist \n set ok to true \n try \n set tablist to every tab of win \n on error errmsg \n set ok to false \n end try \n if ok then \n repeat with t in tablist \n set thetitle to the name of t \n set theurl to the URL of t \n set thebounds to the bounds of win \n set t_info to {thetitle, theurl, thebounds} \n set end of tabs_info to t_info \n end repeat \n end if \n end repeat \n return tabs_info \n end tell")
+                                    tabs_info = s.executeAndReturnError_(None)
+                                    print tabs_info
+                                    numItems = tabs_info[0].numberOfItems()
+                                    for i in range(1, numItems+1):
+                                        window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                        url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
+                                        x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
+                                        y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
+                                        x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
+                                        y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
+                                        regularWindows.append({'process': 'Safari', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
                                 else:
                                     regularWindows.append({'process': owner, 'title': window_name, 'url': url, 'geometry': geometry})
 
 
                 # get active app, window, url and geometry
-                for app in activeApps:
+                # only track for regular apps
+                for app in regularApps:
                     if app.isActive():
                         for window in windowList:
                             if (window['kCGWindowNumber'] == event.windowNumber() or (not event.windowNumber() and window['kCGWindowOwnerName'] == app.localizedName())):
