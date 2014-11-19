@@ -240,31 +240,13 @@ class Sniffer:
                   # self.screenshotMenuItem.setEnabled_(False)
                 self.changeIcon()
 
-            # def toggleScreenshots_(self, notification):
-            #     NSLog("toggleScreenshots")
-            #     screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
-            #     if screen:
-            #       self.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
-            #     else:
-            #       self.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
-            #     screen = not screen
-            #     NSUserDefaultsController.sharedUserDefaultsController().defaults().setBool_forKey_(screen,'screenshots')
-            #     self.changeIcon()
-
             def changeIcon(self):
                 record = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
                 screenshots = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
                 if(record):
                     self.statusitem.setImage_(self.icon)
-                    # if(screenshots):
-                    #     self.statusitem.setImage_(self.iconPhoto)
-                    # else:
                 else:
                     self.statusitem.setImage_(self.iconGray)
-                    # if(screenshots):
-                    #     self.statusitem.setImage_(self.iconGrayPhoto)
-                    # else:
-
 
             def bookmark_(self, notification):
                 self.statusitem.setImage_(self.iconBook)
@@ -333,14 +315,6 @@ class Sniffer:
                 self.iconGray.setScalesWhenResized_(True)
                 self.iconGray.setSize_((20, 20))
 
-                # self.iconPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo-48.png')
-                # self.iconPhoto.setScalesWhenResized_(True)
-                # self.iconPhoto.setSize_((20, 20))
-                #
-                # self.iconGrayPhoto = NSImage.alloc().initByReferencingFile_('../Resources/eye_photo_gray-48.png')
-                # self.iconGrayPhoto.setScalesWhenResized_(True)
-                # self.iconGrayPhoto.setSize_((20, 20))
-
                 self.iconBook = NSImage.alloc().initByReferencingFile_('../Resources/eye_bookmark.png')
                 self.iconBook.setScalesWhenResized_(True)
                 self.iconBook.setSize_((20, 20))
@@ -367,15 +341,6 @@ class Sniffer:
                 #menuitem.setEnabled_(False)
                 self.menu.addItem_(menuitem)
                 self.loggingMenuItem = menuitem
-
-                # if NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots'):
-                #   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Screenshots', 'toggleScreenshots:', '')
-                # else :
-                #   menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Screenshots', 'toggleScreenshots:', '')
-                # if(not NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')):
-                #     menuitem.setEnabled_(False)
-                # self.menu.addItem_(menuitem)
-                # self.screenshotMenuItem = menuitem
 
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
@@ -446,19 +411,40 @@ class Sniffer:
                         regularApps.append(app)
 
                 # get a list of all named windows associated with regular apps
+                # including all tabs in Google Chrome
                 regularWindows = []
                 options = kCGWindowListOptionAll
                 windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+                chromeChecked = False
                 for window in windowList:
-                    name = window.get('kCGWindowName', u'').encode('ascii', 'replace')
+                    window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                     owner = window['kCGWindowOwnerName']
-                    if (name and name != "Focus Proxy" and name != "Clipboard"):
-                        for app in regularApps:
-                            if owner == app.localizedName():
-                                regularWindows.append(window)
-                                break
+                    url = 'NO_URL'
+                    geometry = window['kCGWindowBounds']
+                    windows_to_ignore = ["Focus Proxy", "Clipboard"]
+                    for app in regularApps:
+                        if app.localizedName() == owner:
+                            if (window_name and window_name not in windows_to_ignore):
+                                if owner == 'Google Chrome' and not chromeChecked:
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n set tabs_info to {} \n set window_list to every window \n repeat with win in window_list \n set tab_list to tabs in win \n repeat with t in tab_list \n set the_title to the title of t \n set the_url to the URL of t \n set the_bounds to the bounds of win \n set t_info to {the_title, the_url, the_bounds} \n set end of tabs_info to t_info \n end repeat \n end repeat \n return tabs_info \n end tell")
+                                    tabs_info = s.executeAndReturnError_(None)
+                                    # Applescript returns list of lists including title and url in NSAppleEventDescriptors
+                                    # https://developer.apple.com/library/mac/Documentation/Cocoa/Reference/Foundation/Classes/NSAppleEventDescriptor_Class/index.html
+                                    numItems = tabs_info[0].numberOfItems()
+                                    for i in range(1, numItems+1):
+                                        window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                        url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
+                                        x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
+                                        y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
+                                        x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
+                                        y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
+                                        regularWindows.append({'process': 'Google Chrome', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
+                                    chromeChecked = True
+                                else:
+                                    regularWindows.append({'process': owner, 'title': window_name, 'url': url, 'geometry': geometry})
 
-                # get active app, window, and url
+
+                # get active app, window, url and geometry
                 for app in activeApps:
                     if app.isActive():
                         for window in windowList:
@@ -473,9 +459,12 @@ class Sniffer:
                                 if (window.get('kCGWindowOwnerName') == 'Safari'):
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                     browser_url = s.executeAndReturnError_(None)
-                                browser_url = str(browser_url[0])[33:]
-                                browser_url = urlparse(browser_url).hostname
+                                browser_url = str(browser_url[0])[33:-3]
+                                # browser_url = urlparse(browser_url).hostname
+                                if not browser_url:
+                                    browser_url = 'NO_URL'
 
+                                # call screen hook
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u'').encode('ascii', 'replace'),
                                                  geometry['X'],
