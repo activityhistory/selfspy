@@ -12,7 +12,7 @@ Selfspy is a daemon Mac OS X that continuously monitors and stores what you are 
 ### Installing Selfspy
 We keep a compiled Mac OS X app in Releases, so go ahead and download it.
 
-To install manually, either clone the repository from Github (git clone git://github.com/aurelient/selfspy), or click on the Download link on http://github.com/aurelient/selfspy/ to get the latest Python source.
+To install manually, either clone the repository from Github (git clone git://github.com/activityhistory/selfspy), or click on the Download link on http://github.com/activityhistory/selfspy/ to get the latest Python source.
 
 With 10.9 you should do the following:
 
@@ -26,7 +26,7 @@ With 10.9 you should do the following:
 This will tell you modify your path with a oneliner. Do this. Then, open a new terminal session.
 
 ```
-git clone git://github.com/aurelient/selfspy
+git clone git://github.com/activityhistory/selfspy
 cd selfspy
 pip install setuptools==3.4.1 && pip install -r requirements.txt
 python setup.py py2app
@@ -43,7 +43,7 @@ has to be manually edited such that the functions that line 52 looks like this:
 and line 81 looks like this:
 
         mf._scan_code(co, m)
-		
+
 (Yes, this is only adding two underscores.)
 
 This command sequence will build an .app in the /dist folder of your selfspy directory.
@@ -51,7 +51,7 @@ This command sequence will build an .app in the /dist folder of your selfspy dir
 Selfspy is only tested with Python 2.7 and has a few dependencies on other Python libraries that need to be satisfied. These are documented in the requirements.txt file.
 
 Report issues here:
-https://github.com/aurelient/selfspy/issues
+https://github.com/activityhistory/selfspy/issues
 
 #### Running on OS X
 To run Selfspy in OS X you also need to enable access for assistive devices.

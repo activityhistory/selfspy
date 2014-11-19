@@ -346,20 +346,26 @@ class ActivityStore:
             if not cur_process:
                 cur_process = Process(process_name)
                 self.session.add(cur_process)
-            # if cur_process.name != self.active_app:
-            #     process_event = ProcessEvent(cur_process.id, "Active")
-            #     self.session.add(process_event)
-            #     self.active_app = cur_process.name
+                self.trycommit()
+                cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
 
-            cur_window = self.session.query(Window).filter_by(title=window_name, process_id=cur_process.id, browser_url=browser_url ).scalar()
+            if cur_process.name != self.active_app:
+                process_event = ProcessEvent(cur_process.id, "Active")
+                self.session.add(process_event)
+                self.active_app = cur_process.name
+
+            if browser_url == "NO_URL":
+                cur_window = self.session.query(Window).filter_by(title=window_name, process_id=cur_process.id).scalar()
+            else:
+                cur_window = self.session.query(Window).filter_by(process_id=cur_process.id, browser_url=browser_url).scalar()
             if not cur_window:
                 cur_window = Window(window_name, cur_process.id, browser_url)
                 self.session.add(cur_window)
-            # if (cur_window.title != self.active_window['title'] or cur_window.process_id != self.active_window['process'] or cur_window.browser_url != self.active_window['url']):
-            #     window_event = WindowEvent(cur_window.id, "Active")
-            #     self.session.add(window_event)
-            #     self.trycommit()
-            #     self.active_window = {'title': window_name, 'process': cur_process.id, 'url': browser_url}
+            if (cur_window.title != self.active_window['title'] or cur_window.process_id != self.active_window['process'] or cur_window.browser_url != self.active_window['url']):
+                window_event = WindowEvent(cur_window.id, "Active")
+                self.session.add(window_event)
+                self.trycommit()
+                self.active_window = {'title': window_name, 'process': cur_process.id, 'url': browser_url}
 
 
             cur_geometry = self.session.query(Geometry).filter_by(xpos=win_x, ypos=win_y, width=win_width, height=win_height).scalar()
