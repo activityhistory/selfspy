@@ -143,7 +143,8 @@ class ReviewController(NSWindowController):
 
             if len(self.queryResponse) > 0:
                  d = self.generateDictEntry(self, checked=0)
-                 if d not in self.results:
+                 d2 = self.generateDictEntry(self, checked=1)
+                 if d not in self.results and d2 not in self.results:
                     self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
             self.queryResponse = []
