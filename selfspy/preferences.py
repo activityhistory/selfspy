@@ -36,6 +36,19 @@ class PreferencesController(NSWindowController):
     screenshotSizePopup = IBOutlet()
     screenshotSizeMenu = IBOutlet()
     clearDataPopup = IBOutlet()
+    arrayController = IBOutlet()
+    arrayControllerWindows = IBOutlet()
+    appList = IBOutlet()
+    windowList = IBOutlet()
+
+    # dynamic review table
+    list = [{'checked':False, 'image':'', 'app_name':'First App', 'windows':[{'checked':False, 'window_name':'Window 1', 'image':''},{'checked':False, 'window_name':'Window 2', 'image':''},{'checked':False, 'window_name':'Window 2', 'image':''}]},{'checked':False, 'image':'', 'app_name':'Second App', 'windows':[{'checked':False, 'window_name':'Window 4', 'image':''},{'checked':False, 'window_name':'Window 5', 'image':''},{'checked':False, 'window_name':'Window 6', 'image':''}]},{'checked':False, 'image':'', 'app_name':'Third App', 'windows':[{'checked':False, 'window_name':'Window 7', 'image':''},{'checked':False, 'window_name':'Window 8', 'image':''},{'checked':False, 'window_name':'Window 9', 'image':''}]}]
+    window_list = [{'checked':False, 'window_name':'Window 10', 'image':''},{'checked':False, 'window_name':'Window 11', 'image':''},{'checked':False, 'window_name':'Window 12', 'image':''}]
+    NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
+    NSNumber = objc.lookUpClass('NSNumber')
+    apps = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
+    windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in window_list]
+
 
     # notifications sent to Activity Store
     @IBAction
@@ -53,6 +66,12 @@ class PreferencesController(NSWindowController):
     @IBAction
     def changedExperienceRate_(self,sender):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperiencePref',self)
+
+    @IBAction
+    def updateWindowList_(self,sender):
+        selected_app = self.appList.selectedRow()
+        self.windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.apps[selected_app]['windows']]
+        self.windowList.reloadData()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
