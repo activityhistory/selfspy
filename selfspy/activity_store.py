@@ -43,7 +43,6 @@ from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, Window
 
 from urlparse import urlparse
 
-
 NOW = datetime.datetime.now
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
 SCROLL_BUTTONS = {4, 5, 6, 7}
@@ -166,6 +165,9 @@ class ActivityStore:
 
         s = objc.selector(self.queryMetadata_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
+
+        s = objc.selector(self.getAppsAndUrls_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndUrls', None)
 
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
@@ -574,6 +576,35 @@ class ActivityStore:
                 controller.queryResponse.append(p[0][1])
         except UnicodeEncodeError:
                 pass
+
+    def getAppsAndUrls_(self, notification):
+        controller = notification.object().reviewController
+        try:
+            q_apps = self.session.query(Process).all()
+            q_windows = self.session.query(Window).all()
+
+            for a in q_apps:
+                app_dict = {'checked':False, 'image':'', 'app_name': a.name, 'windows':[]}
+                print app_dict
+                controller.queryResponse.append(app_dict)
+
+            for w in q_windows:
+                if w.browser_url != 'NO_URL':
+                    browser_url = urlparse(w.browser_url).hostname
+                    window_dict = {'checked':False, 'window_name':w.browser_url, 'image':''}
+                else:
+                    window_dict = {'checked':False, 'window_name':w.title, 'image':''}
+                if not window_dict in controller.queryResponse[w.process_id-1]['windows']:
+                    controller.queryResponse[w.process_id-1]['windows'].append(window_dict)
+
+                # p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
+                # if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
+                #     u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
+                #     controller.queryResponse2.append(u[0][1])
+                # controller.queryResponse.append(p[0][1])
+        except UnicodeEncodeError:
+                pass
+
 
     def getPriorExperiences_(self, notification):
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)

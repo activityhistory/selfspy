@@ -148,20 +148,30 @@ class ReviewController(NSWindowController):
         return int('20' + s[0:2] + s[2:4] + s[4:6] + s[7:9] + s[9:11] + s[11:13])
 
     def getApplicationsAndURLsForTable(self, list_of_files):
-        for s in list_of_files:
-            self.generateDateQuery(self, s=s)
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
+
+        for entry in self.queryResponse:
+            mutable = NSMutableDictionary({'Data': entry['app_name'],
+                                        'Datab': entry['image'],
+                                        'checkb': entry['checked']})#NSNumber.numberWithBool_(1)})
+            self.results.append(mutable)
+            
+        self.queryResponse = []
+
+        #for s in list_of_files:
+            #self.generateDateQuery(self, s=s)
 
             # send message to activity_store so it can do the database query
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
+            # NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
 
-            if len(self.queryResponse) > 0:
-                 d = self.generateDictEntry(self, checked=0)
-                 d2 = self.generateDictEntry(self, checked=1)
-                 if d not in self.results and d2 not in self.results:
-                    self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
+            # if len(self.queryResponse) > 0:
+            #      d = self.generateDictEntry(self, checked=0)
+            #      d2 = self.generateDictEntry(self, checked=1)
+            #      if d not in self.results and d2 not in self.results:
+            #         self.results.append(NSMutableDictionary.dictionaryWithDictionary_(d))
 
-            self.queryResponse = []
-            self.queryResponse2 = []
+            # self.queryResponse = []
+            # self.queryResponse2 = []
 
     def manageTimeline(self, list_of_files):
         self.slider_min = self.mapFilenameDateToNumber(self, s=list_of_files[0])
