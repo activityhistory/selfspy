@@ -40,12 +40,11 @@
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="General" identifier="1" id="cvF-i0-mIF">
-                                <view key="view" id="ecz-St-mUf">
-                                    <rect key="frame" x="10" y="33" width="394" height="388"/>
+                                <view key="view" ambiguous="YES" id="ecz-St-mUf">
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vge-wW-8ie">
-                                            <rect key="frame" x="56" y="296" width="106" height="17"/>
+                                            <rect key="frame" x="56" y="-92" width="106" height="17"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Screenshot size:" id="bsM-og-tgy">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -56,7 +55,7 @@
                                             </connections>
                                         </textField>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YQq-ib-ZqF">
-                                            <rect key="frame" x="56" y="346" width="127" height="17"/>
+                                            <rect key="frame" x="56" y="-42" width="127" height="17"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="At least once every:" id="nqA-Nt-4OO">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -67,7 +66,7 @@
                                             </connections>
                                         </textField>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="G8j-B8-1Hq">
-                                            <rect key="frame" x="56" y="321" width="194" height="17"/>
+                                            <rect key="frame" x="56" y="-67" width="194" height="17"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="But not more than once every:" id="5O0-nQ-v4C">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -78,7 +77,7 @@
                                             </connections>
                                         </textField>
                                         <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ImY-8d-57i">
-                                            <rect key="frame" x="261" y="287" width="119" height="26"/>
+                                            <rect key="frame" x="261" y="-101" width="119" height="26"/>
                                             <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="5dU-bf-hGU">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
@@ -90,7 +89,7 @@
                                             </connections>
                                         </popUpButton>
                                         <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="u9O-ix-AHD">
-                                            <rect key="frame" x="261" y="339" width="119" height="26"/>
+                                            <rect key="frame" x="261" y="-49" width="119" height="26"/>
                                             <popUpButtonCell key="cell" type="push" title="1 min" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="60" imageScaling="proportionallyDown" inset="2" selectedItem="SOb-IX-4h2" id="c2W-F2-bwG">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
@@ -121,7 +120,7 @@
                                             </connections>
                                         </popUpButton>
                                         <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ty1-b2-cv3">
-                                            <rect key="frame" x="261" y="313" width="119" height="26"/>
+                                            <rect key="frame" x="261" y="-75" width="119" height="26"/>
                                             <popUpButtonCell key="cell" type="push" title="100 ms" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="100" imageScaling="proportionallyDown" inset="2" selectedItem="Y98-mg-uEN" id="C3r-W1-9HF">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
@@ -151,7 +150,7 @@
                                             </connections>
                                         </popUpButton>
                                         <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6hc-qF-2hY">
-                                            <rect key="frame" x="204" y="240" width="176" height="26"/>
+                                            <rect key="frame" x="204" y="-148" width="176" height="26"/>
                                             <popUpButtonCell key="cell" type="push" title="every 15 min" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="900" imageScaling="proportionallyDown" inset="2" selectedItem="lya-cJ-ys3" id="Uqk-2c-GxT">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
@@ -185,7 +184,7 @@
                                             </connections>
                                         </popUpButton>
                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="QqD-WB-mrQ">
-                                            <rect key="frame" x="15" y="246" width="147" height="18"/>
+                                            <rect key="frame" x="15" y="-142" width="147" height="18"/>
                                             <buttonCell key="cell" type="check" title="Ask what I'm doing:" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="3rS-hG-gLQ">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -196,7 +195,7 @@
                                             </connections>
                                         </button>
                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C7M-Uj-hwm">
-                                            <rect key="frame" x="15" y="369" width="184" height="18"/>
+                                            <rect key="frame" x="15" y="-19" width="184" height="18"/>
                                             <buttonCell key="cell" type="check" title="Take periodic screenshots" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="vFV-an-UGa">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -207,13 +206,13 @@
                                             </connections>
                                         </button>
                                         <box verticalHuggingPriority="750" fixedFrame="YES" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="YrA-TK-Uqr">
-                                            <rect key="frame" x="17" y="222" width="344" height="5"/>
+                                            <rect key="frame" x="17" y="-166" width="344" height="5"/>
                                             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                                             <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                             <font key="titleFont" metaFont="system"/>
                                         </box>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jhp-ZU-5Lx">
-                                            <rect key="frame" x="17" y="184" width="205" height="17"/>
+                                            <rect key="frame" x="17" y="-204" width="205" height="17"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Clear data from the last:" id="M2e-Jb-AMT">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -221,7 +220,7 @@
                                             </textFieldCell>
                                         </textField>
                                         <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Q9J-pq-Mhp">
-                                            <rect key="frame" x="204" y="175" width="176" height="26"/>
+                                            <rect key="frame" x="204" y="-213" width="176" height="26"/>
                                             <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="e2T-2O-4Pl">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
@@ -241,7 +240,7 @@
                                             </popUpButtonCell>
                                         </popUpButton>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Y8z-C3-TiX">
-                                            <rect key="frame" x="277" y="130" width="106" height="32"/>
+                                            <rect key="frame" x="277" y="-258" width="106" height="32"/>
                                             <buttonCell key="cell" type="push" title="Clear Data" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BqO-ba-2QL">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -254,7 +253,7 @@
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Do Not Record" identifier="2" id="adi-27-bcH">
-                                <view key="view" ambiguous="YES" id="JMU-g0-AzF">
+                                <view key="view" id="JMU-g0-AzF">
                                     <rect key="frame" x="10" y="33" width="394" height="388"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>

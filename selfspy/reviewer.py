@@ -36,6 +36,9 @@ class ReviewController(NSWindowController):
     mainPanel = IBOutlet()
     tableView = IBOutlet()
     arrayController = IBOutlet()
+    arrayControllerWindows = IBOutlet()
+    appList = IBOutlet()
+    windowList = IBOutlet()
 
     # instance variables
     currentScreenshot = -1
@@ -43,9 +46,11 @@ class ReviewController(NSWindowController):
 
     # dynamic review table
     list = []
+    window_list = [{'checked':False, 'windowName':'Window 10', 'image':''}]
     NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
     NSNumber = objc.lookUpClass('NSNumber')
     results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
+    results_windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in window_list]
 
     # let activity_store write query results into those
     queryResponse = []
@@ -115,6 +120,13 @@ class ReviewController(NSWindowController):
     def revertReviewWindow_(self, sender):
         self.moveReviewWindow(direction=-1)
 
+    @IBAction
+    def updateWindowList_(self,sender):
+        selected_app = self.appList.selectedRow()
+        self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[selected_app]['windows']]
+        print self.results_windows
+        self.windowList.reloadData()
+
     def moveReviewWindow(self, direction):
         list_of_files = self.generateScreenshotList(self)
         screenshot_found = False
@@ -153,9 +165,10 @@ class ReviewController(NSWindowController):
         for entry in self.queryResponse:
             mutable = NSMutableDictionary({'Data': entry['app_name'],
                                         'Datab': entry['image'],
-                                        'checkb': entry['checked']})#NSNumber.numberWithBool_(1)})
+                                        'checkb': entry['checked'],
+                                        'windows': entry['windows']})#NSNumber.numberWithBool_(1)})
             self.results.append(mutable)
-            
+
         self.queryResponse = []
 
         #for s in list_of_files:
@@ -227,9 +240,9 @@ class ReviewController(NSWindowController):
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
         # get arrayController read for Table
-        desc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',False)
-        descriptiorArray = [desc]
-        self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
+        # desc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',False)
+        # descriptiorArray = [desc]
+        # self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
 
         self.populateExperienceTable(self)
