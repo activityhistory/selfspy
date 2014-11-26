@@ -147,19 +147,9 @@ class ReviewController(NSWindowController):
     def mapFilenameDateToNumber(self, s=None):
         return int('20' + s[0:2] + s[2:4] + s[4:6] + s[7:9] + s[9:11] + s[11:13])
 
-    def populateExperienceTable(self):
-
-        list_of_files = self.generateScreenshotList(self)
-
-        self.slider_min = self.mapFilenameDateToNumber(self, s=list_of_files[0])
-
+    def getApplicationsAndURLsForTable(self, list_of_files):
         for s in list_of_files:
             self.generateDateQuery(self, s=s)
-            helper = self.mapFilenameDateToNumber(self, s=s)
-            if self.slider_max < helper:
-                self.slider_max = helper
-            if self.slider_min > helper:
-                self.slider_min = helper
 
             # send message to activity_store so it can do the database query
             NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
@@ -173,7 +163,24 @@ class ReviewController(NSWindowController):
             self.queryResponse = []
             self.queryResponse2 = []
 
+    def manageTimeline(self, list_of_files):
+        self.slider_min = self.mapFilenameDateToNumber(self, s=list_of_files[0])
+
+        for s in list_of_files:
+            self.generateDateQuery(self, s=s)
+            helper = self.mapFilenameDateToNumber(self, s=s)
+            if self.slider_max < helper:
+                self.slider_max = helper
+            if self.slider_min > helper:
+                self.slider_min = helper
+
         self.normalized_max_value = self.slider_max - self.slider_min
+
+    def populateExperienceTable(self):
+
+        list_of_files = self.generateScreenshotList(self)
+        self.getApplicationsAndURLsForTable(self, list_of_files)
+        self.manageTimeline(self, list_of_files)
 
         try:
             self.reviewController.arrayController.rearrangeObjects()
