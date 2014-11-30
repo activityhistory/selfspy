@@ -54,7 +54,7 @@ from datetime import datetime
 
 import mutagen.mp4
 
-from selfspy import locationTracking
+#from selfspy import locationTracking
 from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
@@ -164,9 +164,9 @@ class Sniffer:
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
 
         self.location_hook = lambda x: True
-        self.geo = locationTracking.LocationTracking()
-        self.geo.startTracking()
-        self.geo.locationchange_hook = self.got_location_change
+        #self.geo = locationTracking.LocationTracking()
+        #self.geo.startTracking()
+        #self.geo.locationchange_hook = self.got_location_change
 
         self.delegate = None
 
