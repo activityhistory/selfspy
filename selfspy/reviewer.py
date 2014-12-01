@@ -120,8 +120,8 @@ class ReviewController(NSWindowController):
     def revertReviewWindow_(self, sender):
         self.moveReviewWindow(direction=-1)
 
-    @IBAction
-    def updateWindowList_(self,sender):
+    # @IBAction
+    def tableViewSelectionDidChange_(self,sender):
         selected_app = self.appList.selectedRow()
         self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[selected_app]['windows']]
         self.windowList.reloadData()
