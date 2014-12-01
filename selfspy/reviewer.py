@@ -124,7 +124,6 @@ class ReviewController(NSWindowController):
     def updateWindowList_(self,sender):
         selected_app = self.appList.selectedRow()
         self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[selected_app]['windows']]
-        print self.results_windows
         self.windowList.reloadData()
 
     def moveReviewWindow(self, direction):
@@ -244,6 +243,9 @@ class ReviewController(NSWindowController):
         # descriptiorArray = [desc]
         # self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
+
+        # s = objc.selector(self.updateWindowList_,signature='v@:@')
+        # self.reviewController.appList.setAction_(s)
 
         self.populateExperienceTable(self)
 
