@@ -201,7 +201,7 @@
                                         </tableColumn>
                                     </tableColumns>
                                     <connections>
-                                        <action selector="updateWindowList:" target="-2" id="9C9-ku-h1I"/>
+                                        <action selector="updateWindowList:" target="-2" id="0ba-gZ-DJ1"/>
                                     </connections>
                                 </tableView>
                             </subviews>
