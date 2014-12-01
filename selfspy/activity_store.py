@@ -305,7 +305,6 @@ class ActivityStore:
             db_window = self.session.query(Window).filter_by(title=window['title'], process_id=pid, browser_url=window['url']).scalar()
             if not db_window:
                 window_to_add = Window(window['title'], pid, window['url'])
-                print "Loop created window: " + window['title'] + " , " + window['url']
                 self.session.add(window_to_add)
                 self.trycommit()
                 db_window = self.session.query(Window).filter_by(title=window['title'], process_id=pid, browser_url=window['url']).scalar()
@@ -363,7 +362,6 @@ class ActivityStore:
                 cur_window = self.session.query(Window).filter_by(process_id=cur_process.id, title=window_name, browser_url=browser_url).scalar()
             if not cur_window:
                 cur_window = Window(window_name, cur_process.id, browser_url)
-                print "Event created window: " + window_name + " , " + browser_url
                 self.session.add(cur_window)
             if (cur_window.title != self.active_window['title'] or cur_window.process_id != self.active_window['process'] or cur_window.browser_url != self.active_window['url']):
                 window_event = WindowEvent(cur_window.id, "Active")
@@ -592,8 +590,8 @@ class ActivityStore:
 
             for w in q_windows:
                 if w.browser_url != 'NO_URL':
-                    browser_url = urlparse(w.browser_url).hostname
-                    window_dict = {'checked':False, 'windowName':w.browser_url, 'image':''}
+                    short_url = urlparse(w.browser_url).hostname
+                    window_dict = {'checked':False, 'windowName':short_url, 'image':''}
                 else:
                     window_dict = {'checked':False, 'windowName':w.title, 'image':''}
                 if not window_dict in controller.queryResponse[w.process_id-1]['windows']:

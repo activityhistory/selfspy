@@ -483,14 +483,6 @@ class Sniffer:
                                         s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                         browser_url = s.executeAndReturnError_(None)
                                     browser_url = str(browser_url[0])[33:-3]
-                                    # browser_url = urlparse(browser_url).hostname
-                                # if not browser_url:
-                                #     browser_url = 'NO_URL'
-
-                                # call screen hook
-                                # print "WINDOW name is " + str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
-                                # print "PROCESS name is " + window['kCGWindowOwnerName']
-                                # print "URL name is " + browser_url
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u'').encode('ascii', 'replace'),
