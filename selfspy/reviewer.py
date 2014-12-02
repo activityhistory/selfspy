@@ -29,6 +29,41 @@ from AppKit import *
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
 
+
+class WindowListController(NSArrayController):
+    # review_controller = ""
+
+    @IBAction
+    def updateAppCheckbox_(self, sender):
+        x=1
+        # TODO determine why self.review_controller does not work for some list
+        # items but works for others
+
+        # print self.review_controller
+        #row = self.review_controller.appList.selectedRow()
+        # view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
+        # if view:
+        #     app = view.textField().stringValue()
+        #     app_i = 0
+        #     for i in range(len(self.review_controller.results)):
+        #         if self.review_controller.results[i]["Data"] == app:
+        #             app_i = i
+        #             break
+        #     app_data = self.review_controller.results[app_i]
+        #     num_rows = len(app_data['windows'])
+        #     num_checked = 0
+        #     for j in app_data['windows']:
+        #         if j['checked'] == 1:
+        #             num_checked += 1
+        #     if num_checked == num_rows:
+        #         app_data['checked'] = 1
+        #     elif num_checked == 0:
+        #         app_data['checked'] = 0
+        #     else:
+        #         app_data['checked'] = -1
+        #     print "check value is " + str(app_data['checked'])
+
+
 # Review window controller
 class ReviewController(NSWindowController):
 
@@ -36,21 +71,19 @@ class ReviewController(NSWindowController):
     mainPanel = IBOutlet()
     tableView = IBOutlet()
     arrayController = IBOutlet()
-    arrayControllerWindows = IBOutlet()
     appList = IBOutlet()
     windowList = IBOutlet()
+    protoCheckbox = IBOutlet()
 
     # instance variables
     currentScreenshot = -1
     dateQuery = ""
 
     # dynamic review table
-    list = []
-    window_list = [{'checked':False, 'windowName':'Window 10', 'image':''}]
     NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
     NSNumber = objc.lookUpClass('NSNumber')
-    results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
-    results_windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in window_list]
+    results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in []]
+    results_windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in [{'checked':0, 'windowName':'Window 10', 'image':''}]]
 
     # let activity_store write query results into those
     queryResponse = []
@@ -62,6 +95,18 @@ class ReviewController(NSWindowController):
     slider_min = 0
     normalized_max_value = 0
 
+
+    def createWindowListController(self):
+        return WindowListController
+
+    @IBAction
+    def updateAppCheckbox_(self, sender):
+        print "You checked something"
+        numCols = self.reviewController.windowList.numberOfColumns()
+        numChecked = 0
+        for i in range(numCols):
+            if self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False):
+                print self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False).textField().stringValue()
 
     # For Debugging purposes
     def printBools(self, self2=None):
@@ -120,11 +165,21 @@ class ReviewController(NSWindowController):
     def revertReviewWindow_(self, sender):
         self.moveReviewWindow(direction=-1)
 
-    # @IBAction
     def tableViewSelectionDidChange_(self,sender):
-        selected_app = self.appList.selectedRow()
-        self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[selected_app]['windows']]
-        self.windowList.reloadData()
+        selected_row = self.appList.selectedRow()
+        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+
+        # TODO for some reason, when we programatically select the 0 index
+        # at launch, the selected_view is none
+        if selected_view:
+            selected_app = selected_view.textField().stringValue()
+            app_index_in_dict = 0
+            for i in range(len(self.results)):
+                if self.results[i]["Data"] == selected_app:
+                    app_index_in_dict = i
+                    break
+            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
+            self.windowList.reloadData()
 
     def moveReviewWindow(self, direction):
         list_of_files = self.generateScreenshotList(self)
@@ -199,13 +254,15 @@ class ReviewController(NSWindowController):
         self.normalized_max_value = self.slider_max - self.slider_min
 
     def populateExperienceTable(self):
-
         list_of_files = self.generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
         self.manageTimeline(self, list_of_files)
 
         try:
+            # re-sort list items and select the first one
             self.reviewController.arrayController.rearrangeObjects()
+            index_set = NSIndexSet.indexSetWithIndex_(0)
+            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
         except UnboundLocalError:
             pass
 
@@ -238,14 +295,15 @@ class ReviewController(NSWindowController):
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
-        # get arrayController read for Table
-        # desc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',False)
-        # descriptiorArray = [desc]
-        # self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
-        self.reviewController.arrayController.rearrangeObjects()
+        self.reviewController.windowArrayController = self.createWindowListController(self).alloc().init()
+        self.reviewController.windowArrayController.review_controller = self.reviewController
+        self.reviewController.windowList.setDelegate_(self.reviewController.windowArrayController)
 
-        # s = objc.selector(self.updateWindowList_,signature='v@:@')
-        # self.reviewController.appList.setAction_(s)
+        # get arrayController read for Table
+        asc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',True)
+        descriptiorArray = [asc]
+        self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
+        self.reviewController.arrayController.rearrangeObjects()
 
         self.populateExperienceTable(self)
 

@@ -537,7 +537,6 @@ class ActivityStore:
 
         # populate page with responses to last debrief
         q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
-        print q
 
         if q:
             controller.doingText.setStringValue_(q[-1].doing_report)
@@ -585,7 +584,6 @@ class ActivityStore:
 
             for a in q_apps:
                 app_dict = {'checked':False, 'image':'', 'app_name': a.name, 'windows':[]}
-                print app_dict
                 controller.queryResponse.append(app_dict)
 
             for w in q_windows:
