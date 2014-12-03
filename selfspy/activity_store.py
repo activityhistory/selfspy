@@ -359,7 +359,7 @@ class ActivityStore:
             if browser_url == "NO_URL":
                 cur_window = self.session.query(Window).filter_by(title=window_name, process_id=cur_process.id).scalar()
             else:
-                cur_window = self.session.query(Window).filter_by(process_id=cur_process.id, browser_url=browser_url).scalar()
+                cur_window = self.session.query(Window).filter_by(process_id=cur_process.id, title=window_name, browser_url=browser_url).scalar()
             if not cur_window:
                 cur_window = Window(window_name, cur_process.id, browser_url)
                 self.session.add(cur_window)
@@ -537,7 +537,6 @@ class ActivityStore:
 
         # populate page with responses to last debrief
         q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
-        print q
 
         if q:
             controller.doingText.setStringValue_(q[-1].doing_report)
@@ -585,13 +584,12 @@ class ActivityStore:
 
             for a in q_apps:
                 app_dict = {'checked':False, 'image':'', 'app_name': a.name, 'windows':[]}
-                print app_dict
                 controller.queryResponse.append(app_dict)
 
             for w in q_windows:
                 if w.browser_url != 'NO_URL':
-                    hostname = urlparse(w.browser_url).hostname
-                    window_dict = {'checked':False, 'windowName':hostname, 'image':''}
+                    short_url = urlparse(w.browser_url).hostname
+                    window_dict = {'checked':False, 'windowName':short_url, 'image':''}
                 else:
                     window_dict = {'checked':False, 'windowName':w.title, 'image':''}
                 if not window_dict in controller.queryResponse[w.process_id-1]['windows']:

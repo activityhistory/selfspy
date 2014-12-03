@@ -10,6 +10,7 @@
                 <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
                 <outlet property="arrayControllerWindows" destination="MuR-ve-Uyd" id="N5c-Tx-hCC"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
+                <outlet property="protoCheckbox" destination="aja-CX-gly" id="ril-dl-cSA"/>
                 <outlet property="tableView" destination="beq-tF-GIw" id="bac-Kh-gKM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
                 <outlet property="windowList" destination="RVT-QW-VUu" id="Yd7-hA-lv3"/>
@@ -35,7 +36,7 @@
                         </textFieldCell>
                     </textField>
                     <scrollView hidden="YES" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YOG-hU-cyb">
-                        <rect key="frame" x="947" y="64" width="347" height="569"/>
+                        <rect key="frame" x="237" y="63" width="347" height="569"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="SXu-jc-F7G">
                             <rect key="frame" x="1" y="17" width="238" height="117"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -130,8 +131,12 @@
                             <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
                         </connections>
                     </slider>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
+                        <rect key="frame" x="56" y="49" width="871" height="604"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
+                    </imageView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JBQ-pv-W8z">
-                        <rect key="frame" x="938" y="44" width="180" height="567"/>
+                        <rect key="frame" x="936" y="63" width="180" height="590"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="O14-8c-aRP">
                             <rect key="frame" x="1" y="0.0" width="238" height="134"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -172,11 +177,12 @@
                                                         </textField>
                                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3NK-Hv-1dE">
                                                             <rect key="frame" x="1" y="8" width="20" height="18"/>
-                                                            <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="obs-2x-sUJ">
+                                                            <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" allowsMixedState="YES" inset="2" id="obs-2x-sUJ">
                                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                 <font key="font" metaFont="system"/>
                                                             </buttonCell>
                                                             <connections>
+                                                                <action selector="updateAppCheckbox:" target="-2" id="ZvP-lb-Bj4"/>
                                                                 <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.checkb" id="Qp5-v8-zen"/>
                                                             </connections>
                                                         </button>
@@ -201,7 +207,7 @@
                                         </tableColumn>
                                     </tableColumns>
                                     <connections>
-                                        <action selector="updateWindowList:" target="-2" id="0ba-gZ-DJ1"/>
+                                        <outlet property="delegate" destination="-2" id="Qpn-vM-prQ"/>
                                     </connections>
                                 </tableView>
                             </subviews>
@@ -221,7 +227,7 @@
                         </tableHeaderView>
                     </scrollView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Q7u-cH-FvU">
-                        <rect key="frame" x="1114" y="44" width="180" height="567"/>
+                        <rect key="frame" x="1114" y="64" width="180" height="589"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="YCs-k1-dJM">
                             <rect key="frame" x="1" y="0.0" width="238" height="134"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -250,7 +256,7 @@
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
                                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DDU-sO-qG6">
-                                                            <rect key="frame" x="60" y="9" width="105" height="17"/>
+                                                            <rect key="frame" x="22" y="9" width="145" height="17"/>
                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="cds-dJ-je6">
                                                                 <font key="font" metaFont="system"/>
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -270,20 +276,12 @@
                                                                 <font key="font" metaFont="system"/>
                                                             </buttonCell>
                                                             <connections>
+                                                                <action selector="updateAppCheckbox:" target="MuR-ve-Uyd" id="XBv-ib-j8m"/>
                                                                 <binding destination="4PU-1x-gyb" name="value" keyPath="objectValue.checked" id="Fpm-gN-y9c"/>
                                                             </connections>
                                                         </button>
-                                                        <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N7a-HU-qqr">
-                                                            <rect key="frame" x="23" y="1" width="32" height="32"/>
-                                                            <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSApplicationIcon" id="SqT-ag-BeA">
-                                                                <connections>
-                                                                    <binding destination="4PU-1x-gyb" name="value" keyPath="objectValue.image" id="rb2-3E-VE2"/>
-                                                                </connections>
-                                                            </imageCell>
-                                                        </imageView>
                                                     </subviews>
                                                     <connections>
-                                                        <outlet property="imageView" destination="N7a-HU-qqr" id="fOE-ij-k8p"/>
                                                         <outlet property="textField" destination="DDU-sO-qG6" id="O9B-fb-I0B"/>
                                                     </connections>
                                                 </tableCellView>
@@ -293,6 +291,9 @@
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>
+                                    <connections>
+                                        <outlet property="delegate" destination="MuR-ve-Uyd" id="zKE-7B-sGZ"/>
+                                    </connections>
                                 </tableView>
                             </subviews>
                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -310,10 +311,6 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
-                        <rect key="frame" x="56" y="25" width="871" height="604"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
-                    </imageView>
                 </subviews>
             </view>
             <point key="canvasLocation" x="496" y="245.5"/>
@@ -323,7 +320,7 @@
                 <binding destination="-2" name="contentArray" keyPath="self.results" id="unG-1M-8PH"/>
             </connections>
         </arrayController>
-        <arrayController id="MuR-ve-Uyd">
+        <arrayController id="MuR-ve-Uyd" customClass="WindowListController">
             <connections>
                 <binding destination="-2" name="contentArray" keyPath="self.results_windows" id="Kjg-Si-qwN"/>
             </connections>
