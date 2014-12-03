@@ -40,7 +40,7 @@ sys.path.append(os.getcwd() + '/../../../..') # your project folder
 #
 # remote debugging with PyCharm
 
-#sys.path.append("/Applications/PyCharm.app/pycharm-debug.egg") # your PyCharm path
+#sys.path.append("/Applications/PyCharm.app/Contents/pycharm-debug.egg") # your PyCharm path
 #import pydevd
 #
 #pydevd.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)

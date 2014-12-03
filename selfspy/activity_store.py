@@ -590,8 +590,8 @@ class ActivityStore:
 
             for w in q_windows:
                 if w.browser_url != 'NO_URL':
-                    browser_url = urlparse(w.browser_url).hostname
-                    window_dict = {'checked':False, 'windowName':w.browser_url, 'image':''}
+                    hostname = urlparse(w.browser_url).hostname
+                    window_dict = {'checked':False, 'windowName':hostname, 'image':''}
                 else:
                     window_dict = {'checked':False, 'windowName':w.title, 'image':''}
                 if not window_dict in controller.queryResponse[w.process_id-1]['windows']:
