@@ -24,9 +24,10 @@ from os import listdir
 from os.path import isfile, join
 
 from objc import IBAction, IBOutlet
+from Foundation import *
 from AppKit import *
 
-import CBGraphView
+from CBGraphView import CBGraphView
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
@@ -307,8 +308,10 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
 
-        this_view = CBGraphView()
-        self.reviewController.window().addSubView_(this_view)
+        frame = NSRect(NSPoint(50, 50), NSSize(600, 100))
+        this_view = CBGraphView.alloc().initWithFrame_(frame)
+
+        self.reviewController.window().contentView().addSubview_(this_view)
 
         self.populateExperienceTable(self)
 
