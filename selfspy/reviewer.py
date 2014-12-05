@@ -33,7 +33,7 @@ class WindowListController(NSArrayController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        x=1
+        print "You checked a window"
         # TODO determine why self.review_controller does not work for some list
         # items but works for others
 
@@ -104,12 +104,12 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        print "You checked something"
-        numCols = self.reviewController.windowList.numberOfColumns()
-        numChecked = 0
-        for i in range(numCols):
-            if self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False):
-                print self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False).textField().stringValue()
+        print "You checked an application"
+        # numCols = self.reviewController.windowList.numberOfColumns()
+        # numChecked = 0
+        # for i in range(numCols):
+        #     if self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False):
+        #         print self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False).textField().stringValue()
 
 
     def displayScreenshot(self, self2=None, s=None):
@@ -130,9 +130,9 @@ class ReviewController(NSWindowController):
         self.reviewController.mainPanel.setImage_(experienceImage)
 
     def generateDictEntry(self, checked=None):
-        return NSMutableDictionary({'Data': self.queryResponse2[0] if len(self.queryResponse2) > 0 else "",
-                                    'Datab': self.queryResponse[0] if len(self.queryResponse) > 0 else "",
-                                    'checkb': NSNumber.numberWithBool_(checked)})
+        return NSMutableDictionary({'appName': self.queryResponse2[0] if len(self.queryResponse2) > 0 else "",
+                                    'image': self.queryResponse[0] if len(self.queryResponse) > 0 else "",
+                                    'checked': NSNumber.numberWithBool_(checked)})
 
     @IBAction
     def advanceReviewWindow_(self, sender):
@@ -152,7 +152,7 @@ class ReviewController(NSWindowController):
             selected_app = selected_view.textField().stringValue()
             app_index_in_dict = 0
             for i in range(len(self.results)):
-                if self.results[i]["Data"] == selected_app:
+                if self.results[i]["appName"] == selected_app:
                     app_index_in_dict = i
                     break
             self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
@@ -195,10 +195,10 @@ class ReviewController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
 
         for entry in self.queryResponse:
-            mutable = NSMutableDictionary({'Data': entry['app_name'],
-                                        'Datab': entry['image'],
-                                        'checkb': entry['checked'],
-                                        'windows': entry['windows']})#NSNumber.numberWithBool_(1)})
+            mutable = NSMutableDictionary({'appName': entry['appName'],
+                                        'image': entry['image'],
+                                        'checked': entry['checked'],
+                                        'windows': entry['windows']})
             self.results.append(mutable)
 
         self.queryResponse = []

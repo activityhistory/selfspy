@@ -586,15 +586,15 @@ class ActivityStore:
             q_windows = self.session.query(Window).all()
 
             for a in q_apps:
-                app_dict = {'checked':False, 'image':'', 'app_name': a.name, 'windows':[]}
+                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appName': a.name, 'windows':[]})
                 controller.queryResponse.append(app_dict)
 
             for w in q_windows:
                 if w.browser_url != 'NO_URL':
                     short_url = urlparse(w.browser_url).hostname
-                    window_dict = {'checked':False, 'windowName':short_url, 'image':''}
+                    window_dict = NSMutableDictionary({'checked':False, 'windowName':short_url, 'image':''})
                 else:
-                    window_dict = {'checked':False, 'windowName':w.title, 'image':''}
+                    window_dict = NSMutableDictionary({'checked':False, 'windowName':w.title, 'image':''})
                 if not window_dict in controller.queryResponse[w.process_id-1]['windows']:
                     window_dict = NSMutableDictionary.dictionaryWithDictionary_(window_dict)
                     controller.queryResponse[w.process_id-1]['windows'].append(window_dict)
