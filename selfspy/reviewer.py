@@ -95,6 +95,8 @@ class ReviewController(NSWindowController):
     normalized_max_value = 0
 
     timeline_view = None
+    nested_timeline_views = []
+    current_timeline_process = 7
 
 
     def createWindowListController(self):
@@ -156,6 +158,10 @@ class ReviewController(NSWindowController):
             self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
             self.windowList.reloadData()
 
+            self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+            list_of_files = generateScreenshotList(self)
+            self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
+
     def moveReviewWindow(self, direction):
         list_of_files = generateScreenshotList(self)
         screenshot_found = False
@@ -198,13 +204,10 @@ class ReviewController(NSWindowController):
         self.queryResponse = []
 
     def manageTimeline(self, list_of_files):
-        a = mapFilenameDateToNumber(self, s=list_of_files[0])
-        self.slider_min = unixTimeFromString(self, s=a)
+        self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
 
         for s in list_of_files:
-            generateDateQuery(self, s=s)
-            a = mapFilenameDateToNumber(self, s=s)
-            helper = unixTimeFromString(self, s=a)
+            helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
             if self.slider_max < helper:
                 self.slider_max = helper
             if self.slider_min > helper:
@@ -214,14 +217,10 @@ class ReviewController(NSWindowController):
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcess1times',self)
 
-        entry_no = 0
         bounds_detected = 0
         front_bound = 0
         for entry in self.p1Response:
-            entryA_no = 0
             for entryA in entry:
-                print("entry " + str(entry_no) + " entryA "+ str(entryA_no) + ": " + str(entryA[1])  + " @ " + str(entryA[2]))
-
                 if str(entryA[1]) == "Open" and bounds_detected == 0:
                     front_bound = unixTimeFromString(self, str(entryA[2]))
                     bounds_detected = 1
@@ -231,16 +230,14 @@ class ReviewController(NSWindowController):
                     bounds_detected = 2
 
                 if  bounds_detected == 2:
-                    print("attempting to draw view at front_bound " + str(front_bound) + " - slider_min " + str(self.slider_min) + " / self.normalized_max_value " + str(self.normalized_max_value) + "  * 600 = " + str((front_bound - self.slider_min) / self.slider_max  * 600))
-                    frame = NSRect(NSPoint((front_bound - self.slider_min) * 600 / self.normalized_max_value, 10), NSSize(30, 50))
-                    this_view_B = CBGraphView.alloc().initWithFrame_(frame)
+                    frame = NSRect(NSPoint((front_bound - self.slider_min) * 600 / self.normalized_max_value, 10),
+                                   NSSize(back_bound - front_bound, 50))
+                    this_view = CBGraphView.alloc().initWithFrame_(frame)
+                    self.timeline_view.addSubview_(this_view)
+                    this_view.drawRect_(frame)
+                    self.nested_timeline_views.append(this_view)
 
-                    self.timeline_view.addSubview_(this_view_B)
-                    this_view_B.drawRect_(frame)
                     bounds_detected = 0
-
-                entryA_no += 1
-            entry_no += 1
 
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
@@ -294,15 +291,12 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
 
-        frame = NSRect(NSPoint(50, 50), NSSize(600, 100))
+        # generate the timeline view
+        frame = NSRect(NSPoint(50, 50), NSSize(800, 100))
         self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
 
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
         self.timeline_view.drawRect_(frame)
-
-
-
-
 
         self.populateExperienceTable(self)
 

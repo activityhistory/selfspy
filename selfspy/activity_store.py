@@ -610,8 +610,9 @@ class ActivityStore:
 
     def getProcess1times_(self, notification):
         controller = notification.object().reviewController
+        process = controller.current_timeline_process
         try:
-            q = self.session.query(ProcessEvent).filter(ProcessEvent.process_id == 10).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).all()
+            q = self.session.query(ProcessEvent).filter(ProcessEvent.process_id == process).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).all()
             if len(q) > 0:
                 controller.p1Response.append(q)
         except UnicodeEncodeError:
