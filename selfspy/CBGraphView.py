@@ -15,6 +15,8 @@ class CBGraphView(NSControl):
     grad = None          # the gradient object
     lineWidth = 1.0      # default bar width (1 "pixel")
     lineSpacing = 0.0    # default spacing between bars to no space
+
+    current_color = 0
     
     def initWithFrame_(self, frame):
         """ basic constructor for views. here we init colors and gradients """
@@ -25,7 +27,7 @@ class CBGraphView(NSControl):
 
             self.gradientGray = NSColor.colorWithCalibratedRed_green_blue_alpha_(50/255.0, 50/255.0, 50/255.0, 1.0)
             self.lineColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(33/255.0, 104/255.0, 198/255.0, 1.0)
-            self.borderColor = NSColor.whiteColor()
+            self.borderColor = NSColor.blackColor()
 
             self.grad = NSGradient.alloc().initWithStartingColor_endingColor_(NSColor.blackColor(), self.gradientGray)
             self.grad.retain()
@@ -159,6 +161,11 @@ class CBGraphView(NSControl):
         # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
         # self.grad.drawInBezierPath_angle_(r, 45.0)
 
-        self.setBorderColor_(NSColor.blackColor())
+        self.current_color = self.current_color % 2 + 1
+
+        if self.current_color == 1:
+            self.setBorderColor_(NSColor.blackColor())
+        else:
+            self.setBorderColor_(NSColor.whiteColor())
 
         self.setNeedsDisplay_(True)

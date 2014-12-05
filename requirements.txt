@@ -7,3 +7,4 @@ pyobjc-framework-Quartz==2.5.1
 pyobjc-framework-Cocoa==2.5.1
 pyobjc-framework-LaunchServices==2.5.1
 mutagen
+python-dateutil

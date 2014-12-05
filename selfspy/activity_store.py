@@ -169,6 +169,9 @@ class ActivityStore:
         s = objc.selector(self.getAppsAndUrls_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndUrls', None)
 
+        s = objc.selector(self.getProcess1times_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcess1times', None)
+
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
@@ -604,6 +607,15 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
+
+    def getProcess1times_(self, notification):
+        controller = notification.object().reviewController
+        try:
+            q = self.session.query(ProcessEvent).filter(ProcessEvent.process_id == 10).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).all()
+            if len(q) > 0:
+                controller.p1Response.append(q)
+        except UnicodeEncodeError:
+                pass
 
     def getPriorExperiences_(self, notification):
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)

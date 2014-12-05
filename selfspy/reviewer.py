@@ -24,17 +24,18 @@ from os import listdir
 from os.path import isfile, join
 
 from objc import IBAction, IBOutlet
-from Foundation import *
 from AppKit import *
 
 from CBGraphView import CBGraphView
+
+import calendar
+from dateutil.parser import parse
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
 
 
 class WindowListController(NSArrayController):
-    # review_controller = ""
 
     @IBAction
     def updateAppCheckbox_(self, sender):
@@ -91,12 +92,15 @@ class ReviewController(NSWindowController):
     # let activity_store write query results into those
     queryResponse = []
     queryResponse2 = []
+    p1Response = []
 
     # timeline
     timeline_value = 0
     slider_max = 1
     slider_min = 0
     normalized_max_value = 0
+
+    timeline_view = None
 
 
     def createWindowListController(self):
@@ -215,6 +219,16 @@ class ReviewController(NSWindowController):
 
     def mapFilenameDateToNumber(self, s=None):
         return int('20' + s[0:2] + s[2:4] + s[4:6] + s[7:9] + s[9:11] + s[11:13])
+    #
+    # def mapFilenameDateToNumber2(self, s=None):
+    #     return int(s[0:4] + s[5:7] + s[8:10] + s[11:13] + s[14:16] + s[17:19])
+
+    def unixTimeFromString(self, s=None):
+        # print("attempting unixTimeFromString")
+        front_bound = parse(str(s), fuzzy=True)
+        ts = calendar.timegm(front_bound.utctimetuple())
+        # print("before returning unixTimeFromString")
+        return ts
 
     def getApplicationsAndURLsForTable(self, list_of_files):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
@@ -244,17 +258,49 @@ class ReviewController(NSWindowController):
             # self.queryResponse2 = []
 
     def manageTimeline(self, list_of_files):
-        self.slider_min = self.mapFilenameDateToNumber(self, s=list_of_files[0])
+        a = self.mapFilenameDateToNumber(self, s=list_of_files[0])
+        self.slider_min = self.unixTimeFromString(self, s=a)
 
         for s in list_of_files:
             self.generateDateQuery(self, s=s)
-            helper = self.mapFilenameDateToNumber(self, s=s)
+            a = self.mapFilenameDateToNumber(self, s=s)
+            helper = self.unixTimeFromString(self, s=a)
             if self.slider_max < helper:
                 self.slider_max = helper
             if self.slider_min > helper:
                 self.slider_min = helper
 
         self.normalized_max_value = self.slider_max - self.slider_min
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcess1times',self)
+
+        entry_no = 0
+        bounds_detected = 0
+        front_bound = 0
+        for entry in self.p1Response:
+            entryA_no = 0
+            for entryA in entry:
+                print("entry " + str(entry_no) + " entryA "+ str(entryA_no) + ": " + str(entryA[1])  + " @ " + str(entryA[2]))
+
+                if str(entryA[1]) == "Open" and bounds_detected == 0:
+                    front_bound = self.unixTimeFromString(self, str(entryA[2]))
+                    bounds_detected = 1
+
+                if str(entryA[1]) == "Close" and bounds_detected == 1:
+                    back_bound = self.unixTimeFromString(self, str(entryA[2]))
+                    bounds_detected = 2
+
+                if  bounds_detected == 2:
+                    print("attempting to draw view at front_bound " + str(front_bound) + " - slider_min " + str(self.slider_min) + " / self.normalized_max_value " + str(self.normalized_max_value) + "  * 600 = " + str((front_bound - self.slider_min) / self.slider_max  * 600))
+                    frame = NSRect(NSPoint((front_bound - self.slider_min) * 600 / self.normalized_max_value, 10), NSSize(30, 50))
+                    this_view_B = CBGraphView.alloc().initWithFrame_(frame)
+
+                    self.timeline_view.addSubview_(this_view_B)
+                    this_view_B.drawRect_(frame)
+                    bounds_detected = 0
+
+                entryA_no += 1
+            entry_no += 1
 
     def populateExperienceTable(self):
         list_of_files = self.generateScreenshotList(self)
@@ -309,10 +355,12 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         frame = NSRect(NSPoint(50, 50), NSSize(600, 100))
-        this_view = CBGraphView.alloc().initWithFrame_(frame)
+        self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
 
-        self.reviewController.window().contentView().addSubview_(this_view)
-        this_view.drawRect_(frame)
+        self.reviewController.window().contentView().addSubview_(self.timeline_view)
+        self.timeline_view.drawRect_(frame)
+
+
 
 
 
