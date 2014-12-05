@@ -11,7 +11,6 @@
                 <outlet property="arrayControllerWindows" destination="MuR-ve-Uyd" id="N5c-Tx-hCC"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
                 <outlet property="protoCheckbox" destination="aja-CX-gly" id="ril-dl-cSA"/>
-                <outlet property="tableView" destination="beq-tF-GIw" id="bac-Kh-gKM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
                 <outlet property="windowList" destination="RVT-QW-VUu" id="Yd7-hA-lv3"/>
             </connections>
@@ -35,75 +34,6 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <scrollView hidden="YES" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YOG-hU-cyb">
-                        <rect key="frame" x="237" y="63" width="347" height="569"/>
-                        <clipView key="contentView" ambiguous="YES" misplaced="YES" id="SXu-jc-F7G">
-                            <rect key="frame" x="1" y="17" width="238" height="117"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="fi8-pQ-biE" id="beq-tF-GIw">
-                                    <rect key="frame" x="0.0" y="0.0" width="345" height="19"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <size key="intercellSpacing" width="3" height="2"/>
-                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
-                                    <tableColumns>
-                                        <tableColumn width="27.51953125" minWidth="10" maxWidth="3.4028234663852886e+38" id="l1Z-2I-fbO">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
-                                            </tableHeaderCell>
-                                            <buttonCell key="dataCell" type="check" bezelStyle="regularSquare" imagePosition="left" inset="2" id="bmb-cS-ToU">
-                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                        </tableColumn>
-                                        <tableColumn width="140.48046875" minWidth="40" maxWidth="1000" id="Q3u-T0-hJ0">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Application">
-                                                <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
-                                            </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" title="Text" id="qTo-ia-ipm">
-                                                <font key="font" metaFont="system"/>
-                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                            </textFieldCell>
-                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                        </tableColumn>
-                                        <tableColumn width="168.03515625" minWidth="40" maxWidth="1000" id="3lY-Nr-jN7">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="URL">
-                                                <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
-                                            </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" title="Text" id="MfI-Mg-FTx">
-                                                <font key="font" metaFont="system"/>
-                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                            </textFieldCell>
-                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                        </tableColumn>
-                                    </tableColumns>
-                                </tableView>
-                            </subviews>
-                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </clipView>
-                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="new-dI-UPx">
-                            <rect key="frame" x="1" y="119" width="223" height="15"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </scroller>
-                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="aMz-rh-hWk">
-                            <rect key="frame" x="224" y="17" width="15" height="102"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </scroller>
-                        <tableHeaderView key="headerView" id="fi8-pQ-biE">
-                            <rect key="frame" x="0.0" y="0.0" width="238" height="17"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </tableHeaderView>
-                    </scrollView>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Trf-dt-yta">
                         <rect key="frame" x="1158" y="16" width="142" height="32"/>
                         <buttonCell key="cell" type="push" title="Next Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rhj-JY-ZH7">
@@ -132,7 +62,7 @@
                         </connections>
                     </slider>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
-                        <rect key="frame" x="56" y="49" width="871" height="604"/>
+                        <rect key="frame" x="56" y="44" width="871" height="604"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
                     </imageView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JBQ-pv-W8z">
@@ -171,7 +101,7 @@
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                                 <connections>
-                                                                    <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.Data" id="q8d-pS-gaU"/>
+                                                                    <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.appName" id="fFz-2x-Re5"/>
                                                                 </connections>
                                                             </textFieldCell>
                                                         </textField>
@@ -183,7 +113,7 @@
                                                             </buttonCell>
                                                             <connections>
                                                                 <action selector="updateAppCheckbox:" target="-2" id="ZvP-lb-Bj4"/>
-                                                                <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.checkb" id="Qp5-v8-zen"/>
+                                                                <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.checked" id="LrH-Zv-Cl6"/>
                                                             </connections>
                                                         </button>
                                                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CVv-RK-oA7">
