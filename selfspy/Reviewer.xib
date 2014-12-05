@@ -10,7 +10,6 @@
                 <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
                 <outlet property="arrayControllerWindows" destination="MuR-ve-Uyd" id="N5c-Tx-hCC"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
-                <outlet property="protoCheckbox" destination="aja-CX-gly" id="ril-dl-cSA"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
                 <outlet property="windowList" destination="RVT-QW-VUu" id="Yd7-hA-lv3"/>
             </connections>

@@ -17,11 +17,11 @@ class CBGraphView(NSControl):
     lineSpacing = 0.0    # default spacing between bars to no space
 
     current_color = 0
-    
+
     def initWithFrame_(self, frame):
         """ basic constructor for views. here we init colors and gradients """
 
-        self = super(CBGraphView, self).initWithFrame_(frame)
+        self = NSControl.initWithFrame_(self, frame) # super(CBGraphView, self).initWithFrame_(frame)
 
         if self:
 
@@ -33,20 +33,20 @@ class CBGraphView(NSControl):
             self.grad.retain()
 
         return self
-        
+
     def setDataQueue_(self, dq):
         """ set the data object we are graphig """
         self.dataQueue = dq
         self.setNeedsDisplay_(YES)
-        
+
     def setLineWidth_(self, width):
         """ let user change line (bar) width """
         self.lineWidth = width
-        
+
     def setLineSpacing_(self, spacing):
         """ let user change spacing bewteen bars (lines) """
         self.lineSpacing = spacing
-     
+
     def setLineColor_(self, color):
         """ let user change line (bar) color """
         self.lineColor = color
@@ -57,17 +57,17 @@ class CBGraphView(NSControl):
 
     def setBackgroundColor_(self, color):
         self.backgroundColor = color
-        
+
     # def setupdateWindowListoundGradient_(self, startColor, endColor):
     #     """ let user change the gradient colors """
     #     self.grad.release()
     #     self.grad = NSGradient.alloc().initWithStartingColor_endingColor_(startColor, endColor)
     #     self.grad.retain()
-        
+
     def isOpaque(self):
         """ are we opaque? why, of course we are! """
         return YES
-        
+
     def dealloc(self):
         """ default destructor """
         self.grad.release()
@@ -108,7 +108,7 @@ class CBGraphView(NSControl):
 
 
 
-        
+
         # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
         # self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
 
@@ -120,19 +120,19 @@ class CBGraphView(NSControl):
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
 
         buf = None  # init the list structure we will be using
-        
+
         if self.dataQueue:
             buf = self.dataQueue.get()  # get teh list
-        
+
         if buf:
-        
+
             rbuf = [ q for q in buf if q ] # filter "None" from the list
             rbuf.reverse() # reverse the list
-            
+
             self.lineColor.set() # set drawing color
- 
+
             barRect = NSRect() # init the rect
-                
+
             maxB = max(rbuf) # find out the max value so we can scale the graph
 
             # disable anti-aliasing since it looks bad
@@ -144,15 +144,15 @@ class CBGraphView(NSControl):
             barRect.origin.x = insetBounds.size.width - self.lineWidth + 2
             for b in rbuf:
                 if b:
-                                   
+
                     barRect.origin.y = insetBounds.origin.y
                     barRect.size.width = self.lineWidth
                     barRect.size.height = ((int(b) * insetBounds.size.height) / maxB)
-                    
+
                     NSBezierPath.fillRect_(barRect)
-                    
+
                     barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
-                    
+
             NSGraphicsContext.currentContext().setShouldAntialias_(shouldAA)
 
     def mouseDown_(self, theEvent):

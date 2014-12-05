@@ -71,7 +71,6 @@ class ReviewController(NSWindowController):
     arrayController = IBOutlet()
     appList = IBOutlet()
     windowList = IBOutlet()
-    protoCheckbox = IBOutlet()
 
     # instance variables
     currentScreenshot = -1
@@ -79,9 +78,8 @@ class ReviewController(NSWindowController):
 
     # dynamic review table
     NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
-    NSNumber = objc.lookUpClass('NSNumber')
-    results = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in []]
-    results_windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in [{'checked':0, 'windowName':'Window 10', 'image':''}]]
+    results = [] #NSMutableDictionary.dictionaryWithDictionary_(x) for x in []]
+    results_windows = [] #NSMutableDictionary.dictionaryWithDictionary_(x) for x in [{'checked':0, 'windowName':'Window 10', 'image':''}]]
 
     # let activity_store write query results into those
     queryResponse = []
@@ -132,7 +130,7 @@ class ReviewController(NSWindowController):
     def generateDictEntry(self, checked=None):
         return NSMutableDictionary({'appName': self.queryResponse2[0] if len(self.queryResponse2) > 0 else "",
                                     'image': self.queryResponse[0] if len(self.queryResponse) > 0 else "",
-                                    'checked': NSNumber.numberWithBool_(checked)})
+                                    'checked': 1})
 
     @IBAction
     def advanceReviewWindow_(self, sender):
