@@ -312,6 +312,9 @@ class ReviewController(NSWindowController):
         this_view = CBGraphView.alloc().initWithFrame_(frame)
 
         self.reviewController.window().contentView().addSubview_(this_view)
+        this_view.drawRect_(frame)
+
+
 
         self.populateExperienceTable(self)
 

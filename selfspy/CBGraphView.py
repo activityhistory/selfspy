@@ -7,7 +7,7 @@ from AppKit import *
 
 #import RingBuffer
 
-class CBGraphView(NSView):
+class CBGraphView(NSControl):
 
     dataQueue = None     # holds the data we'll be graphing
     gradientGray = None  # the gray color of the black->gray gradient we are using
@@ -52,6 +52,9 @@ class CBGraphView(NSView):
     def setBorderColor_(self, color):
         """ let user change border color """
         self.borderColor = color
+
+    def setBackgroundColor_(self, color):
+        self.backgroundColor = color
         
     # def setupdateWindowListoundGradient_(self, startColor, endColor):
     #     """ let user change the gradient colors """
@@ -74,10 +77,39 @@ class CBGraphView(NSView):
 
         bounds = self.bounds() # get our view bounds
         insetBounds = NSInsetRect(bounds, 2, 2) # set the inside ortion
+
+
+
+        # CGContextRef context = (CGContextRef) [[NSGraphicsContext currentContext] graphicsPort];
+        # CGContextSetRGBFillColor(context, 0.227,0.251,0.337,0.8);
+        # CGContextFillRect(context, NSRectToCGRect(dirtyRect));
+
+    #     // set any NSColor for filling, say white:
+    # [[NSColor whiteColor] setFill];
+    # NSRectFill(dirtyRect);
+    # [super drawRect:dirtyRect];
+
+
+        # self.setBackgroundColor_(NSColor.whiteColor())
+
+        # self.setBorderColor_(NSColor.blackColor())
+
+
+
+        # currentContext = NSGraphicsContext.currentContext()
+        # context = CGContextRef(currentContext)
+        # context.CGContextSetRGBFillColor(0.227,0.251,0.337,0.8)
+        # dirtyRect = NSRectToCGRect(rect)
+        # context.CGContextFillRect(dirtyRect)
+
+
+
+
+
         
-        r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
-        self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
-        
+        # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
+        # self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
+
         self.borderColor.set() # set border to white
         NSBezierPath.setDefaultLineWidth_(3.0) # set line width for outline
         NSBezierPath.strokeRect_(bounds) # draw outline
@@ -120,3 +152,13 @@ class CBGraphView(NSView):
                     barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
                     
             NSGraphicsContext.currentContext().setShouldAntialias_(shouldAA)
+
+    def mouseDown_(self, theEvent):
+        print("mouse button pressed")
+        # bounds = self.bounds() # get our view bounds
+        # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
+        # self.grad.drawInBezierPath_angle_(r, 45.0)
+
+        self.setBorderColor_(NSColor.blackColor())
+
+        self.setNeedsDisplay_(True)
