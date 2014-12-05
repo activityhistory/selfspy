@@ -156,9 +156,16 @@ class ReviewController(NSWindowController):
             self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
             self.windowList.reloadData()
 
+
             self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+
+            for view in self.nested_timeline_views:
+                view.removeFromSuperview()
+            self.nested_timeline_views = []
+
             list_of_files = generateScreenshotList(self)
             self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
+
 
     def moveReviewWindow(self, direction):
         list_of_files = generateScreenshotList(self)
