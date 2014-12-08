@@ -68,10 +68,11 @@ class CBGraphView(NSControl):
         """ are we opaque? why, of course we are! """
         return YES
 
+    # TODO fix error that occurs when using super()
     def dealloc(self):
         """ default destructor """
         self.grad.release()
-        super(CBGraphView, self).dealloc()
+        NSControl.dealloc(self) # super(CBGraphView, self).dealloc()
 
     def drawRect_(self, rect):
         """ we raw the background gradient and graph outline then clip the inner rect
@@ -79,8 +80,6 @@ class CBGraphView(NSControl):
 
         bounds = self.bounds() # get our view bounds
         insetBounds = NSInsetRect(bounds, 2, 2) # set the inside ortion
-
-
 
         # CGContextRef context = (CGContextRef) [[NSGraphicsContext currentContext] graphicsPort];
         # CGContextSetRGBFillColor(context, 0.227,0.251,0.337,0.8);
@@ -96,18 +95,11 @@ class CBGraphView(NSControl):
 
         # self.setBorderColor_(NSColor.blackColor())
 
-
-
         # currentContext = NSGraphicsContext.currentContext()
         # context = CGContextRef(currentContext)
         # context.CGContextSetRGBFillColor(0.227,0.251,0.337,0.8)
         # dirtyRect = NSRectToCGRect(rect)
         # context.CGContextFillRect(dirtyRect)
-
-
-
-
-
 
         # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
         # self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it

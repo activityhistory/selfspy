@@ -581,23 +581,28 @@ class ActivityStore:
 
     def getAppsAndUrls_(self, notification):
         controller = notification.object().reviewController
+        controller.results = []
+
         try:
             q_apps = self.session.query(Process).all()
             q_windows = self.session.query(Window).all()
 
             for a in q_apps:
                 app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appName': a.name, 'windows':[]})
-                controller.queryResponse.append(app_dict)
+                controller.results.append(app_dict)
 
             for w in q_windows:
-                if w.browser_url != 'NO_URL':
+                if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
+                    windowName = w.title
+                    if not windowName:
+                        windowName = ''
+                    window_dict = NSMutableDictionary({'checked':False, 'windowName':windowName, 'image':''})
+                else:
                     short_url = urlparse(w.browser_url).hostname
                     window_dict = NSMutableDictionary({'checked':False, 'windowName':short_url, 'image':''})
-                else:
-                    window_dict = NSMutableDictionary({'checked':False, 'windowName':w.title, 'image':''})
-                if not window_dict in controller.queryResponse[w.process_id-1]['windows']:
+                if not window_dict in controller.results[w.process_id-1]['windows']:
                     window_dict = NSMutableDictionary.dictionaryWithDictionary_(window_dict)
-                    controller.queryResponse[w.process_id-1]['windows'].append(window_dict)
+                    controller.results[w.process_id-1]['windows'].append(window_dict)
 
                 # p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
                 # if p[0][1] == "Safari" or p[0][1] == "Google Chrome":

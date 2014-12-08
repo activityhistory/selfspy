@@ -242,6 +242,9 @@
                     </scrollView>
                 </subviews>
             </view>
+            <connections>
+                <outlet property="delegate" destination="-2" id="bEO-bb-VQY"/>
+            </connections>
             <point key="canvasLocation" x="496" y="245.5"/>
         </window>
         <arrayController id="35e-tI-NTw">

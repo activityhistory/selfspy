@@ -25,6 +25,8 @@ from CBGraphView import CBGraphView
 
 from helpers import *
 
+import time
+
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
 
@@ -33,37 +35,49 @@ class WindowListController(NSArrayController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        print "You checked a window"
-        # TODO determine why self.review_controller does not work for some list
-        # items but works for others
-
-        # print self.review_controller
-        #row = self.review_controller.appList.selectedRow()
-        # view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
-        # if view:
+        print "updating checkbox"
+        row = self.review_controller.appList.selectedRow()
+        view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
+        # w_view = sender.superview()
+        #
+        # if view and w_view:
+        #     # get app and window arrays
         #     app = view.textField().stringValue()
-        #     app_i = 0
-        #     for i in range(len(self.review_controller.results)):
-        #         if self.review_controller.results[i]["Data"] == app:
-        #             app_i = i
-        #             break
-        #     app_data = self.review_controller.results[app_i]
-        #     num_rows = len(app_data['windows'])
-        #     num_checked = 0
-        #     for j in app_data['windows']:
-        #         if j['checked'] == 1:
-        #             num_checked += 1
-        #     if num_checked == num_rows:
-        #         app_data['checked'] = 1
-        #     elif num_checked == 0:
-        #         app_data['checked'] = 0
-        #     else:
-        #         app_data['checked'] = -1
-        #     print "check value is " + str(app_data['checked'])
+        #     window = w_view.textField().stringValue()
+        #     try:
+        #         app_data = (a for a in self.review_controller.results if a['appName'] == app).next()
+        #     except:
+        #         app_data = None
+        #
+        #     if app_data:
+        #         try:
+        #             w_data = (a for a in app_data['windows'] if a['windowName'] == window).next()
+        #         except:
+        #             w_data = None
+        #
+        #     # update app and window arrays
+        #     if app_data and w_data:
+        #         print "updating arrays"
+        #         w_data['checked'] = sender.state()
+        #
+        #         num_rows = len(app_data['windows'])
+        #         num_checked = 0
+        #         for j in app_data['windows']:
+        #             if j['checked'] == 1:
+        #                 num_checked += 1
+        #         if num_checked == num_rows:
+        #             app_data['checked'] = 1
+        #         elif num_checked == 0:
+        #             app_data['checked'] = 0
+        #         else:
+        #             app_data['checked'] = -1
+        #         print "check value is " + str(app_data['checked'])
 
 
 # Review window controller
 class ReviewController(NSWindowController):
+
+    NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
 
     # outlets for UI elements
     mainPanel = IBOutlet()
@@ -76,10 +90,10 @@ class ReviewController(NSWindowController):
     currentScreenshot = -1
     dateQuery = ""
 
-    # dynamic review table
-    NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
-    results = [] #NSMutableDictionary.dictionaryWithDictionary_(x) for x in []]
-    results_windows = [] #NSMutableDictionary.dictionaryWithDictionary_(x) for x in [{'checked':0, 'windowName':'Window 10', 'image':''}]]
+    # data for dynamic review tables
+    results = []
+    results_half = []
+    results_windows = []
 
     # let activity_store write query results into those
     queryResponse = []
@@ -102,12 +116,37 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        print "You checked an application"
-        # numCols = self.reviewController.windowList.numberOfColumns()
-        # numChecked = 0
-        # for i in range(numCols):
-        #     if self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False):
-        #         print self.reviewController.windowList.viewAtColumn_row_makeIfNecessary_(i,0,False).textField().stringValue()
+        app = sender.superview().textField().stringValue()
+        state = sender.state()
+        app_data = (a for a in self.results if a['appName'] == app).next()
+
+        if state == 1:
+            try:
+                old_half = (a for a in self.results_half if a['appName'] == app).next()
+            except:
+                old_half = None
+            if old_half:
+                old_half = app_data
+            else:
+                self.results_half.append(app_data)
+            for w in app_data['windows']:
+                w['checked'] = 1
+        elif state == 0:
+            for w in app_data['windows']:
+                w['checked'] = 0
+        elif state == -1:
+            try:
+                old_half = (a for a in self.results_half if a['appName'] == app).next()
+            except:
+                old_half = None
+            if old_half:
+                app_data = old_half
+            else:
+                for w in app_data['windows']:
+                    w['checked'] = 0
+
+        self.results_windows = app_data['windows']
+        # print self.results_half
 
 
     def displayScreenshot(self, self2=None, s=None):
@@ -199,14 +238,20 @@ class ReviewController(NSWindowController):
     def getApplicationsAndURLsForTable(self, list_of_files):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
 
-        for entry in self.queryResponse:
-            mutable = NSMutableDictionary({'appName': entry['appName'],
-                                        'image': entry['image'],
-                                        'checked': entry['checked'],
-                                        'windows': entry['windows']})
-            self.results.append(mutable)
-
-        self.queryResponse = []
+    # TODO debug why window settings do not load
+    def applyDefaults(self, defaults, results):
+        # restore checkbox states saved in NSUserDefaults
+        for d in defaults:
+            try:
+                result = (r for r in results if r['appName'] == d['appName']).next()
+            except:
+                result = False
+            if result:
+                result['checked'] = d['checked']
+                for w in d['windows']:
+                    result_w = (rw for rw in result['windows'] if rw['windowName'] == w['windowName']).next()
+                    if result_w:
+                        result_w['checked'] = w['checked']
 
     def manageTimeline(self, list_of_files):
         self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
@@ -247,10 +292,12 @@ class ReviewController(NSWindowController):
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
+        defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
+        self.applyDefaults(self, defaults, self.reviewController.results)
         self.manageTimeline(self, list_of_files)
 
         try:
-            # re-sort list items and select the first one
+            # re-sort list items and select the first item
             self.reviewController.arrayController.rearrangeObjects()
             index_set = NSIndexSet.indexSetWithIndex_(0)
             self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
@@ -260,12 +307,15 @@ class ReviewController(NSWindowController):
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
-    def awakeFromNib(self):
-        if self.tableView:
-            self.tableView.setTarget_(self)
+    def windowWillClose_(self, notification):
+        # save state of tables to user defaults
+        NSUserDefaultsController.sharedUserDefaultsController().defaults().setObject_forKey_(self.results, 'appWindowList')
+
+    # def awakeFromNib(self):
+    #     if self.tableView:
+    #         self.tableView.setTarget_(self)
 
     def show(self):
-
         try:
             if self.reviewController:
                 self.reviewController.close()
@@ -278,19 +328,19 @@ class ReviewController(NSWindowController):
         self.reviewController.window().makeKeyAndOrderFront_(None)
         self.reviewController.window().center()
         self.reviewController.retain()
-
         # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
-        # get cmd-w to close window
+        # get cmd-w hotkey to close window
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
         self.reviewController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
+        # create controller for list of windows
         self.reviewController.windowArrayController = self.createWindowListController(self).alloc().init()
         self.reviewController.windowArrayController.review_controller = self.reviewController
         self.reviewController.windowList.setDelegate_(self.reviewController.windowArrayController)
 
-        # get arrayController read for Table
+        # sort app list in ascending order
         asc = NSSortDescriptor.alloc().initWithKey_ascending_('Data',True)
         descriptiorArray = [asc]
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
@@ -299,10 +349,10 @@ class ReviewController(NSWindowController):
         # generate the timeline view
         frame = NSRect(NSPoint(50, 50), NSSize(800, 100))
         self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
-
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
         self.timeline_view.drawRect_(frame)
 
+        # get screenshots and app/window data
         self.populateExperienceTable(self)
 
     show = classmethod(show)
