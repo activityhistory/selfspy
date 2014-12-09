@@ -5,17 +5,18 @@ import os
 from os import listdir
 from os.path import isfile, join
 
-from objc import IBAction, IBOutlet, YES, NO
+from objc import YES, NO
 from AppKit import *
 from CBGraphView import CBGraphView
 
 
 TIMELINE_WIDTH = 800
-TIMELINE_HEIGHT = 400
+TIMELINE_HEIGHT = 550
 WINDOW_BORDER_WIDTH = 30
 TEXTLABEL_WIDTH = 80
 TEXTLABEL_HEIGHT = 15
-TIMELINE_MAX_ROWS = TIMELINE_WIDTH / (TEXTLABEL_HEIGHT * 3)
+LINE_SPACING = 2
+TIMELINE_MAX_ROWS = TIMELINE_HEIGHT / (TEXTLABEL_HEIGHT * LINE_SPACING)
 SEGMENT_SECTION_WIDTH = TIMELINE_WIDTH - TEXTLABEL_WIDTH
 
 
@@ -58,14 +59,19 @@ def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
 
     self.processNameResponse = []
 
-    reviewer.timeline_view.addSubview_(textField)
+    reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accesible
 
 
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):
+
     normalized_min_value = front_bound - reviewer.slider_min
-    frame = NSRect(NSPoint(TEXTLABEL_WIDTH + normalized_min_value * SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value,
-                           TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
-                   NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
+    relative_position_in_timeline = normalized_min_value * SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value
+    timeline_segment_width = TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id
+    timeline_segment_height = TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * LINE_SPACING)
+
+    frame = NSRect(NSPoint(TEXTLABEL_WIDTH + relative_position_in_timeline, timeline_segment_width),
+                   NSSize(back_bound - front_bound, timeline_segment_height))
+
     this_view = CBGraphView.alloc().initWithFrame_(frame)
     reviewer.timeline_view.addSubview_(this_view)
     this_view.drawRect_(frame)

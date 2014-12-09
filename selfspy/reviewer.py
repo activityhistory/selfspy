@@ -272,14 +272,12 @@ class ReviewController(NSWindowController):
         self.normalized_max_value = self.slider_max - self.slider_min
 
 
-    def manageTimeline(self, list_of_files):
-        self.getTimelineMinAndMax(self, list_of_files=list_of_files)
-
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes',self)
-
+    def manageTimeline(self):
         bounds_detected = 0
         front_bound = 0
         drawn_textlabels = []
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes', self)
         for app in self.processTimesResponse:
             for time in app:
                 process_id = time[3]
@@ -287,6 +285,7 @@ class ReviewController(NSWindowController):
                     if process_id not in drawn_textlabels:
                         drawn_textlabels.append(process_id)
                         addProcessNameTextLabelToTimeline(self, process_id, self)
+
                     if str(time[1]) == "Open" and bounds_detected == 0:
                         front_bound = unixTimeFromString(self, str(time[2]))
                         bounds_detected = 1
@@ -305,7 +304,8 @@ class ReviewController(NSWindowController):
         self.getApplicationsAndURLsForTable(self, list_of_files)
         defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
         self.applyDefaults(self, defaults, self.reviewController.results)
-        self.manageTimeline(self, list_of_files)
+        self.getTimelineMinAndMax(self, list_of_files=list_of_files)
+        self.manageTimeline(self)
 
         try:
             # re-sort list items and select the first item
