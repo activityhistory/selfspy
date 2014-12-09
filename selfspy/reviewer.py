@@ -29,12 +29,7 @@ import time
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
-TIMELINE_WIDTH = 800
-TIMELINE_HEIGHT = 800
-TIMELINE_MAX_ROWS = 20
-WINDOW_BORDER_WIDTH = 30
-TEXTLABEL_WIDTH = 80
-TEXTLABEL_HEIGHT = 15
+
 
 
 class WindowListController(NSArrayController):
@@ -276,35 +271,6 @@ class ReviewController(NSWindowController):
         self.normalized_max_value = self.slider_max - self.slider_min
 
 
-    def addProcessNameTextLabelToTimeline(self, process_id):
-        textField_frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
-                                 NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
-        textField = NSTextField.alloc().initWithFrame_(textField_frame)
-
-        self.processNameQuery = process_id
-
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
-        textField.setStringValue_(str(self.processNameResponse[0][0][1]))
-
-        self.processNameResponse = []
-
-        textField.setEditable_(NO)
-        textField.setDrawsBackground_(NO)
-        textField.setSelectable_(NO)
-        textField.setBezeled_(NO)
-
-        self.reviewController.window().contentView().addSubview_(textField)
-
-    def addProcessTimelineSegment(self, process_id, front_bound, back_bound):
-        frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value,
-                               TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (process_id + 0.5)),
-                       NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
-        this_view = CBGraphView.alloc().initWithFrame_(frame)
-        self.timeline_view.addSubview_(this_view)
-        this_view.drawRect_(frame)
-        self.nested_timeline_views.append(this_view)
-
-
     def manageTimeline(self, list_of_files):
         self.getTimelineMinAndMax(self, list_of_files)
 
@@ -319,7 +285,7 @@ class ReviewController(NSWindowController):
                 if process_id < TIMELINE_MAX_ROWS:
                     if process_id not in drawn_textlabels:
                         drawn_textlabels.append(process_id)
-                        self.addProcessNameTextLabelToTimeline(self, process_id)
+                        addProcessNameTextLabelToTimeline(self, process_id, self)
                     if str(time[1]) == "Open" and bounds_detected == 0:
                         front_bound = unixTimeFromString(self, str(time[2]))
                         bounds_detected = 1
@@ -329,7 +295,7 @@ class ReviewController(NSWindowController):
                         bounds_detected = 2
 
                     if bounds_detected == 2:
-                        self.addProcessTimelineSegment(self, process_id, front_bound, back_bound)
+                        addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
                         bounds_detected = 0
 
 
