@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from objc import IBAction, IBOutlet
+from objc import IBAction, IBOutlet, YES, NO
 from AppKit import *
 
 from CBGraphView import CBGraphView
@@ -29,6 +29,9 @@ import time
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
+TIMELINE_WIDTH = 800
+TIMELINE_HEIGHT = 800
+TIMELINE_MAX_ROWS = 20
 
 
 class WindowListController(NSArrayController):
@@ -89,6 +92,7 @@ class ReviewController(NSWindowController):
     # instance variables
     currentScreenshot = -1
     dateQuery = ""
+    processNameQuery = ""
 
     # data for dynamic review tables
     results = []
@@ -99,6 +103,7 @@ class ReviewController(NSWindowController):
     queryResponse = []
     queryResponse2 = []
     p1Response = []
+    processNameResponse = []
 
     # timeline
     timeline_value = 0
@@ -198,9 +203,12 @@ class ReviewController(NSWindowController):
 
             self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
 
-            for view in self.nested_timeline_views:
-                view.removeFromSuperview()
-            self.nested_timeline_views = []
+            try:
+                for view in self.nested_timeline_views:
+                    view.removeFromSuperview()
+                self.nested_timeline_views = []
+            except StopIteration, TypeError:
+                print('Error with array of views.')
 
             list_of_files = generateScreenshotList(self)
             self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
@@ -271,23 +279,48 @@ class ReviewController(NSWindowController):
         front_bound = 0
         for entry in self.p1Response:
             for entryA in entry:
-                if str(entryA[1]) == "Open" and bounds_detected == 0:
-                    front_bound = unixTimeFromString(self, str(entryA[2]))
-                    bounds_detected = 1
+                if entryA[3] < TIMELINE_MAX_ROWS:
+                    if str(entryA[1]) == "Open" and bounds_detected == 0:
+                        front_bound = unixTimeFromString(self, str(entryA[2]))
+                        bounds_detected = 1
 
-                if str(entryA[1]) == "Close" and bounds_detected == 1:
-                    back_bound = unixTimeFromString(self, str(entryA[2]))
-                    bounds_detected = 2
+                    if str(entryA[1]) == "Close" and bounds_detected == 1:
+                        back_bound = unixTimeFromString(self, str(entryA[2]))
+                        bounds_detected = 2
 
-                if  bounds_detected == 2:
-                    frame = NSRect(NSPoint((front_bound - self.slider_min) * 600 / self.normalized_max_value, 10),
-                                   NSSize(back_bound - front_bound, 50))
-                    this_view = CBGraphView.alloc().initWithFrame_(frame)
-                    self.timeline_view.addSubview_(this_view)
-                    this_view.drawRect_(frame)
-                    self.nested_timeline_views.append(this_view)
+                    if  bounds_detected == 2:
+                        frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (entryA[3] + 0.5)),
+                                       NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
+                        this_view = CBGraphView.alloc().initWithFrame_(frame)
+                        self.timeline_view.addSubview_(this_view)
+                        this_view.drawRect_(frame)
+                        self.nested_timeline_views.append(this_view)
 
-                    bounds_detected = 0
+                        # [textField setDrawsBackground:NO];
+                        # [textField setSelectable:NO];
+
+                        textField_frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value - 60, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (entryA[3] + 0.5)),
+                                                 NSSize(120, 20))
+                        textField = NSTextField.alloc().initWithFrame_(textField_frame)
+
+                        self.processNameQuery = entryA[3]
+
+                        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID',self)
+
+                        print("self.processNameResponse: ", str(self.processNameResponse[0][0][1]))
+
+                        textField.setStringValue_(str(self.processNameResponse[0][0][1]))
+
+                        self.processNameResponse = []
+
+
+                        textField.setEditable_(NO)
+                        # textField.setDrawsBackground_(NO)
+                        textField.setBezeled_(NO)
+
+                        self.reviewController.window().contentView().addSubview_(textField)
+
+                        bounds_detected = 0
 
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
@@ -347,7 +380,7 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         # generate the timeline view
-        frame = NSRect(NSPoint(50, 50), NSSize(800, 100))
+        frame = NSRect(NSPoint(50, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
         self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
         self.timeline_view.drawRect_(frame)
