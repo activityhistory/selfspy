@@ -259,7 +259,8 @@ class ReviewController(NSWindowController):
                     if result_w:
                         result_w['checked'] = w['checked']
 
-    def getTimelineMinAndMax(self, list_of_files):
+
+    def getTimelineMinAndMax(self, self2=None, list_of_files=None): # btw: this is a good example that shows how weird it gets with passing the 'self' parameter
         self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
         for s in list_of_files:
             helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
@@ -272,7 +273,7 @@ class ReviewController(NSWindowController):
 
 
     def manageTimeline(self, list_of_files):
-        self.getTimelineMinAndMax(self, list_of_files)
+        self.getTimelineMinAndMax(self, list_of_files=list_of_files)
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes',self)
 

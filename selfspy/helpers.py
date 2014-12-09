@@ -11,18 +11,17 @@ from CBGraphView import CBGraphView
 
 
 TIMELINE_WIDTH = 800
-TIMELINE_HEIGHT = 800
-TIMELINE_MAX_ROWS = 20
+TIMELINE_HEIGHT = 400
 WINDOW_BORDER_WIDTH = 30
 TEXTLABEL_WIDTH = 80
 TEXTLABEL_HEIGHT = 15
+TIMELINE_MAX_ROWS = TIMELINE_WIDTH / (TEXTLABEL_HEIGHT * 3)
+SEGMENT_SECTION_WIDTH = TIMELINE_WIDTH - TEXTLABEL_WIDTH
 
 
 def unixTimeFromString(self, s=None):
-    # print("attempting unixTimeFromString")
-    front_bound = parse(str(s), fuzzy=True)
-    ts = calendar.timegm(front_bound.utctimetuple())
-    # print("before returning unixTimeFromString")
+    fuzzy_ts = parse(str(s), fuzzy=True)
+    ts = calendar.timegm(fuzzy_ts.utctimetuple())
     return ts
 
 def getScreenshotPath(self, self2=None):
@@ -45,23 +44,27 @@ def mapFilenameDateToNumber(self, s=None):
 ## TIMELINE HELPERS
 
 def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
-    textField_frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
-                             NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
-    textField = NSTextField.alloc().initWithFrame_(textField_frame)
     self.processNameQuery = process_id
     NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
-    textField.setStringValue_(str(self.processNameResponse[0][0][1]))
-    self.processNameResponse = []
+
+    textField_frame = NSRect(NSPoint(0, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
+                             NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
+    textField = NSTextField.alloc().initWithFrame_(textField_frame)
     textField.setEditable_(NO)
     textField.setDrawsBackground_(NO)
     textField.setSelectable_(NO)
     textField.setBezeled_(NO)
-    reviewer.reviewController.window().contentView().addSubview_(textField)
+    textField.setStringValue_(str(self.processNameResponse[0]))
+
+    self.processNameResponse = []
+
+    reviewer.timeline_view.addSubview_(textField)
 
 
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):
-    frame = NSRect(NSPoint((front_bound - reviewer.slider_min) * TIMELINE_WIDTH / reviewer.normalized_max_value,
-                           TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (process_id + 0.5)),
+    normalized_min_value = front_bound - reviewer.slider_min
+    frame = NSRect(NSPoint(TEXTLABEL_WIDTH + normalized_min_value * SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value,
+                           TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
                    NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
     this_view = CBGraphView.alloc().initWithFrame_(frame)
     reviewer.timeline_view.addSubview_(this_view)

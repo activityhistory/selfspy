@@ -631,7 +631,7 @@ class ActivityStore:
         try:
             q = self.session.query(Process).filter(Process.id == controller.processNameQuery).add_column(Process.name).all()
             if len(q) > 0:
-                controller.processNameResponse.append(q)
+                controller.processNameResponse.append(q[0][1])
         except UnicodeEncodeError:
                 pass
 
