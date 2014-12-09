@@ -169,8 +169,8 @@ class ActivityStore:
         s = objc.selector(self.getAppsAndUrls_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndUrls', None)
 
-        s = objc.selector(self.getProcess1times_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcess1times', None)
+        s = objc.selector(self.getProcessTimes_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
 
         s = objc.selector(self.getProcessNameFromID_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessNameFromID', None)
@@ -616,13 +616,13 @@ class ActivityStore:
                 pass
 
 
-    def getProcess1times_(self, notification):
+    def getProcessTimes_(self, notification):
         controller = notification.object().reviewController
         process = controller.current_timeline_process
         try:
             q = self.session.query(ProcessEvent).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).add_column(ProcessEvent.process_id).all()
             if len(q) > 0:
-                controller.p1Response.append(q)
+                controller.processTimesResponse.append(q)
         except UnicodeEncodeError:
                 pass
 

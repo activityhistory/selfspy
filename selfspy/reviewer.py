@@ -32,6 +32,9 @@ UI_SLIDER_MAX_VALUE = 100
 TIMELINE_WIDTH = 800
 TIMELINE_HEIGHT = 800
 TIMELINE_MAX_ROWS = 20
+WINDOW_BORDER_WIDTH = 30
+TEXTLABEL_WIDTH = 80
+TEXTLABEL_HEIGHT = 15
 
 
 class WindowListController(NSArrayController):
@@ -102,7 +105,7 @@ class ReviewController(NSWindowController):
     # let activity_store write query results into those
     queryResponse = []
     queryResponse2 = []
-    p1Response = []
+    processTimesResponse = []
     processNameResponse = []
 
     # timeline
@@ -261,9 +264,8 @@ class ReviewController(NSWindowController):
                     if result_w:
                         result_w['checked'] = w['checked']
 
-    def manageTimeline(self, list_of_files):
+    def getTimelineMinAndMax(self, list_of_files):
         self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
-
         for s in list_of_files:
             helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
             if self.slider_max < helper:
@@ -273,54 +275,63 @@ class ReviewController(NSWindowController):
 
         self.normalized_max_value = self.slider_max - self.slider_min
 
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcess1times',self)
+
+    def addProcessNameTextLabelToTimeline(self, process_id):
+        textField_frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
+                                 NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
+        textField = NSTextField.alloc().initWithFrame_(textField_frame)
+
+        self.processNameQuery = process_id
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
+        textField.setStringValue_(str(self.processNameResponse[0][0][1]))
+
+        self.processNameResponse = []
+
+        textField.setEditable_(NO)
+        textField.setDrawsBackground_(NO)
+        textField.setSelectable_(NO)
+        textField.setBezeled_(NO)
+
+        self.reviewController.window().contentView().addSubview_(textField)
+
+    def addProcessTimelineSegment(self, process_id, front_bound, back_bound):
+        frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value,
+                               TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (process_id + 0.5)),
+                       NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
+        this_view = CBGraphView.alloc().initWithFrame_(frame)
+        self.timeline_view.addSubview_(this_view)
+        this_view.drawRect_(frame)
+        self.nested_timeline_views.append(this_view)
+
+
+    def manageTimeline(self, list_of_files):
+        self.getTimelineMinAndMax(self, list_of_files)
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes',self)
 
         bounds_detected = 0
         front_bound = 0
-        for entry in self.p1Response:
-            for entryA in entry:
-                if entryA[3] < TIMELINE_MAX_ROWS:
-                    if str(entryA[1]) == "Open" and bounds_detected == 0:
-                        front_bound = unixTimeFromString(self, str(entryA[2]))
+        drawn_textlabels = []
+        for app in self.processTimesResponse:
+            for time in app:
+                process_id = time[3]
+                if process_id < TIMELINE_MAX_ROWS:
+                    if process_id not in drawn_textlabels:
+                        drawn_textlabels.append(process_id)
+                        self.addProcessNameTextLabelToTimeline(self, process_id)
+                    if str(time[1]) == "Open" and bounds_detected == 0:
+                        front_bound = unixTimeFromString(self, str(time[2]))
                         bounds_detected = 1
 
-                    if str(entryA[1]) == "Close" and bounds_detected == 1:
-                        back_bound = unixTimeFromString(self, str(entryA[2]))
+                    if str(time[1]) == "Close" and bounds_detected == 1:
+                        back_bound = unixTimeFromString(self, str(time[2]))
                         bounds_detected = 2
 
-                    if  bounds_detected == 2:
-                        frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (entryA[3] + 0.5)),
-                                       NSSize(back_bound - front_bound, TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * 2)))
-                        this_view = CBGraphView.alloc().initWithFrame_(frame)
-                        self.timeline_view.addSubview_(this_view)
-                        this_view.drawRect_(frame)
-                        self.nested_timeline_views.append(this_view)
-
-                        # [textField setDrawsBackground:NO];
-                        # [textField setSelectable:NO];
-
-                        textField_frame = NSRect(NSPoint((front_bound - self.slider_min) * TIMELINE_WIDTH / self.normalized_max_value - 60, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * (entryA[3] + 0.5)),
-                                                 NSSize(120, 20))
-                        textField = NSTextField.alloc().initWithFrame_(textField_frame)
-
-                        self.processNameQuery = entryA[3]
-
-                        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID',self)
-
-                        print("self.processNameResponse: ", str(self.processNameResponse[0][0][1]))
-
-                        textField.setStringValue_(str(self.processNameResponse[0][0][1]))
-
-                        self.processNameResponse = []
-
-
-                        textField.setEditable_(NO)
-                        # textField.setDrawsBackground_(NO)
-                        textField.setBezeled_(NO)
-
-                        self.reviewController.window().contentView().addSubview_(textField)
-
+                    if bounds_detected == 2:
+                        self.addProcessTimelineSegment(self, process_id, front_bound, back_bound)
                         bounds_detected = 0
+
 
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
@@ -380,7 +391,7 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         # generate the timeline view
-        frame = NSRect(NSPoint(50, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
+        frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
         self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
         self.timeline_view.drawRect_(frame)
