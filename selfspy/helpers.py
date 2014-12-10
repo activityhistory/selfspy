@@ -45,21 +45,23 @@ def mapFilenameDateToNumber(self, s=None):
 ## TIMELINE HELPERS
 
 def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
-    self.processNameQuery = process_id
-    NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
+    if (process_id == reviewer.current_timeline_process):
+        self.processNameQuery = process_id
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
 
-    textField_frame = NSRect(NSPoint(0, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
-                             NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
-    textField = NSTextField.alloc().initWithFrame_(textField_frame)
-    textField.setEditable_(NO)
-    textField.setDrawsBackground_(NO)
-    textField.setSelectable_(NO)
-    textField.setBezeled_(NO)
-    textField.setStringValue_(str(self.processNameResponse[0]))
+        textField_frame = NSRect(NSPoint(0, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
+                                 NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
+        textField = NSTextField.alloc().initWithFrame_(textField_frame)
+        textField.setEditable_(NO)
+        textField.setDrawsBackground_(NO)
+        textField.setSelectable_(NO)
+        textField.setBezeled_(NO)
+        textField.setStringValue_(str(self.processNameResponse[0]))
 
-    self.processNameResponse = []
+        self.processNameResponse = []
 
-    reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accesible
+        reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accesible
+        reviewer.nested_timeline_labels.append(textField)
 
 
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):

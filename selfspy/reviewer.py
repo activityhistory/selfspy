@@ -111,6 +111,7 @@ class ReviewController(NSWindowController):
 
     timeline_view = None
     nested_timeline_views = []
+    nested_timeline_labels = []
     current_timeline_process = 7
 
 
@@ -183,12 +184,18 @@ class ReviewController(NSWindowController):
         self.moveReviewWindow(direction=-1)
 
     def tableViewSelectionDidChange_(self,sender):
+
         selected_row = self.appList.selectedRow()
         selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
         if selected_view:
+            # try:
+            #     print("STA2: ", str(self.nested_timeline_labels[0]))
+            #     self.nested_timeline_labels[0].setHidden_(YES)
+            # except IndexError:
+            #     pass  # TODO I'm stuck here. setHidden works when put above if "selected_view:" - but not here (invoked by selecting another item in the list).
             selected_app = selected_view.textField().stringValue()
             app_index_in_dict = 0
             for i in range(len(self.results)):
@@ -202,14 +209,19 @@ class ReviewController(NSWindowController):
             self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
 
             try:
-                for view in self.nested_timeline_views:
-                    view.removeFromSuperview()
-                self.nested_timeline_views = []
-            except StopIteration, TypeError:
+                # for view in self.nested_timeline_views:
+                #     view.removeFromSuperview()
+                # self.nested_timeline_views = []
+                for label in self.nested_timeline_labels:
+                    print("attemping to hide: ", str(label))
+                    # status = self
+                    # print("STATUS: ", status)
+                # self.nested_timeline_views = []
+                # self.nested_timeline_labels = []
+            except TypeError:
                 print('Error with array of views.')
 
-            list_of_files = generateScreenshotList(self)
-            self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
+            # self.manageTimeline() # TODO do not query file list and so on every time
 
 
     def moveReviewWindow(self, direction):
@@ -271,7 +283,6 @@ class ReviewController(NSWindowController):
 
         self.normalized_max_value = self.slider_max - self.slider_min
 
-
     def manageTimeline(self):
         bounds_detected = 0
         front_bound = 0
@@ -285,6 +296,7 @@ class ReviewController(NSWindowController):
                     if process_id not in drawn_textlabels:
                         drawn_textlabels.append(process_id)
                         addProcessNameTextLabelToTimeline(self, process_id, self)
+
 
                     if str(time[1]) == "Open" and bounds_detected == 0:
                         front_bound = unixTimeFromString(self, str(time[2]))
