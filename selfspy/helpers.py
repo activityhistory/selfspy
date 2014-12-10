@@ -15,7 +15,7 @@ TIMELINE_HEIGHT = 550
 WINDOW_BORDER_WIDTH = 30
 TEXTLABEL_WIDTH = 80
 TEXTLABEL_HEIGHT = 15
-LINE_SPACING = 2
+LINE_SPACING = 1.2
 TIMELINE_MAX_ROWS = TIMELINE_HEIGHT / (TEXTLABEL_HEIGHT * LINE_SPACING)
 SEGMENT_SECTION_WIDTH = TIMELINE_WIDTH - TEXTLABEL_WIDTH
 
@@ -45,36 +45,37 @@ def mapFilenameDateToNumber(self, s=None):
 ## TIMELINE HELPERS
 
 def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
-    if (process_id == reviewer.current_timeline_process):
-        self.processNameQuery = process_id
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
+    self.processNameQuery = process_id
+    NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
 
-        textField_frame = NSRect(NSPoint(0, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
-                                 NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
-        textField = NSTextField.alloc().initWithFrame_(textField_frame)
-        textField.setEditable_(NO)
-        textField.setDrawsBackground_(NO)
-        textField.setSelectable_(NO)
-        textField.setBezeled_(NO)
-        textField.setStringValue_(str(self.processNameResponse[0]))
+    textField_frame = NSRect(NSPoint(0, TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id),
+                             NSSize(TEXTLABEL_WIDTH, TEXTLABEL_HEIGHT))
+    textField = NSTextField.alloc().initWithFrame_(textField_frame)
+    textField.setEditable_(NO)
+    textField.setDrawsBackground_(NO)
+    textField.setSelectable_(NO)
+    textField.setBezeled_(NO)
+    textField.setStringValue_(str(self.processNameResponse[0]))
 
-        self.processNameResponse = []
+    self.processNameResponse = []
 
-        reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accessible
-        reviewer.nested_timeline_labels.append(textField)
+    reviewer.timeline_view.addSubview_(textField)
+    reviewer.nested_timeline_labels.append(textField)
 
 
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):
 
-    normalized_min_value = front_bound - reviewer.slider_min
-    relative_position_in_timeline = normalized_min_value * SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value
-    timeline_segment_width = TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id
-    timeline_segment_height = TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * LINE_SPACING)
+    if front_bound > reviewer.slider_min and back_bound < reviewer.slider_max:
 
-    frame = NSRect(NSPoint(TEXTLABEL_WIDTH + relative_position_in_timeline, timeline_segment_width),
-                   NSSize(back_bound - front_bound, timeline_segment_height))
+        normalized_min_value = front_bound - reviewer.slider_min
+        relative_position_in_timeline = normalized_min_value * SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value
+        timeline_segment_width = TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id
+        timeline_segment_height = TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * LINE_SPACING)
 
-    this_view = CBGraphView.alloc().initWithFrame_(frame)
-    reviewer.timeline_view.addSubview_(this_view)
-    this_view.drawRect_(frame)
-    reviewer.nested_timeline_views.append(this_view)
+        frame = NSRect(NSPoint(TEXTLABEL_WIDTH + relative_position_in_timeline, timeline_segment_width),
+                       NSSize(back_bound - front_bound, timeline_segment_height))
+
+        this_view = CBGraphView.alloc().initWithFrame_(frame)
+        reviewer.timeline_view.addSubview_(this_view)
+        this_view.drawRect_(frame)
+        reviewer.nested_timeline_views.append(this_view)

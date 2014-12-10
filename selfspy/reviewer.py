@@ -26,9 +26,11 @@ from CBGraphView import CBGraphView
 from helpers import *
 
 import time
+import datetime
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
+TIMELINE_INTERVAL_IN_SECONDS = 600 # 1 day = 86400 seconds
 
 
 
@@ -273,13 +275,16 @@ class ReviewController(NSWindowController):
 
 
     def getTimelineMinAndMax(self, self2=None, list_of_files=None): # btw: this is a good example that shows how weird it gets with passing the 'self' parameter
-        self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
-        for s in list_of_files:
-            helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
-            if self.slider_max < helper:
-                self.slider_max = helper
-            if self.slider_min > helper:
-                self.slider_min = helper
+        # self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
+        # for s in list_of_files:
+        #     helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
+        #     if self.slider_max < helper:
+        #         self.slider_max = helper
+        #     if self.slider_min > helper:
+        #         self.slider_min = helper
+
+        self.slider_max = unixTimeFromString(self, s=str(datetime.datetime.now()))
+        self.slider_min = self.slider_max - TIMELINE_INTERVAL_IN_SECONDS
 
         self.normalized_max_value = self.slider_max - self.slider_min
 
