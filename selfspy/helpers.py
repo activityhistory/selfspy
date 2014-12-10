@@ -60,7 +60,7 @@ def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
 
         self.processNameResponse = []
 
-        reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accesible
+        reviewer.timeline_view.addSubview_(textField) # TODO add these subviews also to an array to have them accessible
         reviewer.nested_timeline_labels.append(textField)
 
 
