@@ -41,6 +41,7 @@ class WindowListController(NSArrayController):
         print "updating checkbox"
         row = self.review_controller.appList.selectedRow()
         view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
+
         # w_view = sender.superview()
         #
         # if view and w_view:
@@ -189,6 +190,8 @@ class ReviewController(NSWindowController):
 
         selected_row = self.appList.selectedRow()
         selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+
+        self.nested_timeline_views[0].invokeFromOutside()
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none

@@ -161,3 +161,19 @@ class CBGraphView(NSControl):
             self.setBorderColor_(NSColor.whiteColor())
 
         self.setNeedsDisplay_(True)
+
+
+    def invokeFromOutside(self):
+        print("mouse button pressed")
+        # bounds = self.bounds() # get our view bounds
+        # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
+        # self.grad.drawInBezierPath_angle_(r, 45.0)
+
+        self.current_color = self.current_color % 2 + 1
+
+        if self.current_color == 1:
+            self.setBorderColor_(NSColor.blackColor())
+        else:
+            self.setBorderColor_(NSColor.whiteColor())
+
+        self.setNeedsDisplay_(True)
