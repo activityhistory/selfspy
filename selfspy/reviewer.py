@@ -182,15 +182,31 @@ class ReviewController(NSWindowController):
         self.moveReviewWindow(direction=-1)
 
     def tableViewSelectionDidChange_(self,sender):
+        self.populateWindowList()
+        #
+        #
+        #     self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+        #
+        #     for view in self.nested_timeline_views:
+        #         view.removeFromSuperview()
+        #     self.nested_timeline_views = []
+        #
+        #     list_of_files = generateScreenshotList(self)
+        #     self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
 
-        selected_row = self.appList.selectedRow()
-        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+    def populateWindowList(self):
+        selected_row = self.reviewController.appList.selectedRow()
+        selected_view = self.reviewController.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
 
         # self.nested_timeline_views[0].invokeFromOutside()
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
         if selected_view:
+            #app_data = selected_view.objectValue()
+            #self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in app_data['windows']]
+            #self.windowList.reloadData()
+
             # try:
             #     print("STA2: ", str(self.nested_timeline_labels[0]))
             #     self.nested_timeline_labels[0].setHidden_(YES)
@@ -257,7 +273,7 @@ class ReviewController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
 
     # TODO debug why window settings do not load
-    def applyDefaults(self, defaults, results):
+    def applyDefaultsToLists(self, defaults, results):
         # restore checkbox states saved in NSUserDefaults
         for d in defaults:
             try:
@@ -314,6 +330,17 @@ class ReviewController(NSWindowController):
                         bounds_detected = 0
 
 
+    def resortTable(self):
+        try:
+            self.reviewController.arrayController.rearrangeObjects()
+            index_set = NSIndexSet.indexSetWithIndex_(0)
+            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
+
+            self.populateWindowList(self)
+
+        except UnboundLocalError:
+            pass
+
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
@@ -321,14 +348,6 @@ class ReviewController(NSWindowController):
         self.applyDefaults(self, defaults, self.reviewController.results)
         self.getTimelineMinAndMax(self, list_of_files=list_of_files)
         self.manageTimeline(self)
-
-        try:
-            # re-sort list items and select the first item
-            self.reviewController.arrayController.rearrangeObjects()
-            index_set = NSIndexSet.indexSetWithIndex_(0)
-            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
-        except UnboundLocalError:
-            pass
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
