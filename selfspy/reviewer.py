@@ -39,40 +39,34 @@ class WindowListController(NSArrayController):
         row = self.review_controller.appList.selectedRow()
         view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
 
-        # w_view = sender.superview()
-        #
-        # if view and w_view:
-        #     # get app and window arrays
-        #     app = view.textField().stringValue()
-        #     window = w_view.textField().stringValue()
-        #     try:
-        #         app_data = (a for a in self.review_controller.results if a['appName'] == app).next()
-        #     except:
-        #         app_data = None
-        #
-        #     if app_data:
-        #         try:
-        #             w_data = (a for a in app_data['windows'] if a['windowName'] == window).next()
-        #         except:
-        #             w_data = None
-        #
-        #     # update app and window arrays
-        #     if app_data and w_data:
-        #         print "updating arrays"
-        #         w_data['checked'] = sender.state()
-        #
-        #         num_rows = len(app_data['windows'])
-        #         num_checked = 0
-        #         for j in app_data['windows']:
-        #             if j['checked'] == 1:
-        #                 num_checked += 1
-        #         if num_checked == num_rows:
-        #             app_data['checked'] = 1
-        #         elif num_checked == 0:
-        #             app_data['checked'] = 0
-        #         else:
-        #             app_data['checked'] = -1
-        #         print "check value is " + str(app_data['checked'])
+        w_view = sender.superview()
+
+        if view and w_view:
+            # get app and window arrays
+            app = view.textField().stringValue()
+            window = w_view.textField().stringValue()
+            try:
+                app_data = (a for a in self.review_controller.results if a['appName'] == app).next()
+                w_data = (a for a in app_data['windows'] if a['windowName'] == window).next()
+            except:
+                app_data = None
+                w_data = None
+
+            # update app and window arrays
+            if app_data and w_data:
+                w_data['checked'] = sender.state()
+
+                num_rows = len(app_data['windows'])
+                num_checked = 0
+                for j in app_data['windows']:
+                    if j['checked'] == 1:
+                        num_checked += 1
+                if num_checked == num_rows:
+                    app_data['checked'] = 1
+                elif num_checked == 0:
+                    app_data['checked'] = 0
+                else:
+                    app_data['checked'] = -1
 
 
 # Review window controller
