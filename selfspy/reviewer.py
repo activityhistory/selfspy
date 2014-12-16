@@ -116,37 +116,32 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        app = sender.superview().textField().stringValue()
+        app_data = sender.superview().objectValue()
         state = sender.state()
-        app_data = (a for a in self.results if a['appName'] == app).next()
+        appName = app_data['appName']
 
         if state == 1:
-            try:
-                old_half = (a for a in self.results_half if a['appName'] == app).next()
-            except:
-                old_half = None
-            if old_half:
-                old_half = app_data
-            else:
-                self.results_half.append(app_data)
+            app_data['windows_mixed'] = []
+            for i in app_data['windows']:
+                app_data['windows_mixed'].append(NSMutableDictionary(i))
+
             for w in app_data['windows']:
                 w['checked'] = 1
+
         elif state == 0:
             for w in app_data['windows']:
                 w['checked'] = 0
+
         elif state == -1:
-            try:
-                old_half = (a for a in self.results_half if a['appName'] == app).next()
-            except:
-                old_half = None
-            if old_half:
-                app_data = old_half
+            if app_data['windows_mixed'] != []:
+                app_data['windows'] = []
+                for i in app_data['windows_mixed']:
+                    app_data['windows'].append(NSMutableDictionary(i))
             else:
                 for w in app_data['windows']:
                     w['checked'] = 0
 
         self.results_windows = app_data['windows']
-        # print self.results_half
 
 
     def displayScreenshot(self, self2=None, s=None):
@@ -180,30 +175,32 @@ class ReviewController(NSWindowController):
         self.moveReviewWindow(direction=-1)
 
     def tableViewSelectionDidChange_(self,sender):
-        selected_row = self.appList.selectedRow()
-        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+        self.populateWindowList()
+        #
+        #
+        #     self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+        #
+        #     for view in self.nested_timeline_views:
+        #         view.removeFromSuperview()
+        #     self.nested_timeline_views = []
+        #
+        #     list_of_files = generateScreenshotList(self)
+        #     self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
+
+    def populateWindowList(self):
+        selected_row = self.reviewController.appList.selectedRow()
+        selected_view = self.reviewController.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+
+        #print self.reviewController.appList
+        #print selected_row
+        #print selected_view
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
         if selected_view:
-            selected_app = selected_view.textField().stringValue()
-            app_index_in_dict = 0
-            for i in range(len(self.results)):
-                if self.results[i]["appName"] == selected_app:
-                    app_index_in_dict = i
-                    break
-            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
+            app_data = selected_view.objectValue()
+            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in app_data['windows']]
             self.windowList.reloadData()
-
-
-            self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
-
-            for view in self.nested_timeline_views:
-                view.removeFromSuperview()
-            self.nested_timeline_views = []
-
-            list_of_files = generateScreenshotList(self)
-            self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
 
 
     def moveReviewWindow(self, direction):
@@ -239,7 +236,7 @@ class ReviewController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
 
     # TODO debug why window settings do not load
-    def applyDefaults(self, defaults, results):
+    def applyDefaultsToLists(self, defaults, results):
         # restore checkbox states saved in NSUserDefaults
         for d in defaults:
             try:
@@ -289,20 +286,25 @@ class ReviewController(NSWindowController):
 
                     bounds_detected = 0
 
+    def resortTable(self):
+        print self
+        try:
+            self.reviewController.arrayController.rearrangeObjects()
+            index_set = NSIndexSet.indexSetWithIndex_(0)
+            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
+
+            self.populateWindowList(self)
+
+        except UnboundLocalError:
+            pass
+
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
         defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
-        self.applyDefaults(self, defaults, self.reviewController.results)
+        self.applyDefaultsToLists(self, defaults, self.reviewController.results)
         self.manageTimeline(self, list_of_files)
-
-        try:
-            # re-sort list items and select the first item
-            self.reviewController.arrayController.rearrangeObjects()
-            index_set = NSIndexSet.indexSetWithIndex_(0)
-            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
-        except UnboundLocalError:
-            pass
+        self.resortTable(self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
