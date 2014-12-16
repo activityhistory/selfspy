@@ -591,7 +591,7 @@ class ActivityStore:
             q_windows = self.session.query(Window).all()
 
             for a in q_apps:
-                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appName': a.name, 'windows':[]})
+                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appName': a.name, 'windows':[], 'windows_mixed':[]})
                 controller.results.append(app_dict)
 
             for w in q_windows:

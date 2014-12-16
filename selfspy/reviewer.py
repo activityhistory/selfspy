@@ -123,37 +123,32 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def updateAppCheckbox_(self, sender):
-        app = sender.superview().textField().stringValue()
+        app_data = sender.superview().objectValue()
         state = sender.state()
-        app_data = (a for a in self.results if a['appName'] == app).next()
+        appName = app_data['appName']
 
         if state == 1:
-            try:
-                old_half = (a for a in self.results_half if a['appName'] == app).next()
-            except:
-                old_half = None
-            if old_half:
-                old_half = app_data
-            else:
-                self.results_half.append(app_data)
+            app_data['windows_mixed'] = []
+            for i in app_data['windows']:
+                app_data['windows_mixed'].append(NSMutableDictionary(i))
+
             for w in app_data['windows']:
                 w['checked'] = 1
+
         elif state == 0:
             for w in app_data['windows']:
                 w['checked'] = 0
+
         elif state == -1:
-            try:
-                old_half = (a for a in self.results_half if a['appName'] == app).next()
-            except:
-                old_half = None
-            if old_half:
-                app_data = old_half
+            if app_data['windows_mixed'] != []:
+                app_data['windows'] = []
+                for i in app_data['windows_mixed']:
+                    app_data['windows'].append(NSMutableDictionary(i))
             else:
                 for w in app_data['windows']:
                     w['checked'] = 0
 
         self.results_windows = app_data['windows']
-        # print self.results_half
 
 
     def displayScreenshot(self, self2=None, s=None):
@@ -191,7 +186,7 @@ class ReviewController(NSWindowController):
         selected_row = self.appList.selectedRow()
         selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
 
-        self.nested_timeline_views[0].invokeFromOutside()
+        # self.nested_timeline_views[0].invokeFromOutside()
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
