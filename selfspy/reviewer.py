@@ -3,17 +3,14 @@
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
 Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Kemper
-
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-
 Selfspy is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
@@ -182,31 +179,15 @@ class ReviewController(NSWindowController):
         self.moveReviewWindow(direction=-1)
 
     def tableViewSelectionDidChange_(self,sender):
-        self.populateWindowList()
-        #
-        #
-        #     self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
-        #
-        #     for view in self.nested_timeline_views:
-        #         view.removeFromSuperview()
-        #     self.nested_timeline_views = []
-        #
-        #     list_of_files = generateScreenshotList(self)
-        #     self.manageTimeline(list_of_files) # TODO do not query file list and so on every time
 
-    def populateWindowList(self):
-        selected_row = self.reviewController.appList.selectedRow()
-        selected_view = self.reviewController.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+        selected_row = self.appList.selectedRow()
+        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
 
         # self.nested_timeline_views[0].invokeFromOutside()
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
         if selected_view:
-            #app_data = selected_view.objectValue()
-            #self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in app_data['windows']]
-            #self.windowList.reloadData()
-
             # try:
             #     print("STA2: ", str(self.nested_timeline_labels[0]))
             #     self.nested_timeline_labels[0].setHidden_(YES)
@@ -273,7 +254,7 @@ class ReviewController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
 
     # TODO debug why window settings do not load
-    def applyDefaultsToLists(self, defaults, results):
+    def applyDefaults(self, defaults, results):
         # restore checkbox states saved in NSUserDefaults
         for d in defaults:
             try:
@@ -330,17 +311,6 @@ class ReviewController(NSWindowController):
                         bounds_detected = 0
 
 
-    def resortTable(self):
-        try:
-            self.reviewController.arrayController.rearrangeObjects()
-            index_set = NSIndexSet.indexSetWithIndex_(0)
-            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
-
-            self.populateWindowList(self)
-
-        except UnboundLocalError:
-            pass
-
     def populateExperienceTable(self):
         list_of_files = generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
@@ -348,6 +318,14 @@ class ReviewController(NSWindowController):
         self.applyDefaults(self, defaults, self.reviewController.results)
         self.getTimelineMinAndMax(self, list_of_files=list_of_files)
         self.manageTimeline(self)
+
+        try:
+            # re-sort list items and select the first item
+            self.reviewController.arrayController.rearrangeObjects()
+            index_set = NSIndexSet.indexSetWithIndex_(0)
+            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
+        except UnboundLocalError:
+            pass
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
