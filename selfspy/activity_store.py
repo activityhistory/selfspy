@@ -169,8 +169,11 @@ class ActivityStore:
         s = objc.selector(self.getAppsAndUrls_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndUrls', None)
 
-        s = objc.selector(self.getProcess1times_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcess1times', None)
+        s = objc.selector(self.getProcessTimes_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
+
+        s = objc.selector(self.getProcessNameFromID_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessNameFromID', None)
 
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
@@ -613,13 +616,22 @@ class ActivityStore:
                 pass
 
 
-    def getProcess1times_(self, notification):
+    def getProcessTimes_(self, notification):
         controller = notification.object().reviewController
         process = controller.current_timeline_process
         try:
-            q = self.session.query(ProcessEvent).filter(ProcessEvent.process_id == process).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).all()
+            q = self.session.query(ProcessEvent).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).add_column(ProcessEvent.process_id).all()
             if len(q) > 0:
-                controller.p1Response.append(q)
+                controller.processTimesResponse.append(q)
+        except UnicodeEncodeError:
+                pass
+
+    def getProcessNameFromID_(self, notification):
+        controller = notification.object().reviewController
+        try:
+            q = self.session.query(Process).filter(Process.id == controller.processNameQuery).add_column(Process.name).all()
+            if len(q) > 0:
+                controller.processNameResponse.append(q[0][1])
         except UnicodeEncodeError:
                 pass
 

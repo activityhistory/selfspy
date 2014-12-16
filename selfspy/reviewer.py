@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from objc import IBAction, IBOutlet
+from objc import IBAction, IBOutlet, YES, NO
 from AppKit import *
 
 from CBGraphView import CBGraphView
@@ -26,9 +26,12 @@ from CBGraphView import CBGraphView
 from helpers import *
 
 import time
+import datetime
 
 SCREENSHOT_REVIEW_INTERVAL = 1
 UI_SLIDER_MAX_VALUE = 100
+TIMELINE_INTERVAL_IN_SECONDS = 600 # 1 day = 86400 seconds
+
 
 
 class WindowListController(NSArrayController):
@@ -38,6 +41,7 @@ class WindowListController(NSArrayController):
         print "updating checkbox"
         row = self.review_controller.appList.selectedRow()
         view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
+
         # w_view = sender.superview()
         #
         # if view and w_view:
@@ -89,6 +93,7 @@ class ReviewController(NSWindowController):
     # instance variables
     currentScreenshot = -1
     dateQuery = ""
+    processNameQuery = ""
 
     # data for dynamic review tables
     results = []
@@ -98,7 +103,8 @@ class ReviewController(NSWindowController):
     # let activity_store write query results into those
     queryResponse = []
     queryResponse2 = []
-    p1Response = []
+    processTimesResponse = []
+    processNameResponse = []
 
     # timeline
     timeline_value = 0
@@ -108,6 +114,7 @@ class ReviewController(NSWindowController):
 
     timeline_view = None
     nested_timeline_views = []
+    nested_timeline_labels = []
     current_timeline_process = 7
 
 
@@ -191,16 +198,46 @@ class ReviewController(NSWindowController):
         selected_row = self.reviewController.appList.selectedRow()
         selected_view = self.reviewController.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
 
-        #print self.reviewController.appList
-        #print selected_row
-        #print selected_view
+        self.nested_timeline_views[0].invokeFromOutside()
 
         # TODO for some reason, when we programatically select the 0 index
         # at launch, the selected_view is none
         if selected_view:
-            app_data = selected_view.objectValue()
-            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in app_data['windows']]
+            #app_data = selected_view.objectValue()
+            #self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in app_data['windows']]
+            #self.windowList.reloadData()
+
+            # try:
+            #     print("STA2: ", str(self.nested_timeline_labels[0]))
+            #     self.nested_timeline_labels[0].setHidden_(YES)
+            # except IndexError:
+            #     pass  # TODO I'm stuck here. setHidden works when put above if "selected_view:" - but not here (invoked by selecting another item in the list).
+            selected_app = selected_view.textField().stringValue()
+            app_index_in_dict = 0
+            for i in range(len(self.results)):
+                if self.results[i]["appName"] == selected_app:
+                    app_index_in_dict = i
+                    break
+            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
             self.windowList.reloadData()
+
+
+            self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+
+            try:
+                # for view in self.nested_timeline_views:
+                #     view.removeFromSuperview()
+                # self.nested_timeline_views = []
+                for label in self.nested_timeline_labels:
+                    print("attemping to hide: ", str(label))
+                    # status = self
+                    # print("STATUS: ", status)
+                # self.nested_timeline_views = []
+                # self.nested_timeline_labels = []
+            except TypeError:
+                print('Error with array of views.')
+
+            # self.manageTimeline() # TODO do not query file list and so on every time
 
 
     def moveReviewWindow(self, direction):
@@ -250,44 +287,50 @@ class ReviewController(NSWindowController):
                     if result_w:
                         result_w['checked'] = w['checked']
 
-    def manageTimeline(self, list_of_files):
-        self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
 
-        for s in list_of_files:
-            helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
-            if self.slider_max < helper:
-                self.slider_max = helper
-            if self.slider_min > helper:
-                self.slider_min = helper
+    def getTimelineMinAndMax(self, self2=None, list_of_files=None): # btw: this is a good example that shows how weird it gets with passing the 'self' parameter
+        # self.slider_min = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=list_of_files[0]))
+        # for s in list_of_files:
+        #     helper = unixTimeFromString(self, s=mapFilenameDateToNumber(self, s=s))
+        #     if self.slider_max < helper:
+        #         self.slider_max = helper
+        #     if self.slider_min > helper:
+        #         self.slider_min = helper
+
+        self.slider_max = unixTimeFromString(self, s=str(datetime.datetime.now()))
+        self.slider_min = self.slider_max - TIMELINE_INTERVAL_IN_SECONDS
 
         self.normalized_max_value = self.slider_max - self.slider_min
 
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcess1times',self)
-
+    def manageTimeline(self):
         bounds_detected = 0
         front_bound = 0
-        for entry in self.p1Response:
-            for entryA in entry:
-                if str(entryA[1]) == "Open" and bounds_detected == 0:
-                    front_bound = unixTimeFromString(self, str(entryA[2]))
-                    bounds_detected = 1
+        drawn_textlabels = []
 
-                if str(entryA[1]) == "Close" and bounds_detected == 1:
-                    back_bound = unixTimeFromString(self, str(entryA[2]))
-                    bounds_detected = 2
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes', self)
+        for app in self.processTimesResponse:
+            for time in app:
+                process_id = time[3]
+                if process_id < TIMELINE_MAX_ROWS:
+                    if process_id not in drawn_textlabels:
+                        drawn_textlabels.append(process_id)
+                        addProcessNameTextLabelToTimeline(self, process_id, self)
 
-                if  bounds_detected == 2:
-                    frame = NSRect(NSPoint((front_bound - self.slider_min) * 600 / self.normalized_max_value, 10),
-                                   NSSize(back_bound - front_bound, 50))
-                    this_view = CBGraphView.alloc().initWithFrame_(frame)
-                    self.timeline_view.addSubview_(this_view)
-                    this_view.drawRect_(frame)
-                    self.nested_timeline_views.append(this_view)
 
-                    bounds_detected = 0
+                    if str(time[1]) == "Open" and bounds_detected == 0:
+                        front_bound = unixTimeFromString(self, str(time[2]))
+                        bounds_detected = 1
+
+                    if str(time[1]) == "Close" and bounds_detected == 1:
+                        back_bound = unixTimeFromString(self, str(time[2]))
+                        bounds_detected = 2
+
+                    if bounds_detected == 2:
+                        addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
+                        bounds_detected = 0
+
 
     def resortTable(self):
-        print self
         try:
             self.reviewController.arrayController.rearrangeObjects()
             index_set = NSIndexSet.indexSetWithIndex_(0)
@@ -302,9 +345,9 @@ class ReviewController(NSWindowController):
         list_of_files = generateScreenshotList(self)
         self.getApplicationsAndURLsForTable(self, list_of_files)
         defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
-        self.applyDefaultsToLists(self, defaults, self.reviewController.results)
-        self.manageTimeline(self, list_of_files)
-        self.resortTable(self)
+        self.applyDefaults(self, defaults, self.reviewController.results)
+        self.getTimelineMinAndMax(self, list_of_files=list_of_files)
+        self.manageTimeline(self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
@@ -349,7 +392,7 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
         # generate the timeline view
-        frame = NSRect(NSPoint(50, 50), NSSize(800, 100))
+        frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
         self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
         self.timeline_view.drawRect_(frame)
