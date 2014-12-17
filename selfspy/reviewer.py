@@ -324,10 +324,10 @@ class ReviewController(NSWindowController):
             event_type = event[1]
             time = event[2]
 
-            if process_id < TIMELINE_MAX_ROWS:
-                if process_id not in drawn_textlabels:
-                    drawn_textlabels.append(process_id)
-                    addProcessNameTextLabelToTimeline(self, process_id, self)
+            # if process_id < TIMELINE_MAX_ROWS:
+            #     if process_id not in drawn_textlabels:
+            #         drawn_textlabels.append(process_id)
+            #         addProcessNameTextLabelToTimeline(self, process_id, self)
 
             if str(event[1]) == "Active":
                 if first_bound:
@@ -337,6 +337,7 @@ class ReviewController(NSWindowController):
                     back_bound = event[2]
                     next_front_bound = event[2]
                     addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
+
                     front_bound = next_front_bound
 
         # reordered_process_times = {}
@@ -436,9 +437,16 @@ class ReviewController(NSWindowController):
 
         # generate the timeline view
         frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
-        self.timeline_view = CBGraphView.alloc().initWithFrame_(frame)
+        self.timeline_view = NSView.alloc().initWithFrame_(frame)
+        frame = NSRect(NSPoint(0, 0), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
+        this_view = CBGraphView.alloc().initWithFrame_(frame)
+        self.timeline_view.addSubview_(this_view)
+        this_view.setBackgroundColor_(NSColor.whiteColor())
+        this_view.setBorderColor_(NSColor.darkGrayColor())
+        this_view.setWantsLayer_(YES)
+
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
-        self.timeline_view.drawRect_(frame)
+        #self.timeline_view.drawRect_(frame)
 
         # get screenshots and app/window data
         self.populateExperienceTable(self)

@@ -27,7 +27,8 @@ class CBGraphView(NSControl):
 
             self.gradientGray = NSColor.colorWithCalibratedRed_green_blue_alpha_(50/255.0, 50/255.0, 50/255.0, 1.0)
             self.lineColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(33/255.0, 104/255.0, 198/255.0, 1.0)
-            self.borderColor = NSColor.blackColor()
+            self.borderColor = NSColor.darkGrayColor()
+            self.backgroundColor = NSColor.darkGrayColor()
 
             self.grad = NSGradient.alloc().initWithStartingColor_endingColor_(NSColor.blackColor(), self.gradientGray)
             self.grad.retain()
@@ -77,18 +78,18 @@ class CBGraphView(NSControl):
     def drawRect_(self, rect):
         """ we raw the background gradient and graph outline then clip the inner rect
             and draw the bars """
-
         bounds = self.bounds() # get our view bounds
         insetBounds = NSInsetRect(bounds, 2, 2) # set the inside ortion
+        # super.drawRect_(rect)
 
         # CGContextRef context = (CGContextRef) [[NSGraphicsContext currentContext] graphicsPort];
         # CGContextSetRGBFillColor(context, 0.227,0.251,0.337,0.8);
         # CGContextFillRect(context, NSRectToCGRect(dirtyRect));
 
-    #     // set any NSColor for filling, say white:
-    # [[NSColor whiteColor] setFill];
-    # NSRectFill(dirtyRect);
-    # [super drawRect:dirtyRect];
+        # set any NSColor for filling, say white:
+
+        # NSRectFill(dirtyRect);
+        # [super drawRect:dirtyRect];
 
 
         # self.setBackgroundColor_(NSColor.whiteColor())
@@ -104,9 +105,12 @@ class CBGraphView(NSControl):
         # r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
         # self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
 
-        self.borderColor.set() # set border to white
-        NSBezierPath.setDefaultLineWidth_(3.0) # set line width for outline
+        self.borderColor.set()
+        NSBezierPath.setDefaultLineWidth_(4.0) # set line width for outline
         NSBezierPath.strokeRect_(bounds) # draw outline
+
+        self.backgroundColor.setFill()
+        NSBezierPath.fillRect_(insetBounds)
 
         NSBezierPath.clipRect_(insetBounds) # set the clipping path
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
@@ -141,6 +145,7 @@ class CBGraphView(NSControl):
                     barRect.size.width = self.lineWidth
                     barRect.size.height = ((int(b) * insetBounds.size.height) / maxB)
 
+                    self.backgroundColor.setFill()
                     NSBezierPath.fillRect_(barRect)
 
                     barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
@@ -156,9 +161,11 @@ class CBGraphView(NSControl):
         self.current_color = self.current_color % 2 + 1
 
         if self.current_color == 1:
-            self.setBorderColor_(NSColor.blackColor())
+            # self.setBorderColor_(NSColor.blackColor())
+            self.setBackgroundColor_(NSColor.greenColor())
         else:
-            self.setBorderColor_(NSColor.whiteColor())
+            # self.setBorderColor_(NSColor.greenColor())
+            self.setBackgroundColor_(NSColor.blackColor())
 
         self.setNeedsDisplay_(True)
 
