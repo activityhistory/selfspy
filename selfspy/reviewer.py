@@ -323,17 +323,17 @@ class ReviewController(NSWindowController):
                     addProcessNameTextLabelToTimeline(self, process_id, self)
 
             for event in reordered_process_times[process]:
-                    if str(event[0]) == "Open" and bounds_detected == 0:
-                        front_bound = unixTimeFromString(self, str(event[1]))
-                        bounds_detected = 1
+                if str(event[0]) == "Open" and bounds_detected == 0:
+                    front_bound = unixTimeFromString(self, str(event[1]))
+                    bounds_detected = 1
 
-                    if str(event[0]) == "Close" and bounds_detected == 1:
-                        back_bound = unixTimeFromString(self, str(event[1]))
-                        bounds_detected = 2
+                if str(event[0]) == "Close" and bounds_detected == 1:
+                    back_bound = unixTimeFromString(self, str(event[1]))
+                    bounds_detected = 2
 
-                    if bounds_detected == 2:
-                        addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
-                        bounds_detected = 0
+                if bounds_detected == 2:
+                    addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
+                    bounds_detected = 0
 
 
 

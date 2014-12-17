@@ -68,7 +68,7 @@ def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewe
     if front_bound >= reviewer.slider_min and back_bound <= reviewer.slider_max:
 
         normalized_front_bound = front_bound - reviewer.slider_min
-        width_scale_factor = SEGMENT_SECTION_WIDTH / reviewer.normalized_max_value
+        width_scale_factor = SEGMENT_SECTION_WIDTH / (reviewer.normalized_max_value*1.0)
         segment_startpoint_y = normalized_front_bound * width_scale_factor + TEXTLABEL_WIDTH
         segment_startpoint_x = TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id
         timeline_segment_height = TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * LINE_SPACING)
