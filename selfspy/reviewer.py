@@ -257,8 +257,8 @@ class ReviewController(NSWindowController):
                 screenshot_found = True
                 filename = s=self.list_of_files[self.currentScreenshot]
                 self.displayScreenshot(self, s=filename)
-                         # normalized_current_value = mapFilenameDateToNumber(s=filename) - self.slider_min
-                         # self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
+                normalized_current_value =  unixTimeFromString(self, mapFilenameDateToNumber(self, s=filename)) - self.slider_min
+                self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
 
                 self.queryResponse = []
                 self.queryResponse2 = []
