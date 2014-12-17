@@ -30,7 +30,7 @@ def unixTimeFromString(self, s=None):
 def getScreenshotPath(self, self2=None):
     path = os.path.join(cfg.CURRENT_DIR, 'screenshots')
     path = os.path.expanduser(path)
-    return path
+    return path + '/'
 
 def generateScreenshotList(self, self2=None):
      path = getScreenshotPath(self)

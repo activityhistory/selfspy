@@ -149,8 +149,8 @@ class ReviewController(NSWindowController):
 
 
     def displayScreenshot(self, self2=None, s=None):
-        experienceImage = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
 
+        experienceImage = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
         width = experienceImage.size().width
         height = experienceImage.size().height
         ratio = width / height
@@ -248,20 +248,17 @@ class ReviewController(NSWindowController):
         while (not screenshot_found):
             self.currentScreenshot = self.currentScreenshot + (SCREENSHOT_REVIEW_INTERVAL * direction)
             if (0 <= self.currentScreenshot < len(self.list_of_files)):
-
-                generateDateQuery(self.list_of_files[self.currentScreenshot])
-
+                generateDateQuery(self, s=self.list_of_files[self.currentScreenshot])
                 # send message to activity_store so it can do the database query
-                NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
-
-                if len(self.queryResponse) > 0:
-                     d = self.generateDictEntry(checked=1)
-                     if d in self.results:
-                         screenshot_found = True
-                         filename = s=self.list_of_files[self.currentScreenshot]
-                         self.displayScreenshot(self, s=filename)
-                         normalized_current_value = mapFilenameDateToNumber(s=filename) - self.slider_min
-                         self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
+                # NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
+                # if len(self.queryResponse) > 0:
+                #      d = self.generateDictEntry(checked=1)
+                #      if d in self.results:
+                screenshot_found = True
+                filename = s=self.list_of_files[self.currentScreenshot]
+                self.displayScreenshot(self, s=filename)
+                         # normalized_current_value = mapFilenameDateToNumber(s=filename) - self.slider_min
+                         # self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
 
                 self.queryResponse = []
                 self.queryResponse2 = []
@@ -371,6 +368,8 @@ class ReviewController(NSWindowController):
 
 
     def populateExperienceTable(self):
+        # get list of image files
+        self.list_of_files = generateScreenshotList(self)
 
         # prepare data for app and window tables
         self.getApplicationsAndURLsForTable(self)
