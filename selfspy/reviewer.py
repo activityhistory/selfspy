@@ -310,25 +310,47 @@ class ReviewController(NSWindowController):
         drawn_textlabels = []
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes', self)
+
+        self.slider_min = unixTimeFromString(self, s=str(datetime.datetime.now()))
+
         for app in self.processTimesResponse:
             for time in app:
-                process_id = time[3]
-                if process_id < TIMELINE_MAX_ROWS:
-                    if process_id not in drawn_textlabels:
-                        drawn_textlabels.append(process_id)
-                        addProcessNameTextLabelToTimeline(self, process_id, self)
+                if unixTimeFromString(self, str(time[2])) < self.slider_min:
+                    self.slider_min = unixTimeFromString(self, str(time[2]))
 
-                    if str(time[1]) == "Open" and bounds_detected == 0:
-                        front_bound = unixTimeFromString(self, str(time[2]))
+                if unixTimeFromString(self, str(time[2])) > self.slider_max:
+                    self.slider_max = unixTimeFromString(self, str(time[2]))
+
+        self.normalized_max_value = self.slider_max - self.slider_min
+
+        reordered_process_times = {}
+
+        for entry in self.processTimesResponse[0]:
+            if entry[3] not in reordered_process_times:
+                reordered_process_times[entry[3]] = []
+            reordered_process_times[entry[3]].append([entry[1], entry[2]])
+
+        for process in reordered_process_times:
+            process_id = process
+
+            if process_id < TIMELINE_MAX_ROWS:
+                if process_id not in drawn_textlabels:
+                    drawn_textlabels.append(process_id)
+                    addProcessNameTextLabelToTimeline(self, process_id, self)
+
+            for event in reordered_process_times[process]:
+                    if str(event[0]) == "Open" and bounds_detected == 0:
+                        front_bound = unixTimeFromString(self, str(event[1]))
                         bounds_detected = 1
 
-                    if str(time[1]) == "Close" and bounds_detected == 1:
-                        back_bound = unixTimeFromString(self, str(time[2]))
+                    if str(event[0]) == "Close" and bounds_detected == 1:
+                        back_bound = unixTimeFromString(self, str(event[1]))
                         bounds_detected = 2
 
                     if bounds_detected == 2:
                         addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
                         bounds_detected = 0
+
 
 
     def populateExperienceTable(self):
@@ -341,7 +363,7 @@ class ReviewController(NSWindowController):
         self.applyDefaults(self, defaults, self.reviewController.results)
 
         # prepare timeline
-        self.getTimelineMinAndMax(self, list_of_files=self.list_of_files)
+        # self.getTimelineMinAndMax(self, list_of_files=self.list_of_files)
         self.manageTimeline(self)
 
         # re-sort list items and select the first item

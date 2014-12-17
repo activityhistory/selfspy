@@ -618,7 +618,6 @@ class ActivityStore:
 
     def getProcessTimes_(self, notification):
         controller = notification.object().reviewController
-        process = controller.current_timeline_process
         try:
             q = self.session.query(ProcessEvent).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).add_column(ProcessEvent.process_id).all()
             if len(q) > 0:
