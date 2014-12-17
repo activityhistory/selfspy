@@ -13,7 +13,7 @@ from CBGraphView import CBGraphView
 
 
 TIMELINE_WIDTH = 800
-TIMELINE_HEIGHT = 550
+TIMELINE_HEIGHT = 20
 WINDOW_BORDER_WIDTH = 30
 TEXTLABEL_WIDTH = 80
 TEXTLABEL_HEIGHT = 15
@@ -66,12 +66,14 @@ def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):
 
     if front_bound >= reviewer.slider_min and back_bound <= reviewer.slider_max:
+        gray = (30*process_id) % 255
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(gray/255.0, gray/255.0, gray/255.0, 1.0)
 
         normalized_front_bound = front_bound - reviewer.slider_min
         width_scale_factor = SEGMENT_SECTION_WIDTH / (reviewer.normalized_max_value*1.0)
         segment_startpoint_y = normalized_front_bound * width_scale_factor + TEXTLABEL_WIDTH
-        segment_startpoint_x = TIMELINE_HEIGHT / TIMELINE_MAX_ROWS * process_id
-        timeline_segment_height = TIMELINE_HEIGHT / (TIMELINE_MAX_ROWS * LINE_SPACING)
+        segment_startpoint_x = 2
+        timeline_segment_height = TIMELINE_HEIGHT-4 # / (TIMELINE_MAX_ROWS * LINE_SPACING)
         segment_width = (back_bound - front_bound) * width_scale_factor
 
         frame = NSRect(NSPoint(segment_startpoint_y, segment_startpoint_x),
@@ -79,5 +81,12 @@ def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewe
 
         this_view = CBGraphView.alloc().initWithFrame_(frame)
         reviewer.timeline_view.addSubview_(this_view)
-        this_view.drawRect_(frame)
+        this_view.setBorderColor_(color)
+        this_view.setBackgroundColor_(color)
+        this_view.setWantsLayer_(YES)
+
+        self.processNameQuery = process_id
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
+        this_view.setToolTip_(str(self.processNameResponse[0]))
+        self.processNameResponse = []
         reviewer.nested_timeline_views.append(this_view)
