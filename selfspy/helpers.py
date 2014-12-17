@@ -5,6 +5,8 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+from selfspy import config as cfg
+
 from objc import YES, NO
 from AppKit import *
 from CBGraphView import CBGraphView
@@ -26,9 +28,9 @@ def unixTimeFromString(self, s=None):
     return ts
 
 def getScreenshotPath(self, self2=None):
-     path = os.path.expanduser(u'~/.selfspy/screenshots/')
-     # TODO will this now still work on a thumbdrive?
-     return path
+    path = os.path.join(cfg.CURRENT_DIR, 'screenshots')
+    path = os.path.expanduser(path)
+    return path
 
 def generateScreenshotList(self, self2=None):
      path = getScreenshotPath(self)
@@ -41,9 +43,7 @@ def generateDateQuery(self, s=None):
 def mapFilenameDateToNumber(self, s=None):
     return int('20' + s[0:2] + s[2:4] + s[4:6] + s[7:9] + s[9:11] + s[11:13])
 
-
 ## TIMELINE HELPERS
-
 def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
     self.processNameQuery = process_id
     NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessNameFromID', self)
@@ -61,7 +61,6 @@ def addProcessNameTextLabelToTimeline(self, process_id, reviewer):
 
     reviewer.timeline_view.addSubview_(textField)
     reviewer.nested_timeline_labels.append(textField)
-
 
 def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewer):
 
