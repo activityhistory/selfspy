@@ -307,33 +307,65 @@ class ReviewController(NSWindowController):
 
         self.normalized_max_value = self.slider_max - self.slider_min
 
-        reordered_process_times = {}
+        reordered_process_times = []
 
         for entry in self.processTimesResponse[0]:
-            if entry[3] not in reordered_process_times:
-                reordered_process_times[entry[3]] = []
-            reordered_process_times[entry[3]].append([entry[1], entry[2]])
+            reordered_process_times.append([entry[3], entry[1], unixTimeFromString(self, str(entry[2]))])
 
-        for process in reordered_process_times:
-            process_id = process
+        # reorder list
+        reordered_process_times.sort(key=lambda tup: tup[2])
+
+        first_bound = True
+        front_bound = 0
+        back_bound = 0
+
+        for event in reordered_process_times:
+            process_id = event[0]
+            event_type = event[1]
+            time = event[2]
 
             if process_id < TIMELINE_MAX_ROWS:
                 if process_id not in drawn_textlabels:
                     drawn_textlabels.append(process_id)
                     addProcessNameTextLabelToTimeline(self, process_id, self)
 
-            for event in reordered_process_times[process]:
-                if str(event[0]) == "Open" and bounds_detected == 0:
-                    front_bound = unixTimeFromString(self, str(event[1]))
-                    bounds_detected = 1
-
-                if str(event[0]) == "Close" and bounds_detected == 1:
-                    back_bound = unixTimeFromString(self, str(event[1]))
-                    bounds_detected = 2
-
-                if bounds_detected == 2:
+            if str(event[1]) == "Active":
+                if first_bound:
+                    front_bound = event[2]
+                    first_bound = False
+                else:
+                    back_bound = event[2]
+                    next_front_bound = event[2]
                     addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
-                    bounds_detected = 0
+                    front_bound = next_front_bound
+
+        # reordered_process_times = {}
+        #
+        # for entry in self.processTimesResponse[0]:
+        #     if entry[3] not in reordered_process_times:
+        #         reordered_process_times[entry[3]] = []
+        #     reordered_process_times[entry[3]].append([entry[1], entry[2]])
+        #
+        # for process in reordered_process_times:
+        #     process_id = process
+        #
+        #     if process_id < TIMELINE_MAX_ROWS:
+        #         if process_id not in drawn_textlabels:
+        #             drawn_textlabels.append(process_id)
+        #             addProcessNameTextLabelToTimeline(self, process_id, self)
+        #
+        #     for event in reordered_process_times[process]:
+        #         if str(event[0]) == "Open" and bounds_detected == 0:
+        #             front_bound = unixTimeFromString(self, str(event[1]))
+        #             bounds_detected = 1
+        #
+        #         if str(event[0]) == "Close" and bounds_detected == 1:
+        #             back_bound = unixTimeFromString(self, str(event[1]))
+        #             bounds_detected = 2
+        #
+        #         if bounds_detected == 2:
+        #             addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
+        #             bounds_detected = 0
 
 
 
