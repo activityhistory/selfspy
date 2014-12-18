@@ -19,14 +19,14 @@
         <window title="Selfspy Reviewer" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="240" width="1314" height="673"/>
+            <rect key="contentRect" x="196" y="240" width="1360" height="676"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="1314" height="673"/>
+                <rect key="frame" x="0.0" y="0.0" width="1360" height="676"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OLR-Ww-MGY">
-                        <rect key="frame" x="313" y="310" width="368" height="17"/>
+                        <rect key="frame" x="313" y="313" width="368" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="You have no Experiences from today that can be reviewed" id="eVe-0P-mx1">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -34,7 +34,7 @@
                         </textFieldCell>
                     </textField>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Trf-dt-yta">
-                        <rect key="frame" x="1158" y="16" width="142" height="32"/>
+                        <rect key="frame" x="1204" y="19" width="142" height="32"/>
                         <buttonCell key="cell" type="push" title="Next Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rhj-JY-ZH7">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -44,7 +44,7 @@
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xvb-jc-29T">
-                        <rect key="frame" x="941" y="16" width="165" height="32"/>
+                        <rect key="frame" x="976" y="16" width="165" height="32"/>
                         <buttonCell key="cell" type="push" title="Previous Screenshot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="h91-OQ-UKi">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -53,19 +53,12 @@
                             <action selector="revertReviewWindow:" target="-2" id="DvZ-Sj-QdG"/>
                         </connections>
                     </button>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
-                        <rect key="frame" x="54" y="0.0" width="875" height="27"/>
-                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="100" doubleValue="1.0101010101010102" tickMarkPosition="below" numberOfTickMarks="100" allowsTickMarkValuesOnly="YES" sliderType="linear" id="4hp-KR-siz"/>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
-                        </connections>
-                    </slider>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ihk-VA-wK4">
-                        <rect key="frame" x="56" y="44" width="871" height="604"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Hll-6C-0Du"/>
+                        <rect key="frame" x="17" y="59" width="960" height="600"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="Hll-6C-0Du"/>
                     </imageView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JBQ-pv-W8z">
-                        <rect key="frame" x="936" y="63" width="180" height="590"/>
+                        <rect key="frame" x="982" y="62" width="180" height="594"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="O14-8c-aRP">
                             <rect key="frame" x="1" y="0.0" width="238" height="134"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -156,7 +149,7 @@
                         </tableHeaderView>
                     </scrollView>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Q7u-cH-FvU">
-                        <rect key="frame" x="1114" y="64" width="180" height="589"/>
+                        <rect key="frame" x="1160" y="62" width="180" height="594"/>
                         <clipView key="contentView" ambiguous="YES" misplaced="YES" id="YCs-k1-dJM">
                             <rect key="frame" x="1" y="0.0" width="238" height="134"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -240,12 +233,19 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
+                        <rect key="frame" x="16" y="17" width="962" height="21"/>
+                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="99" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="4hp-KR-siz"/>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
+                        </connections>
+                    </slider>
                 </subviews>
             </view>
             <connections>
                 <outlet property="delegate" destination="-2" id="bEO-bb-VQY"/>
             </connections>
-            <point key="canvasLocation" x="496" y="245.5"/>
+            <point key="canvasLocation" x="519" y="247"/>
         </window>
         <arrayController id="35e-tI-NTw">
             <connections>

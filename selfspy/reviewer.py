@@ -99,7 +99,7 @@ class ReviewController(NSWindowController):
     list_of_files = []
     filtered_files = []
 
-    # timeline
+    # timeline values in UTC seconds
     timeline_value = 0
     slider_max = 1
     slider_min = 0
@@ -321,6 +321,7 @@ class ReviewController(NSWindowController):
             event_type = event[1]
             time = event[2]
 
+            # previously used to add text labels to multi-line timeline
             # if process_id < TIMELINE_MAX_ROWS:
             #     if process_id not in drawn_textlabels:
             #         drawn_textlabels.append(process_id)
@@ -393,11 +394,12 @@ class ReviewController(NSWindowController):
 
 
     def windowWillClose_(self, notification):
-        # save state of tables to user defaults
+        """ save state of tables to user defaults when window closes """
         NSUserDefaultsController.sharedUserDefaultsController().defaults().setObject_forKey_(self.results, 'appWindowList')
 
 
     def show(self):
+        """ create the necessary elements and show the reviewer window """
         try:
             if self.reviewController:
                 self.reviewController.close()
@@ -434,18 +436,19 @@ class ReviewController(NSWindowController):
         self.reviewController.windowArrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.windowArrayController.rearrangeObjects()
 
-        # generate the timeline view
-        frame = NSRect(NSPoint(WINDOW_BORDER_WIDTH, 50), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
+        # generate the timeline view, add background and border
+        frame = NSRect(NSPoint(WINDOW_PADDING, 36), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
         self.timeline_view = NSView.alloc().initWithFrame_(frame)
+
         frame = NSRect(NSPoint(0, 0), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
-        this_view = CBGraphView.alloc().initWithFrame_(frame)
-        self.timeline_view.addSubview_(this_view)
-        this_view.setBackgroundColor_(NSColor.whiteColor())
-        this_view.setBorderColor_(NSColor.darkGrayColor())
-        this_view.setWantsLayer_(YES)
+        timeline_fill = CBGraphView.alloc().initWithFrame_(frame)
+        timeline_fill.setBackgroundColor_(NSColor.whiteColor())
+        timeline_fill.setAssignedColor_(NSColor.whiteColor())
+        timeline_fill.setDrawBorder_(True)
+        timeline_fill.setWantsLayer_(YES)
+        self.timeline_view.addSubview_(timeline_fill)
 
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
-        #self.timeline_view.drawRect_(frame)
 
         # get screenshots and app/window data
         self.populateExperienceTable(self)

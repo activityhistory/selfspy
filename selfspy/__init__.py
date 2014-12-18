@@ -28,34 +28,17 @@ import ConfigParser
 
 from lockfile import LockFile
 
-import hashlib
-from Crypto.Cipher import Blowfish
-
-# Following code added by Jonas, should only not be commented for debugging
-
-#print("### current sys.path : ", sys.path) # Weird, if this is uncommented, no screenshots are being taken
-#print("### current os.getcwd() : ", os.getcwd())
-sys.path.append(os.getcwd() + '/../../../..') # your project folder
-#sys.path.append(os.getcwd())
-#
-# remote debugging with PyCharm
-
-# sys.path.append("/Applications/PyCharm.app/Contents/pycharm-debug.egg") # your PyCharm path
-# import pydevd
-#
-# pydevd.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
-
-## End of debugging code
-
 from selfspy.activity_store import ActivityStore
 from selfspy import config as cfg
 
-
+# Cryptography is no longer used
+# import hashlib
+# from Crypto.Cipher import Blowfish
 
 
 def parse_config():
-    conf_parser = argparse.ArgumentParser(description=__doc__,
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+    conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     conf_parser.add_argument("-c", "--config",
         help="Config file with defaults. Command line parameters will override"\
         " those given in the config file. The config file must start with a "\
@@ -79,8 +62,9 @@ def parse_config():
 
     return parser.parse_args()
 
+
 def main():
-    #print "Selfspy started. Python version " + sys.version # TODO find out why this makes it crash
+    print "Selfspy started. Python version " + sys.version
 
     args = vars(parse_config())
 
@@ -113,7 +97,7 @@ def main():
         print 'Shutting down.'
         sys.exit(1)
 
-    # create and start activity tracker
+    # start activity tracker
     astore = ActivityStore(cfg.DBNAME)
     cfg.LOCK.acquire()
     try:
@@ -122,6 +106,7 @@ def main():
         astore.close()
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == '__main__':
     main()
