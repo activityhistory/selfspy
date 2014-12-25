@@ -39,12 +39,15 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
 from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
-from selfspy.models import RecordingEvent, Process, ProcessEvent, Window, WindowEvent, Geometry, Click, Keys, Experience, Location, Debrief, Bookmark
+from selfspy.models import (RecordingEvent, Process, ProcessEvent, Window,
+                            WindowEvent, Geometry, Click, Keys, Experience,
+                            Location, Debrief, Bookmark)
 
 from urlparse import urlparse
 
 NOW = datetime.datetime.now
-SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R", "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X for some ungodly reason.
+SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R",
+                    "Control_R", "Shift_R", "[65027]"}  # [65027] is AltGr in X
 SCROLL_BUTTONS = {4, 5, 6, 7}
 SCROLL_COOLOFF = 10  # seconds
 
@@ -71,10 +74,8 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name):
-
-        # We check if a selfspy thumbdrive is plugged in and available
-        # if so this is where we're storing the screenshots and DB
-        # otherwise we store locally
+        # check if a selfspy thumbdrive is plugged in and available
+        # if so, store screenshots and DB there, otherwise store locally
         self.lookupThumbdrive()
         self.defineCurrentDrive()
 
@@ -166,8 +167,8 @@ class ActivityStore:
         s = objc.selector(self.queryMetadata_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
 
-        s = objc.selector(self.getAppsAndUrls_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndUrls', None)
+        s = objc.selector(self.getAppsAndWindows_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndWindows', None)
 
         s = objc.selector(self.getProcessTimes_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
@@ -582,36 +583,32 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
-    def getAppsAndUrls_(self, notification):
+    def getAppsAndWindows_(self, notification):
         controller = notification.object().reviewController
-        controller.results = []
+        controller.results = NSMutableArray([])
 
         try:
             q_apps = self.session.query(Process).all()
             q_windows = self.session.query(Window).all()
 
             for a in q_apps:
-                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appName': a.name, 'windows':[], 'windows_mixed':[]})
+                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appId':NSMutableArray([a.id]), 'appName': a.name, 'windows':NSMutableArray([]), 'windows_mixed':NSMutableArray([])})
                 controller.results.append(app_dict)
 
             for w in q_windows:
                 if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
-                    windowName = w.title
-                    if not windowName:
-                        windowName = ''
-                    window_dict = NSMutableDictionary({'checked':False, 'windowName':windowName, 'image':''})
+                    windowName = w.title if w.title else 'NO_TITLE'
+                    window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':windowName, 'image':''})
+                    controller.results[w.process_id-1]['windows'].append(window_dict)
                 else:
                     short_url = urlparse(w.browser_url).hostname
-                    window_dict = NSMutableDictionary({'checked':False, 'windowName':short_url, 'image':''})
-                if not window_dict in controller.results[w.process_id-1]['windows']:
-                    window_dict = NSMutableDictionary.dictionaryWithDictionary_(window_dict)
-                    controller.results[w.process_id-1]['windows'].append(window_dict)
+                    try:
+                        window_dict = (d for d in controller.results[w.process_id-1]['windows'] if d['windowName'] == short_url).next()
+                        window_dict['windowId'].append(w.id)
+                    except:
+                        window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':short_url, 'image':''})
+                        controller.results[w.process_id-1]['windows'].append(window_dict)
 
-                # p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
-                # if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
-                #     u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
-                #     controller.queryResponse2.append(u[0][1])
-                # controller.queryResponse.append(p[0][1])
         except UnicodeEncodeError:
                 pass
 

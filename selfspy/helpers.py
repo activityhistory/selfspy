@@ -55,8 +55,7 @@ def addProcessTimelineSegment(self, process_id, front_bound, back_bound, reviewe
 
         frame = NSRect(NSPoint(segment_x, segment_y),
                        NSSize(segment_width, segment_height))
-
-        # TODO change to scrollable view with different interactions than CBGraphView
+        
         this_view = CBGraphView.alloc().initWithFrame_(frame)
         reviewer.timeline_view.addSubview_(this_view)
         this_view.setBorderColor_(color)

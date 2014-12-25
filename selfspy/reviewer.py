@@ -18,64 +18,60 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import time
+import datetime
+
 from objc import IBAction, IBOutlet
 from AppKit import *
 
 from CBGraphView import CBGraphView
 
-from helpers import *
+from selfspy.helpers import *
 
-import time
-import datetime
 
-SCREENSHOT_REVIEW_INTERVAL = 1
-UI_SLIDER_MAX_VALUE = 100
-TIMELINE_INTERVAL_IN_SECONDS = 600 # 1 day = 86400 seconds
+SCREENSHOT_WIDTH = 960
+SCREENSHOT_HEIGHT = 600
 
 
 class WindowListController(NSArrayController):
 
-    # when a window checkbox is clicked, make sure the cooresponding app
-    # checkbox changes to the appropriate state
     @IBAction
     def updateAppCheckbox_(self, sender):
+        """ update app checkbox when a window checkbox is clicked """
+
         row = self.review_controller.appList.selectedRow()
         view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
-        w_view = sender.superview()
 
-        if view and w_view:
-            app = view.textField().stringValue()
-            window = w_view.textField().stringValue()
+        if view:
             try:
-                app_data = (a for a in self.review_controller.results if a['appName'] == app).next()
-                w_data = (a for a in app_data['windows'] if a['windowName'] == window).next()
-
-                w_data['checked'] = sender.state()
-
+                app_data = view.objectValue()
                 num_rows = len(app_data['windows'])
                 num_checked = 0
+
                 for j in app_data['windows']:
                     if j['checked'] == 1:
                         num_checked += 1
+
                 if num_checked == num_rows:
                     app_data['checked'] = 1
                 elif num_checked == 0:
                     app_data['checked'] = 0
                 else:
                     app_data['checked'] = -1
+
             except:
-                pass
+                print "Error: Could not update App Checkbox"
 
 
 # Review window controller
 class ReviewController(NSWindowController):
 
-    NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
-
     # outlets for UI elements
     mainPanel = IBOutlet()
     tableView = IBOutlet()
+    slider = IBOutlet()
     arrayController = IBOutlet()
+    windowListController = IBOutlet()
     appList = IBOutlet()
     windowList = IBOutlet()
 
@@ -84,10 +80,8 @@ class ReviewController(NSWindowController):
     dateQuery = ""
     processNameQuery = ""
 
-    # data for dynamic review tables
+    # data for app and window tables
     results = []
-    results_half = []
-    results_windows = []
 
     # let activity_store write query results into those
     queryResponse = []
@@ -97,7 +91,6 @@ class ReviewController(NSWindowController):
 
     # lists of image files
     list_of_files = []
-    filtered_files = []
 
     # timeline values in UTC seconds
     timeline_value = 0
@@ -116,16 +109,16 @@ class ReviewController(NSWindowController):
 
 
     @IBAction
-    def updateAppCheckbox_(self, sender):
+    def updateWindowCheckboxes_(self, sender):
+        """ update window checboxes when app checkbox clicked """
+
         # TODO select the row of the clicked checkbox if not already selected
         # TODO determine why window name sometimes goes to '{'
-
         app_data = sender.superview().objectValue()
         state = sender.state()
-        appName = app_data['appName']
 
         if state == 1:
-            app_data['windows_mixed'] = []
+            app_data['windows_mixed'] = NSMutableArray([])
             for i in app_data['windows']:
                 app_data['windows_mixed'].append(NSMutableDictionary(i))
 
@@ -134,158 +127,105 @@ class ReviewController(NSWindowController):
 
         elif state == 0:
             for w in app_data['windows']:
-                w['checked'] = 0
+               w['checked'] = 0
 
         elif state == -1:
-            if app_data['windows_mixed'] != []:
-                app_data['windows'] = []
+            if app_data['windows_mixed']:
+                app_data['windows'] = NSMutableArray([])
                 for i in app_data['windows_mixed']:
                     app_data['windows'].append(NSMutableDictionary(i))
             else:
                 for w in app_data['windows']:
                     w['checked'] = 0
 
-        self.results_windows = app_data['windows']
-
-
-    def displayScreenshot(self, self2=None, s=None):
-
-        experienceImage = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
-        width = experienceImage.size().width
-        height = experienceImage.size().height
-        ratio = width / height
-        if( width > 960 or height > 600 ):
-            if (ratio > 1.6):
-                width = 960
-                height = 960 / ratio
-            else:
-                width = 600 * ratio
-                height = 600
-        experienceImage.setScalesWhenResized_(True)
-        experienceImage.setSize_((width, height))
-        self.reviewController.mainPanel.setImage_(experienceImage)
-
-
-    def generateDictEntry(self, checked=None):
-        return NSMutableDictionary({'appName': self.queryResponse2[0] if len(self.queryResponse2) > 0 else "",
-                                    'image': self.queryResponse[0] if len(self.queryResponse) > 0 else "",
-                                    'checked': 1})
+        self.windowListController.setContent_(app_data['windows'])
+        self.windowList.reloadData()
 
 
     @IBAction
     def advanceReviewWindow_(self, sender):
+        """ move to next screenshot """
+
         self.moveReviewWindow(direction=1)
 
 
     @IBAction
     def revertReviewWindow_(self, sender):
+        """ move to previous screenshot """
+
         self.moveReviewWindow(direction=-1)
 
 
-    @IBAction
-    def filterFiles_(self, sender):
-        x = 1
-        # append datetime to screenshot array
-        # get list of window active events, with appended datetime
-        # append NOW to end of active events to make sure last active is processed
-        # self.filtered_files = []
-        # i = 0
-        # for j in range(len(active events)-1):
-        #   active = check if active[j][app] is active
-        #   while time(file_list[i]) < time(active[j+1]):
-        #       if time(file_list[i]) >= time(active[J]) and active:
-        #           append file_list[i] to filtered_files
-        #       i++
-        # print len(self.filtered_files)
-
-
-    def tableViewSelectionDidChange_(self,sender):
-        selected_row = self.appList.selectedRow()
-        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
-
-        # self.nested_timeline_views[0].invokeFromOutside()
-
-        # TODO for some reason, when we programatically select the 0 index
-        # at launch, the selected_view is none
-        if selected_view:
-            # try:
-            #     print("STA2: ", str(self.nested_timeline_labels[0]))
-            #     self.nested_timeline_labels[0].setHidden_(YES)
-            # except IndexError:
-            #     pass  # TODO I'm stuck here. setHidden works when put above if "selected_view:" - but not here (invoked by selecting another item in the list).
-            selected_app = selected_view.textField().stringValue()
-            app_index_in_dict = 0
-            for i in range(len(self.results)):
-                if self.results[i]["appName"] == selected_app:
-                    app_index_in_dict = i
-                    break
-            self.results_windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.results[app_index_in_dict]['windows']]
-            self.windowList.reloadData()
-
-            self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
-
-            try:
-                # for view in self.nested_timeline_views:
-                #     view.removeFromSuperview()
-                # self.nested_timeline_views = []
-                for label in self.nested_timeline_labels:
-                    x = 1 # dummy code
-                    # print("attemping to hide: ", str(label))
-                    # status = self
-                    # print("STATUS: ", status)
-                # self.nested_timeline_views = []
-                # self.nested_timeline_labels = []
-            except TypeError:
-                print('Error with array of views.')
-
-            # self.manageTimeline() # TODO do not query file list and so on every time
-
-
     def moveReviewWindow(self, direction):
+        """ move to next or previous screenshot """
+
         # list_of_files = generateScreenshotList(self)
         screenshot_found = False
 
         while (not screenshot_found):
-            self.currentScreenshot = self.currentScreenshot + (SCREENSHOT_REVIEW_INTERVAL * direction)
+            self.currentScreenshot = self.currentScreenshot + direction # (SCREENSHOT_REVIEW_INTERVAL * direction)
             if (0 <= self.currentScreenshot < len(self.list_of_files)):
                 generateDateQuery(self, s=self.list_of_files[self.currentScreenshot])
-                # send message to activity_store so it can do the database query
-                # NSNotificationCenter.defaultCenter().postNotificationName_object_('queryMetadata',self)
-                # if len(self.queryResponse) > 0:
-                #      d = self.generateDictEntry(checked=1)
-                #      if d in self.results:
+
                 screenshot_found = True
                 filename = s=self.list_of_files[self.currentScreenshot]
                 self.displayScreenshot(self, s=filename)
                 normalized_current_value =  unixTimeFromString(self, mapFilenameDateToNumber(self, s=filename)) - self.slider_min
-                self.timeline_value = normalized_current_value * UI_SLIDER_MAX_VALUE / self.normalized_max_value
+                self.timeline_value = normalized_current_value
 
                 self.queryResponse = []
                 self.queryResponse2 = []
 
             else:
                 screenshot_found = True # so that it stops searching
-                self.reviewController.close()
+                # self.reviewController.close()
 
 
-    def getApplicationsAndURLsForTable(self):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndUrls',self)
+    def displayScreenshot(self, self2=None, s=None):
+        """ draw screenshot at right size """
+
+        experienceImage = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
+        width = experienceImage.size().width
+        height = experienceImage.size().height
+        ratio = width / height
+
+        if( width > SCREENSHOT_WIDTH or height > SCREENSHOT_HEIGHT ):
+            if (ratio > SCREENSHOT_WIDTH/SCREENSHOT_HEIGHT):
+                width = SCREENSHOT_WIDTH
+                height = SCREENSHOT_WIDTH / ratio
+            else:
+                width = SCREENSHOT_HEIGHT * ratio
+                height = SCREENSHOT_HEIGHT
+
+        experienceImage.setScalesWhenResized_(True)
+        experienceImage.setSize_((width, height))
+        self.reviewController.mainPanel.setImage_(experienceImage)
+
+
+    def getApplicationsAndWindowsForTable(self):
+        """ query database for apps and windows """
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndWindows',self)
 
 
     def applyDefaults(self, defaults, results):
-        # restore app and window checkbox states saved in NSUserDefaults
+        """ restore app and window checkbox states saved in NSUserDefaults """
+
         for d in defaults:
             try:
                 result = (r for r in results if r['appName'] == d['appName']).next()
-                result['checked'] = d['checked']
+                result['checked'] = int(d['checked'])
                 for w in d['windows']:
                     result_w = (rw for rw in result['windows'] if rw['windowName'] == w['windowName']).next()
                     if result_w:
-                        result_w['checked'] = w['checked']
+                        result_w['checked'] = int(w['checked'])
             except:
                 pass
 
+
     def manageTimeline(self):
+        """ get timeline limits and draw elements """
+
         bounds_detected = 0
         front_bound = 0
         drawn_textlabels = []
@@ -303,6 +243,7 @@ class ReviewController(NSWindowController):
                     self.slider_max = unixTimeFromString(self, str(time[2]))
 
         self.normalized_max_value = self.slider_max - self.slider_min
+        self.reviewController.slider.setMaxValue_(self.normalized_max_value)
 
         reordered_process_times = []
 
@@ -321,12 +262,6 @@ class ReviewController(NSWindowController):
             event_type = event[1]
             time = event[2]
 
-            # previously used to add text labels to multi-line timeline
-            # if process_id < TIMELINE_MAX_ROWS:
-            #     if process_id not in drawn_textlabels:
-            #         drawn_textlabels.append(process_id)
-            #         addProcessNameTextLabelToTimeline(self, process_id, self)
-
             if str(event[1]) == "Active":
                 if first_bound:
                     front_bound = event[2]
@@ -338,68 +273,49 @@ class ReviewController(NSWindowController):
 
                     front_bound = next_front_bound
 
-        # reordered_process_times = {}
-        #
-        # for entry in self.processTimesResponse[0]:
-        #     if entry[3] not in reordered_process_times:
-        #         reordered_process_times[entry[3]] = []
-        #     reordered_process_times[entry[3]].append([entry[1], entry[2]])
-        #
-        # for process in reordered_process_times:
-        #     process_id = process
-        #
-        #     if process_id < TIMELINE_MAX_ROWS:
-        #         if process_id not in drawn_textlabels:
-        #             drawn_textlabels.append(process_id)
-        #             addProcessNameTextLabelToTimeline(self, process_id, self)
-        #
-        #     for event in reordered_process_times[process]:
-        #         if str(event[0]) == "Open" and bounds_detected == 0:
-        #             front_bound = unixTimeFromString(self, str(event[1]))
-        #             bounds_detected = 1
-        #
-        #         if str(event[0]) == "Close" and bounds_detected == 1:
-        #             back_bound = unixTimeFromString(self, str(event[1]))
-        #             bounds_detected = 2
-        #
-        #         if bounds_detected == 2:
-        #             addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
-        #             bounds_detected = 0
 
-
-
-    def populateExperienceTable(self):
-        # get list of image files
-        self.list_of_files = generateScreenshotList(self)
+    def populateElements(self):
+        """ get app/window data, list of screenshots, and draw timeline """
 
         # prepare data for app and window tables
-        self.getApplicationsAndURLsForTable(self)
+        self.getApplicationsAndWindowsForTable(self)
         defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
         self.applyDefaults(self, defaults, self.reviewController.results)
+
+        # get list of image files
+        self.list_of_files = generateScreenshotList(self)
 
         # prepare timeline
         self.manageTimeline(self)
 
-        # re-sort list items and select the first item
-        try:
-            self.reviewController.arrayController.rearrangeObjects()
-            index_set = NSIndexSet.indexSetWithIndex_(0)
-            self.reviewController.appList.selectRowIndexes_byExtendingSelection_(index_set,False)
-        except UnboundLocalError:
-            pass
+        # re-sort list items
+        self.reviewController.arrayController.rearrangeObjects()
 
 
-    def windowDidLoad(self):
-        NSWindowController.windowDidLoad(self)
+    def tableViewSelectionDidChange_(self,sender):
+        """ change window list based on app selelction """
+
+        selected_row = self.appList.selectedRow()
+        selected_view = self.appList.viewAtColumn_row_makeIfNecessary_(0,selected_row,False)
+
+        if selected_view:
+            app_data = selected_view.objectValue()
+            self.windowListController.setContent_(app_data['windows'])
+            self.windowList.reloadData()
+
+            # self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
+            # self.manageTimeline() # TODO do not query file list and so on every time
 
 
     def windowWillClose_(self, notification):
         """ save state of tables to user defaults when window closes """
+
         NSUserDefaultsController.sharedUserDefaultsController().defaults().setObject_forKey_(self.results, 'appWindowList')
 
 
     def show(self):
         """ create the necessary elements and show the reviewer window """
+
         try:
             if self.reviewController:
                 self.reviewController.close()
@@ -429,14 +345,14 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.setSortDescriptors_(descriptiorArray)
         self.reviewController.arrayController.rearrangeObjects()
 
-        # TODO get window list to sort alphabetically
         # sort window list in ascending order
         asc = NSSortDescriptor.alloc().initWithKey_ascending_('windowName',True)
         descriptiorArray = [asc]
-        self.reviewController.windowArrayController.setSortDescriptors_(descriptiorArray)
-        self.reviewController.windowArrayController.rearrangeObjects()
+        self.reviewController.windowListController.setSortDescriptors_(descriptiorArray)
+        self.reviewController.windowListController.rearrangeObjects()
 
         # generate the timeline view, add background and border
+        # TODO change to scrollable view with different interactions than CBGraphView
         frame = NSRect(NSPoint(WINDOW_PADDING, 36), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
         self.timeline_view = NSView.alloc().initWithFrame_(frame)
 
@@ -451,7 +367,7 @@ class ReviewController(NSWindowController):
         self.reviewController.window().contentView().addSubview_(self.timeline_view)
 
         # get screenshots and app/window data
-        self.populateExperienceTable(self)
+        self.populateElements(self)
 
 
     show = classmethod(show)

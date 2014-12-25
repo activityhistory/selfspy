@@ -10,8 +10,10 @@
                 <outlet property="arrayController" destination="35e-tI-NTw" id="2Fr-8a-wws"/>
                 <outlet property="arrayControllerWindows" destination="MuR-ve-Uyd" id="N5c-Tx-hCC"/>
                 <outlet property="mainPanel" destination="ihk-VA-wK4" id="cn2-TS-EJV"/>
+                <outlet property="slider" destination="vVA-5J-OXK" id="PMu-t7-bOT"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="Lq3-Kv-NjA"/>
                 <outlet property="windowList" destination="RVT-QW-VUu" id="Yd7-hA-lv3"/>
+                <outlet property="windowListController" destination="MuR-ve-Uyd" id="vbS-2M-P9z"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -20,7 +22,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="1360" height="676"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="1360" height="676"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -98,13 +100,13 @@
                                                             </textFieldCell>
                                                         </textField>
                                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3NK-Hv-1dE">
-                                                            <rect key="frame" x="1" y="8" width="20" height="18"/>
+                                                            <rect key="frame" x="1" y="9" width="20" height="18"/>
                                                             <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" allowsMixedState="YES" inset="2" id="obs-2x-sUJ">
                                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                 <font key="font" metaFont="system"/>
                                                             </buttonCell>
                                                             <connections>
-                                                                <action selector="updateAppCheckbox:" target="-2" id="ZvP-lb-Bj4"/>
+                                                                <action selector="updateWindowCheckboxes:" target="-2" id="yyK-kK-Xub"/>
                                                                 <binding destination="d2i-wM-ejo" name="value" keyPath="objectValue.checked" id="LrH-Zv-Cl6"/>
                                                             </connections>
                                                         </button>
@@ -235,7 +237,7 @@
                     </scrollView>
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vVA-5J-OXK">
                         <rect key="frame" x="16" y="17" width="962" height="21"/>
-                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="99" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="4hp-KR-siz"/>
+                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="99" tickMarkPosition="above" sliderType="linear" id="4hp-KR-siz"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
                         </connections>
@@ -252,11 +254,7 @@
                 <binding destination="-2" name="contentArray" keyPath="self.results" id="unG-1M-8PH"/>
             </connections>
         </arrayController>
-        <arrayController id="MuR-ve-Uyd" customClass="WindowListController">
-            <connections>
-                <binding destination="-2" name="contentArray" keyPath="self.results_windows" id="Kjg-Si-qwN"/>
-            </connections>
-        </arrayController>
+        <arrayController id="MuR-ve-Uyd" customClass="WindowListController"/>
     </objects>
     <resources>
         <image name="NSApplicationIcon" width="128" height="128"/>
