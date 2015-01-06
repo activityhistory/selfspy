@@ -220,11 +220,14 @@ class ReviewController(NSWindowController):
         for d in defaults:
             try:
                 result = (r for r in results if r['appName'] == d['appName']).next()
-                result['checked'] = int(d['checked'])
+                result['checked'] = d['checked']
                 for w in d['windows']:
                     result_w = (rw for rw in result['windows'] if rw['windowName'] == w['windowName']).next()
                     if result_w:
                         result_w['checked'] = int(w['checked'])
+                if d['checked'] == 0 or d['checked'] == 1:
+                    for w in result['windows']:
+                        w['checked'] = d['checked']
             except:
                 pass
 
