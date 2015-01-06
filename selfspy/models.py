@@ -91,6 +91,7 @@ class ProcessEvent(SpookMixin, Base):
     def __repr__(self):
         return "<Process '%s' '%s' >" % (self.process_id, self.event_type)
 
+
 class Window(SpookMixin, Base):
     title = Column(Unicode, index=True)
     browser_url = Column(Unicode, index=True)
@@ -118,6 +119,25 @@ class WindowEvent(SpookMixin, Base):
 
     def __repr__(self):
         return "<Window '%s' '%s' >" % (self.window_id, self.event_type)
+
+class FilteredWindowActivation(SpookMixin, Base):
+    window_id = Column(Integer, ForeignKey('window.id'), nullable=False, index=True)
+    window = relationship("Window", backref=backref('filteredwindowactivations'))
+
+    process_name = Column(Unicode, index=True)
+    window_name = Column(Unicode, index=True)
+    start_time = Column(Unicode, index=True)
+    end_time = Column(Unicode, index=True)
+
+    def __init__(self, window_id, process_name, window_name, start_time, end_time):
+        self.window_id = window_id
+        self.process_name = process_name
+        self.window_name = window_name
+        self.start_time = start_time
+        self.end_time = end_time
+
+    def __repr__(self):
+        return "<WindowActivation '%s' '%s' '%s' >" % (self.window_id, self.start_time, self.end_time)
 
 
 class Geometry(SpookMixin, Base):
@@ -176,57 +196,27 @@ class Click(SpookMixin, Base):
         return "<Click (%d, %d), (%d, %d, %d)>" % (self.x, self.y, self.button, self.press, self.nrmoves)
 
 
-class Experience(SpookMixin, Base):
-    # project = Column(Unicode, index=True)
-    message = Column(Unicode, index=True)
-    screenshot = Column(Unicode, index=True)
-    user_initiated = Column(Boolean, index=True)
-    ignored = Column(Boolean, index=True)
-    after_break = Column(Boolean, index=True)
-
-    # removed project
-    def __init__(self, message, screenshot, user_initiated = True, ignored = False, after_break = False):
-        # self.project = project
-        self.message = message
-        self.screenshot = screenshot
-        self.user_initiated = user_initiated
-        self.ignored = ignored
-        self.after_break = after_break
-
-    def __repr__(self):
-        return "<Experience message: '%s'>" % self.message
-
-class Debrief(SpookMixin, Base):
-    experience_id = Column(Integer, ForeignKey('experience.id'), nullable=False, index=True)
-    experience = relationship("Experience", backref=backref('debrief'))
-
-    doing_report = Column(Unicode, index=True)
-    audio_file = Column(Unicode, index=True)
-    memory_id = Column(Integer, index=True)
-
-    def __init__(self, experience_id, doing_report, audio_file, memory_id):
-        self.experience_id = experience_id
-        self.doing_report = doing_report
-        self.audio_file = audio_file
-        self.memory_id = memory_id
-
-    def __repr__(self):
-        if(self.audio_file):
-            return "<Response recorded in: '%s'>" % self.audio_file
-        elif(self.doing_report):
-            return "<Participant was: '%s'>" % self.doing_report
-        else:
-            return "<No response recorded>"
-
-
-class Location(SpookMixin, Base):
-    location = Column(Unicode, index=True, unique=True)
-
-    def __init__(self, location):
-        self.location = location
-
-    def __repr__(self):
-        return "<Location is '%s'>" % self.location
+# class Debrief(SpookMixin, Base):
+#     experience_id = Column(Integer, ForeignKey('experience.id'), nullable=False, index=True)
+#     experience = relationship("Experience", backref=backref('debrief'))
+#
+#     doing_report = Column(Unicode, index=True)
+#     audio_file = Column(Unicode, index=True)
+#     memory_id = Column(Integer, index=True)
+#
+#     def __init__(self, experience_id, doing_report, audio_file, memory_id):
+#         self.experience_id = experience_id
+#         self.doing_report = doing_report
+#         self.audio_file = audio_file
+#         self.memory_id = memory_id
+#
+#     def __repr__(self):
+#         if(self.audio_file):
+#             return "<Response recorded in: '%s'>" % self.audio_file
+#         elif(self.doing_report):
+#             return "<Participant was: '%s'>" % self.doing_report
+#         else:
+#             return "<No response recorded>"
 
 
 def pad(s, padnum):

@@ -20,7 +20,6 @@ along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 
 
 import objc
-
 from objc import IBAction, IBOutlet
 
 from Foundation import *
@@ -36,27 +35,11 @@ class PreferencesController(NSWindowController):
     screenshotSizePopup = IBOutlet()
     screenshotSizeMenu = IBOutlet()
     clearDataPopup = IBOutlet()
-    arrayController = IBOutlet()
-    arrayControllerWindows = IBOutlet()
-    appList = IBOutlet()
-    windowList = IBOutlet()
-
-    # dynamic review table
-    list = [{'checked':False, 'image':'', 'app_name':'First App', 'windows':[{'checked':False, 'window_name':'Window 1', 'image':''},{'checked':False, 'window_name':'Window 2', 'image':''},{'checked':False, 'window_name':'Window 2', 'image':''}]},{'checked':False, 'image':'', 'app_name':'Second App', 'windows':[{'checked':False, 'window_name':'Window 4', 'image':''},{'checked':False, 'window_name':'Window 5', 'image':''},{'checked':False, 'window_name':'Window 6', 'image':''}]},{'checked':False, 'image':'', 'app_name':'Third App', 'windows':[{'checked':False, 'window_name':'Window 7', 'image':''},{'checked':False, 'window_name':'Window 8', 'image':''},{'checked':False, 'window_name':'Window 9', 'image':''}]}]
-    window_list = [{'checked':False, 'window_name':'Window 10', 'image':''},{'checked':False, 'window_name':'Window 11', 'image':''},{'checked':False, 'window_name':'Window 12', 'image':''}]
-    NSMutableDictionary = objc.lookUpClass('NSMutableDictionary')
-    NSNumber = objc.lookUpClass('NSNumber')
-    apps = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in list]
-    windows = [ NSMutableDictionary.dictionaryWithDictionary_(x) for x in window_list]
-
 
     # notifications sent to Activity Store
     @IBAction
-    def clearData_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
-
-    @IBAction
     def changedScreenshot_(self,sender):
+        """ asdf """
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedScreenshot',self)
 
     @IBAction
@@ -64,14 +47,8 @@ class PreferencesController(NSWindowController):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshotPref',self)
 
     @IBAction
-    def changedExperienceRate_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedExperiencePref',self)
-
-    @IBAction
-    def updateWindowList_(self,sender):
-        selected_app = self.appList.selectedRow()
-        self.windows = [ self.NSMutableDictionary.dictionaryWithDictionary_(x) for x in self.apps[selected_app]['windows']]
-        self.windowList.reloadData()
+    def clearData_(self,sender):
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
@@ -107,14 +84,12 @@ class PreferencesController(NSWindowController):
         except:
             pass
 
-        # open window from NIB file, show front and center
+        # open window from NIB file, show front and center, show on top
         self.prefController = PreferencesController.alloc().initWithWindowNibName_("Preferences")
         self.prefController.showWindow_(None)
         self.prefController.window().makeKeyAndOrderFront_(None)
         self.prefController.window().center()
         self.prefController.retain()
-
-        # needed to show window on top of other applications
         NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         # make window close on Cmd-w

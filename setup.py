@@ -19,8 +19,7 @@ DATA_FILES = ['./assets/eye.png',
               './assets/record.png',
               './assets/stop.png',
               './selfspy/Preferences.xib',
-              './selfspy/Experience.xib',
-              './selfspy/Debriefer.xib',
+              # './selfspy/Debriefer.xib',
               './selfspy/Reviewer.xib']
 
 setup(
@@ -30,16 +29,11 @@ setup(
     setup_requires=["py2app"],
     options={'py2app': OPTIONS},
     data_files=DATA_FILES,
-    # packages=['selfspy'],
-    # author="David Fendrich",
     description= 'Log your computer activity!',
-    # entry_points=dict(console_scripts=['selfspy=selfspy:main']),
     install_requires=["SQLAlchemy",
         "lockfile",
-        "pycrypto",
         "pyobjc-core",
         "pyobjc-framework-Cocoa",
-        "pyobjc-framework-Quartz",
-        "keyring"
+        "pyobjc-framework-Quartz"
     ]
 )

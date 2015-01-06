@@ -181,12 +181,18 @@ class ReviewController(NSWindowController):
                 # self.reviewController.close()
 
 
+    @IBAction
+    def filterWindowEvents_(self, sender):
+
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('getFilteredWindowEvents',self)
+
+
     def displayScreenshot(self, self2=None, s=None):
         """ draw screenshot at right size """
 
-        experienceImage = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
-        width = experienceImage.size().width
-        height = experienceImage.size().height
+        image = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
+        width = image.size().width
+        height = image.size().height
         ratio = width / height
 
         if( width > SCREENSHOT_WIDTH or height > SCREENSHOT_HEIGHT ):
@@ -197,9 +203,9 @@ class ReviewController(NSWindowController):
                 width = SCREENSHOT_HEIGHT * ratio
                 height = SCREENSHOT_HEIGHT
 
-        experienceImage.setScalesWhenResized_(True)
-        experienceImage.setSize_((width, height))
-        self.reviewController.mainPanel.setImage_(experienceImage)
+        image.setScalesWhenResized_(True)
+        image.setSize_((width, height))
+        self.reviewController.mainPanel.setImage_(image)
 
 
     def getApplicationsAndWindowsForTable(self):

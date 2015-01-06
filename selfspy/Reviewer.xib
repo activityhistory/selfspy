@@ -22,7 +22,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="1360" height="676"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="1360" height="676"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -242,6 +242,16 @@
                             <binding destination="-2" name="value" keyPath="timeline_value" id="DaU-EI-G3P"/>
                         </connections>
                     </slider>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MMG-yV-gUF">
+                        <rect key="frame" x="1131" y="19" width="71" height="32"/>
+                        <buttonCell key="cell" type="push" title="Filter" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6TY-Wx-Ppf">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="filterWindowEvents:" target="-2" id="Jm9-5I-xIC"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>

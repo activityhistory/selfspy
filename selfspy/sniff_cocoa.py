@@ -54,103 +54,13 @@ from datetime import datetime
 
 import mutagen.mp4
 
-#from selfspy import locationTracking
-from selfspy import debriefer
+# from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
 
 from urlparse import urlparse
 
 start_time = NSDate.date()
-
-
-# Experience Sampling window controller
-class ExperienceController(NSWindowController):
-
-    currentScreenshot = None
-    user_initiated = True
-    ignored = False
-
-    # projectText = IBOutlet()
-    experienceText = IBOutlet()
-    screenshotDisplay = IBOutlet()
-
-    # override window close to track when users close the experience window
-    def overrideClose(self):
-        s = objc.selector(self.setIgnoredAndClose_,signature='v@:@')
-        self.expController.window().standardWindowButton_(NSWindowCloseButton).setTarget_(self.expController)
-        self.expController.window().standardWindowButton_(NSWindowCloseButton).setAction_(s)
-        self.expController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
-        self.expController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
-
-    def setIgnoredAndClose_(self, notification):
-        self.ignored = True
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('experienceReceived',self)
-        self.expController.close()
-
-    @IBAction
-    def recordText_(self, sender):
-        message_value = self.experienceText.stringValue()
-        NSLog('Received experience message of: ' + message_value)
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('experienceReceived',self)
-        self.expController.close()
-
-    @IBAction
-    def takeExperienceScreenshot_(self,sender):
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('takeExperienceScreenshot',self)
-
-    def windowDidLoad(self):
-        NSWindowController.windowDidLoad(self)
-
-    def show(self):
-        try:
-            if self.expController.window().isVisible():
-                if os.path.exists(self.path):
-                    os.remove(self.path)
-                self.expController.close()
-        except:
-            pass
-
-        # take initial full-screen screenshot
-        self.takeFullScreenshot = True
-        self.takeExperienceScreenshot_(self,self)
-        self.takeFullScreenshot = False
-
-        # open window from NIB file, show front and center
-        self.expController = ExperienceController.alloc().initWithWindowNibName_("Experience")
-        self.expController.showWindow_(None)
-        self.expController.window().makeKeyAndOrderFront_(None)
-        self.expController.window().center()
-        self.expController.retain()
-
-        self.path = os.path.expanduser(self.currentScreenshot)
-
-        experienceImage = NSImage.alloc().initByReferencingFile_(self.path)
-        width = experienceImage.size().width
-        height = experienceImage.size().height
-        ratio = width / height
-        if( width > 360 or height > 225 ):
-            if (ratio > 1.6):
-                width = 360
-                height = 360 / ratio
-            else:
-                width = 225 * ratio
-                height = 225
-
-        experienceImage.setScalesWhenResized_(True)
-        experienceImage.setSize_((width, height))
-        self.expController.screenshotDisplay.setImage_(experienceImage)
-
-        # needed to show window on top of other applications
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
-
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getPriorExperiences',self.expController)
-
-        self.overrideClose(self)
-
-        return self.expController
-
-    show = classmethod(show)
 
 
 class Sniffer:
@@ -162,11 +72,6 @@ class Sniffer:
 
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
-
-        self.location_hook = lambda x: True
-        #self.geo = locationTracking.LocationTracking()
-        #self.geo.startTracking()
-        #self.geo.locationchange_hook = self.got_location_change
 
         self.delegate = None
 
@@ -188,8 +93,6 @@ class Sniffer:
                 prefDictionary[u'imageSize'] = 720          # in px
                 prefDictionary[u"imageTimeMax"] = 60        # in s
                 prefDictionary[u"imageTimeMin"] = 100       # in ms
-                prefDictionary[u"experienceTime"] = 1800    # in s
-                prefDictionary[u"experienceLoop"] = True
                 prefDictionary[u"recording"] = True
 
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
@@ -281,17 +184,13 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconRecord)
                     self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
 
-            def showDebrief_(self, notification):
-                NSLog("Showing Daily Debrief Window...")
-                debriefer.DebriefController.show()
+            # def showDebrief_(self, notification):
+            #     NSLog("Showing Daily Debrief Window...")
+            #     debriefer.DebriefController.show()
 
             def showReview_(self, notification):
                 NSLog("Showing Review Window...")
                 reviewer.ReviewController.show()
-
-            def showExperience_(self, notification):
-                NSLog("Showing Experience Sampling Window on Request...")
-                ExperienceController.show()
 
             def showPreferences_(self, notification):
                 NSLog("Showing Preference Window...")
@@ -354,12 +253,6 @@ class Sniffer:
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
-                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Experience Sample', 'showExperience:', '')
-                # self.menu.addItem_(menuitem)
-                #
-                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
-                # self.menu.addItem_(menuitem)
-
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
                 self.menu.addItem_(menuitem)
 
@@ -387,12 +280,9 @@ class Sniffer:
         self.app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         self.workspace = NSWorkspace.sharedWorkspace()
 
-        # listen for events thrown by the Experience sampling window
+        # listen for events thrown by windows
         s = objc.selector(self.makeAppActive_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'makeAppActive', None)
-
-        s = objc.selector(self.takeExperienceScreenshot_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'takeExperienceScreenshot', None)
 
         AppHelper.runEventLoop()
 
@@ -558,60 +448,6 @@ class Sniffer:
     def makeAppActive_(self, notification):
         self.app.activateIgnoringOtherApps_(True)
 
-    def takeExperienceScreenshot_(self, notification):
-        try:
-            mouseLoc = NSEvent.mouseLocation()
-            x = str(int(mouseLoc.x))
-            y = str(int(mouseLoc.y))
-            folder = os.path.join(cfg.CURRENT_DIR,"screenshots")
-            filename = datetime.now().strftime("%y%m%d-%H%M%S%f") + "_" + x + "_" + y + '-experience'
-            path = os.path.join(folder,""+filename+".jpg")
-
-            # -i makes the screenshot interactive
-            # -C captures the mouse cursor.
-            # -x removes the screenshot sound
-            if notification.object().takeFullScreenshot:
-                command = "screencapture -x -C '" + path + "'"
-            else:
-                command = "screencapture -i -x -C '" + path + "'"
-                # delete current full-screen screenshot for this experience
-                os.system("rm "+ notification.object().currentScreenshot )
-            os.system(command)
-
-            notification.object().currentScreenshot = path
-
-            if not notification.object().takeFullScreenshot:
-
-                path = os.path.expanduser(path)
-
-                experienceImage = NSImage.alloc().initByReferencingFile_(path)
-                width = experienceImage.size().width
-                height = experienceImage.size().height
-                ratio = width / height
-                if( width > 360 or height > 225 ):
-                    if (ratio > 1.6):
-                        width = 360
-                        height = 360 / ratio
-                    else:
-                        width = 225 * ratio
-                        height = 225
-
-                experienceImage.setScalesWhenResized_(True)
-                experienceImage.setSize_((width, height))
-                notification.object().screenshotDisplay.setImage_(experienceImage)
-        except errno.ENOSPC:
-            NSLog("No space left on storage device. Turning off Selfspy recording.")
-            self.delegate.toggleLogging_(self,self)
-
-            alert = NSAlert.alloc().init()
-            alert.addButtonWithTitle_("OK")
-            alert.setMessageText_("No space left on storage device. Turning off Selfspy recording.")
-            alert.setAlertStyle_(NSWarningAlertStyle)
-            alert.runModal()
-
-        except:
-            NSLog("Could not save image")
-
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
       try:
@@ -733,9 +569,6 @@ class Sniffer:
           self.delegate.toggleLogging_(self)
       except:
         NSLog("couldn't save image")
-
-    def got_location_change(self, latitude, longitude, latitudeRange, longitudeRange):
-        print "location_change", latitude, longitude
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we have to provide our own.

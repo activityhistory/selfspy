@@ -40,8 +40,8 @@ from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
 from selfspy.models import (RecordingEvent, Process, ProcessEvent, Window,
-                            WindowEvent, Geometry, Click, Keys, Experience,
-                            Location, Debrief, Bookmark)
+                            WindowEvent, Geometry, Click, Keys, Bookmark,
+                            FilteredWindowActivation)
 
 from urlparse import urlparse
 
@@ -121,12 +121,12 @@ class ActivityStore:
         self.last_move_time = time.time()
         self.last_commit = time.time()
         self.last_screenshot = time.time()
-        self.last_experience = time.time()
+        # self.last_experience = time.time()
 
         self.screenshots_active = True
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
-        self.exp_time = 120         # time before first experience sample shows
+        # self.exp_time = 120         # time before first experience sample shows
         self.thumbdrive_time = 10
 
         self.addObservers()
@@ -138,37 +138,41 @@ class ActivityStore:
         s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
-        s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
+        # s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
 
-        s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
+        # s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
 
         s = objc.selector(self.clearData_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
 
         # Listen for events from the Experience sampling window
-        s = objc.selector(self.gotExperience_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
-
-        s = objc.selector(self.getPriorExperiences_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
+        # s = objc.selector(self.gotExperience_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
+        #
+        # s = objc.selector(self.getPriorExperiences_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
         # Listen for events from the Debriefer window
-        s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+        # s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+        #
+        # s = objc.selector(self.recordDebrief_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
+        #
+        # s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
-        s = objc.selector(self.recordDebrief_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
-
-        s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
-
+        # Listen for events thrown by the Reviewer
         s = objc.selector(self.queryMetadata_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
 
         s = objc.selector(self.getAppsAndWindows_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndWindows', None)
+
+        s = objc.selector(self.getFilteredWindowEvents_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getFilteredWindowEvents', None)
 
         s = objc.selector(self.getProcessTimes_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
@@ -213,12 +217,9 @@ class ActivityStore:
             self.stopLoops()
 
     def startLoops(self):
-        # Timers for taking screenshots when idle, and showing experience-sample window
+        # Timer for taking screenshots when idle
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
-
-        s = objc.selector(self.runExperienceLoop,signature='v@:')
-        self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
         # Timer for checking if thumbdrive/memory card is available
         s = objc.selector(self.defineCurrentDrive,signature='v@:')
@@ -229,8 +230,6 @@ class ActivityStore:
         try:
             if self.screenshotTimer:
                 self.screenshotTimer.invalidate()
-            if self.experienceTimer:
-                self.experienceTimer.invalidate()
             if self.thumbdriveTimer:
                 self.thumbdriveTimer.invalidate()
         except(AttributeError):
@@ -515,59 +514,59 @@ class ActivityStore:
             self.last_move_time = now
 
     # removed project
-    def store_experience(self, message, screenshot, user_initiated, ignored):
-        self.session.add(Experience( message, screenshot, user_initiated, ignored))
-        self.trycommit()
-
-    def gotExperience_(self, notification):
-        # project = notification.object().projectText.stringValue()
-        message = notification.object().experienceText.stringValue()
-        screenshot = notification.object().currentScreenshot
-        user_initiated = notification.object().user_initiated
-        ignored = notification.object().ignored
-        self.store_experience(message, screenshot, user_initiated, ignored)
-
-    def recordDebrief_(self, notification):
-        experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
-        doing_report = notification.object().debriefController.doingText.stringValue()
-        audio_file = notification.object().debriefController.audio_file
-        memory_id = notification.object().debriefController.memoryStrength.intValue()
-
-        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
-        self.trycommit()
-
-    def populateDebriefWindow_(self, notification):
-        controller = notification.object().debriefController
-        audio_file = controller.audio_file
-        current_id = notification.object().experiences[notification.object().currentExperience]['id']
-        controller.memoryStrength.setIntValue_(3)
-
-        # populate page with responses to last debrief
-        q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
-
-        if q:
-            controller.doingText.setStringValue_(q[-1].doing_report)
-            controller.audio_file = q[-1].audio_file
-            if q[-1].memory_id:
-                controller.memoryStrength.setIntValue_(q[-1].memory_id)
-
-            if (q[-1].audio_file != '') & (q[-1].audio_file != None):
-                controller.recordButton.setEnabled_(False)
-                controller.existAudioText.setStringValue_("You've recorded an answer:")
-                controller.playAudioButton.setHidden_(False)
-                controller.deleteAudioButton.setHidden_(False)
-            else:
-                controller.recordButton.setEnabled_(True)
-                controller.existAudioText.setStringValue_("Record your answer:")
-                controller.playAudioButton.setHidden_(True)
-                controller.deleteAudioButton.setHidden_(True)
-        else:
-            controller.doingText.setStringValue_('')
-            controller.audio_file = ''
-            controller.recordButton.setEnabled_(True)
-            controller.existAudioText.setStringValue_("Record your answer:")
-            controller.playAudioButton.setHidden_(True)
-            controller.deleteAudioButton.setHidden_(True)
+    # def store_experience(self, message, screenshot, user_initiated, ignored):
+    #     self.session.add(Experience( message, screenshot, user_initiated, ignored))
+    #     self.trycommit()
+    #
+    # def gotExperience_(self, notification):
+    #     # project = notification.object().projectText.stringValue()
+    #     message = notification.object().experienceText.stringValue()
+    #     screenshot = notification.object().currentScreenshot
+    #     user_initiated = notification.object().user_initiated
+    #     ignored = notification.object().ignored
+    #     self.store_experience(message, screenshot, user_initiated, ignored)
+    #
+    # def recordDebrief_(self, notification):
+    #     experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
+    #     doing_report = notification.object().debriefController.doingText.stringValue()
+    #     audio_file = notification.object().debriefController.audio_file
+    #     memory_id = notification.object().debriefController.memoryStrength.intValue()
+    #
+    #     self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
+    #     self.trycommit()
+    #
+    # def populateDebriefWindow_(self, notification):
+    #     controller = notification.object().debriefController
+    #     audio_file = controller.audio_file
+    #     current_id = notification.object().experiences[notification.object().currentExperience]['id']
+    #     controller.memoryStrength.setIntValue_(3)
+    #
+    #     # populate page with responses to last debrief
+    #     q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
+    #
+    #     if q:
+    #         controller.doingText.setStringValue_(q[-1].doing_report)
+    #         controller.audio_file = q[-1].audio_file
+    #         if q[-1].memory_id:
+    #             controller.memoryStrength.setIntValue_(q[-1].memory_id)
+    #
+    #         if (q[-1].audio_file != '') & (q[-1].audio_file != None):
+    #             controller.recordButton.setEnabled_(False)
+    #             controller.existAudioText.setStringValue_("You've recorded an answer:")
+    #             controller.playAudioButton.setHidden_(False)
+    #             controller.deleteAudioButton.setHidden_(False)
+    #         else:
+    #             controller.recordButton.setEnabled_(True)
+    #             controller.existAudioText.setStringValue_("Record your answer:")
+    #             controller.playAudioButton.setHidden_(True)
+    #             controller.deleteAudioButton.setHidden_(True)
+    #     else:
+    #         controller.doingText.setStringValue_('')
+    #         controller.audio_file = ''
+    #         controller.recordButton.setEnabled_(True)
+    #         controller.existAudioText.setStringValue_("Record your answer:")
+    #         controller.playAudioButton.setHidden_(True)
+    #         controller.deleteAudioButton.setHidden_(True)
 
 
     def queryMetadata_(self, notification):
@@ -613,6 +612,51 @@ class ActivityStore:
                 pass
 
 
+    def getFilteredWindowEvents_(self, notification):
+
+        controller = notification.object().reviewController
+        windows_to_watch = []
+        filtered_events = []
+
+        # clear the contents of the FilteredWindowActivations table
+        self.session.query(FilteredWindowActivation).delete()
+
+        # get list of selected windows
+        for app in controller.results:
+            for wind in app['windows']:
+                if wind['checked']:
+                    for i in wind['windowId']:
+                        windows_to_watch.append(i)
+
+        # filter window events from db down to only selected windows
+        past_event = None
+
+        q = self.session.query(WindowEvent).join(WindowEvent.window).all()
+        # q = self.session.query(WindowEvent, Window, Process).join(Window).join(Process).all()
+        for e in q:
+            if e.event_type == 'Active':
+                if past_event:
+                    filtered_events.append([past_event.window_id,
+                                            "No_name",
+                                            past_event.window.title,
+                                            past_event.created_at,
+                                            e.created_at])
+                past_event = e
+            elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
+                filtered_events.append([past_event.window_id,
+                                        "No_name",
+                                        past_event.window.title,
+                                        past_event.created_at,
+                                        e.created_at])
+                past_event = None
+
+        for e in filtered_events:
+            if e[0] in windows_to_watch:
+                event = FilteredWindowActivation(e[0], e[1], e[2], e[3], e[4])
+                self.session.add(event)
+            self.trycommit()
+
+
     def getProcessTimes_(self, notification):
         controller = notification.object().reviewController
         try:
@@ -631,53 +675,53 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
-    def getPriorExperiences_(self, notification):
-        prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
-        for m in prior_messages:
-            if(m.message != ''):
-                notification.object().experienceText.addItemWithObjectValue_(m.message)
+    # def getPriorExperiences_(self, notification):
+    #     prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
+    #     for m in prior_messages:
+    #         if(m.message != ''):
+    #             notification.object().experienceText.addItemWithObjectValue_(m.message)
 
-    def runExperienceLoop(self):
-        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
-        if(experienceLoop):
-            NSLog("Showing Experience Sampling Window on Cycle...")
-            expController = sniffer.ExperienceController.show()
-            expController.user_initiated = False
-            self.last_experience = time.time()
+    # def runExperienceLoop(self):
+    #     experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+    #     if(experienceLoop):
+    #         NSLog("Showing Experience Sampling Window on Cycle...")
+    #         expController = sniffer.ExperienceController.show()
+    #         expController.user_initiated = False
+    #         self.last_experience = time.time()
+    #
+    #         s = objc.selector(self.runExperienceLoop,signature='v@:')
+    #         self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+    #         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
 
-            s = objc.selector(self.runExperienceLoop,signature='v@:')
-            self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-            self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+    # def checkExperienceOnPrefChange_(self, notification):
+    #     if(self.experienceTimer):
+    #         self.experienceTimer.invalidate()
+    #
+    #     self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
+    #     time_since_last_experience = time.time() - self.last_experience
+    #
+    #     experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
+    #     if(experienceLoop):
+    #         if (time_since_last_experience > self.exp_time):
+    #             self.runExperienceLoop()
+    #         else:
+    #             sleep_time = self.exp_time - time_since_last_experience + 0.01
+    #             s = objc.selector(self.runExperienceLoop,signature='v@:')
+    #             self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
-    def checkExperienceOnPrefChange_(self, notification):
-        if(self.experienceTimer):
-            self.experienceTimer.invalidate()
-
-        self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-        time_since_last_experience = time.time() - self.last_experience
-
-        experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
-        if(experienceLoop):
-            if (time_since_last_experience > self.exp_time):
-                self.runExperienceLoop()
-            else:
-                sleep_time = self.exp_time - time_since_last_experience + 0.01
-                s = objc.selector(self.runExperienceLoop,signature='v@:')
-                self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
-
-    def getDebriefExperiences_(self, notification):
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
-        m = []
-        for row in q:
-            m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
-
-        # get a random sample of up to 8 random experiences
-        if len(m) > 7:
-            e = random.sample(m, 7)
-        else:
-            e = random.sample(m, len(m))
-        notification.object().experiences = e
+    # def getDebriefExperiences_(self, notification):
+    #     today = datetime.datetime.now().strftime("%Y-%m-%d")
+    #     q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
+    #     m = []
+    #     for row in q:
+    #         m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
+    #
+    #     # get a random sample of up to 8 random experiences
+    #     if len(m) > 7:
+    #         e = random.sample(m, 7)
+    #     else:
+    #         e = random.sample(m, len(m))
+    #     notification.object().experiences = e
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
@@ -693,12 +737,12 @@ class ActivityStore:
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
-    def toggleScreenshotMenuTitle_(self,notification):
-        screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
-        if screen:
-            self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
-        else :
-            self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
+    # def toggleScreenshotMenuTitle_(self,notification):
+    #     screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
+    #     if screen:
+    #         self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
+    #     else :
+    #         self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
 
     def clearData_(self, notification):
         minutes_to_delete = notification.object().clearDataPopup.selectedItem().tag()
@@ -713,11 +757,9 @@ class ActivityStore:
 
         # delete data from all tables
         q = self.session.query(Click).filter(Click.created_at > delete_from_time).delete()
-        q = self.session.query(Debrief).filter(Debrief.created_at > delete_from_time).delete()
-        q = self.session.query(Experience).filter(Experience.created_at > delete_from_time).delete()
+        # q = self.session.query(Debrief).filter(Debrief.created_at > delete_from_time).delete()
         q = self.session.query(Geometry).filter(Geometry.created_at > delete_from_time).delete()
         q = self.session.query(Keys).filter(Keys.created_at > delete_from_time).delete()
-        q = self.session.query(Location).filter(Location.created_at > delete_from_time).delete()
         q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
         q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
 
