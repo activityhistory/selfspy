@@ -60,9 +60,15 @@ class RecordingEvent(SpookMixin, Base):
 
 class Bookmark(SpookMixin, Base):
     time = Column(Unicode, index=True)
+    text = Column(Unicode, index=True)
+    audio = Column(Unicode, index=True)
+    delay = Column(Integer, index=True)
 
-    def __init__(self, time):
+    def __init__(self, time, text, audio, delay):
         self.time = time
+        self.text = text
+        self.audio = audio
+        self.delay = delay
 
     def __repr__(self):
         return "<Bookmark at '%s' >" % self.time

@@ -184,15 +184,16 @@ class ActivityStore:
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
-        s = objc.selector(self.recordBookmark_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordBookmark', None)
-
         s = objc.selector(self.noteRecordingState_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'noteRecordingState', None)
 
         # Listen for events from Sniff Cocoa
         s = objc.selector(self.checkDrive_,signature='v@:')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkDrive_', None)
+
+        # Listen for events from Bookmark
+        s = objc.selector(self.recordBookmark_,signature='v@:@')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordBookmark', None)
 
         # Listen for close of Selfspy
         s = objc.selector(self.gotCloseNotification_,signature='v@:')
@@ -568,6 +569,17 @@ class ActivityStore:
     #         controller.playAudioButton.setHidden_(True)
     #         controller.deleteAudioButton.setHidden_(True)
 
+    def recordBookmark_(self, notification):
+        t = notification.object().t
+        doing_report = notification.object().doingText.stringValue()
+        audio_file = notification.object().audio_file
+        time_since = notification.object().timeRadioButtons.selectedCell().tag()
+
+        self.session.add(Bookmark(t, doing_report, audio_file, time_since))
+        self.trycommit()
+
+        notification.object().close()
+
 
     def queryMetadata_(self, notification):
         controller = notification.object().reviewController
@@ -853,7 +865,3 @@ class ActivityStore:
             value = "Off"
         recording_event = RecordingEvent(NOW(), value)
         self.session.add(recording_event)
-
-    def recordBookmark_(self, notification):
-        bookmark = Bookmark(NOW())
-        self.session.add(bookmark)

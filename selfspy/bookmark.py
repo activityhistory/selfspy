@@ -18,10 +18,8 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import string
 import objc, re, os
-
 from objc import IBAction, IBOutlet
 
 from Foundation import *
@@ -35,27 +33,18 @@ from datetime import datetime
 
 import mutagen.mp4
 
-# Experience Sampling window controller
-class DebriefController(NSWindowController):
+
+# Preferences window controller
+class BookmarkController(NSWindowController):
 
     # outlets for UI elements
-    mainPanel = IBOutlet()
     doingText = IBOutlet()
-    progressLabel = IBOutlet()
-    progressButton = IBOutlet()
-    errorMessage = IBOutlet()
-    recordButton = IBOutlet()
     existAudioText = IBOutlet()
+    timeRadioButtons = IBOutlet()
+    recordButton = IBOutlet()
     playAudioButton = IBOutlet()
     deleteAudioButton = IBOutlet()
-    memoryStrength = IBOutlet()
-
-    # instance variables
-    experiences = None
-    currentExperience = -1
-    recordingAudio = False
-    playingAudio = False
-    audio_file = ''
+    bookmarkButton = IBOutlet()
 
     # images for audio recording button
     recordImage = NSImage.alloc().initByReferencingFile_('../Resources/record.png')
@@ -66,6 +55,12 @@ class DebriefController(NSWindowController):
     stopImage.setScalesWhenResized_(True)
     stopImage.setSize_((11, 11))
 
+    #instance variables
+    t = None
+    recordingAudio = False
+    playingAudio = False
+    audio_file = ''
+
     @IBAction
     def toggleAudioPlay_(self, sender):
         if self.playingAudio:
@@ -73,7 +68,7 @@ class DebriefController(NSWindowController):
 
         else:
             self.playingAudio = True
-            self.debriefController.playAudioButton.setTitle_("Stop Audio")
+            self.bookController.playAudioButton.setTitle_("Stop Audio")
             s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
             s.executeAndReturnError_(None)
 
@@ -84,7 +79,7 @@ class DebriefController(NSWindowController):
 
     def stopAudioPlay(self):
         self.playingAudio = False
-        self.debriefController.playAudioButton.setTitle_("Play Audio")
+        self.bookController.playAudioButton.setTitle_("Play Audio")
         s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
         s.executeAndReturnError_(None)
 
@@ -96,23 +91,21 @@ class DebriefController(NSWindowController):
         self.audio_file = ''
 
         # reset controls
-        controller = self.debriefController
+        controller = self.bookController
         controller.recordButton.setEnabled_(True)
-        controller.existAudioText.setStringValue_("Record your answer here:")
-        controller.playAudioButton.setHidden_(True)
-        controller.deleteAudioButton.setHidden_(True)
+        controller.existAudioText.setStringValue_("Record audio commentary:")
+        controller.playAudioButton.setEnabled_(False)
+        controller.deleteAudioButton.setEnabled_(False)
 
     @IBAction
     def toggleAudioRecording_(self, sender):
-        controller = self.debriefController
+        controller = self.bookController
 
         if self.recordingAudio:
             self.recordingAudio = False
             print "Stop Audio recording"
 
-            audioName = str(controller.mainPanel.image().name())[0:-4]
-            if (audioName == None) | (audioName == ''): # seems to miss reading the image name sometimes
-                audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
+            audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
             audioName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + audioName + '.m4a'
             self.audio_file = audioName
             audioName = string.replace(audioName, "/", ":")
@@ -124,9 +117,9 @@ class DebriefController(NSWindowController):
             # reset controls
             controller.recordButton.setImage_(self.recordImage)
             controller.recordButton.setEnabled_(False)
-            controller.existAudioText.setStringValue_("You've recorded an answer:")
-            controller.playAudioButton.setHidden_(False)
-            controller.deleteAudioButton.setHidden_(False)
+            controller.existAudioText.setStringValue_("You've recorded commentary:")
+            controller.playAudioButton.setEnabled_(True)
+            controller.deleteAudioButton.setEnabled_(True)
 
         else:
             self.recordingAudio = True
@@ -135,91 +128,48 @@ class DebriefController(NSWindowController):
             s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
             s.executeAndReturnError_(None)
 
-            self.debriefController.recordButton.setImage_(self.stopImage)
+            self.bookController.recordButton.setImage_(self.stopImage)
+
 
     @IBAction
-    def advanceExperienceWindow_(self, sender):
-        controller = self.debriefController
-        i = self.currentExperience
-
-        # close if user clicked Finish on window with no experiences to comment
-        if i == -1:
-            controller.close()
-            return
-
-        # disable all controls if no experiences to debrief
-        if self.experiences:
-            l = len(self.experiences)
-        if (not self.experiences) or (l == 0):
-            controller.errorMessage.setHidden_(False)
-            controller.doingText.setEnabled_(False)
-            controller.recordButton.setEnabled_(False)
-            controller.progressLabel.setStringValue_("0/0")
-            controller.progressButton.setTitle_("Finish")
-            self.currentExperience = -1
-            return
-
-        if i > 0:
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('recordDebrief',self)
-
-        if i == l-1:
-            controller.progressButton.setTitle_("Finish")
-
-        if i < l:
-            NSNotificationCenter.defaultCenter().postNotificationName_object_('populateDebriefWindow',self)
-
-            path = os.path.expanduser(self.experiences[i]['screenshot'][:])
-            experienceImage = NSImage.alloc().initByReferencingFile_(path)
-            width = experienceImage.size().width
-            height = experienceImage.size().height
-            ratio = width / height
-            if( width > 960 or height > 600 ):
-                if (ratio > 1.6):
-                    width = 960
-                    height = 960 / ratio
-                else:
-                    width = 600 * ratio
-                    height = 600
-            experienceImage.setScalesWhenResized_(True)
-            experienceImage.setSize_((width, height))
-            experienceImage.setName_(path.split("/")[-1])
-            controller.mainPanel.setImage_(experienceImage)
-
-            controller.progressLabel.setStringValue_( str(i + 1) + '/' + str(l) )
-
-            self.currentExperience += 1
-
-        else:
-            self.debriefController.close()
+    def saveBookmark_(self, sender):
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
-    def show(self):
 
+    def show(self):
         try:
-            if self.debriefController:
-                self.debriefController.close()
+            if self.bookController:
+                self.bookController.close()
         except:
             pass
 
-        # open window from NIB file, show front and center
-        self.debriefController = DebriefController.alloc().initWithWindowNibName_("Debriefer")
-        self.debriefController.showWindow_(None)
-        self.debriefController.window().makeKeyAndOrderFront_(None)
-        self.debriefController.window().center()
-        self.debriefController.retain()
+        # open window from NIB file, show front and center, show on top
+        self.bookController = BookmarkController.alloc().initWithWindowNibName_("Bookmark")
+        self.bookController.showWindow_(None)
 
-        # needed to show window on top of other applications
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
-        # get cmd-w to close window
-        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
-        self.debriefController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
+        bookmarkSize = self.bookController.window().frame().size
+        bookmarkWidth = bookmarkSize.width
+        bookmarkHeight = bookmarkSize.height
 
-        # get random set of experiences
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getDebriefExperiences',self)
+        screenSize = self.bookController.window().screen().frame().size
+        screenWidth = screenSize.width
+        screenHeight = screenSize.height
 
-        self.currentExperience = 0
-        self.advanceExperienceWindow_(self, self)
+        point = NSPoint(screenWidth - bookmarkWidth - 12, screenHeight - bookmarkHeight - 34)
+        self.bookController.window().setFrameOrigin_(point)
+
+        # self.bookController.window().makeKeyAndOrderFront_(None)
+        # self.bookController.window().center()
+        # self.bookController.retain()
+        # NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+
+        # make window close on Cmd-w
+        self.bookController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
+        self.bookController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
+
+        self.bookController.t = datetime.now()
 
     show = classmethod(show)

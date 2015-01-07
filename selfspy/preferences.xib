@@ -7,6 +7,8 @@
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesController">
             <connections>
                 <outlet property="clearDataPopup" destination="Q9J-pq-Mhp" id="xat-PC-s4L"/>
+                <outlet property="popButton" destination="hem-dV-dgm" id="Jz2-FQ-mY1"/>
+                <outlet property="popover" destination="tSo-8v-hKd" id="G6f-3t-cel"/>
                 <outlet property="screenshotSizeMenu" destination="Zfc-cP-1Ys" id="cO3-ne-XTx"/>
                 <outlet property="screenshotSizePopup" destination="ImY-8d-57i" id="jGL-9c-OyC"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="k2w-Wa-h0P"/>
@@ -192,11 +194,90 @@
                             <action selector="clearData:" target="-2" id="e99-3m-GU2"/>
                         </connections>
                     </button>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hem-dV-dgm">
+                        <rect key="frame" x="14" y="11" width="92" height="32"/>
+                        <buttonCell key="cell" type="push" title="Popover" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="eZz-51-yeG">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="showPopover:" target="-2" id="GtI-5o-4ym"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="377" y="256"/>
         </window>
         <customObject id="2X5-EM-jwX" customClass="PreferencesController"/>
         <userDefaultsController representsSharedInstance="YES" id="bq4-b7-72c"/>
+        <customView id="g4d-Bs-uiy">
+            <rect key="frame" x="0.0" y="0.0" width="281" height="177"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CKL-5G-LRb">
+                    <rect key="frame" x="18" y="110" width="200" height="17"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How long have you been away?" id="Sm4-Pa-bPQ">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autorecalculatesCellSize="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XfT-vU-16t">
+                    <rect key="frame" x="32" y="44" width="91" height="58"/>
+                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    <size key="cellSize" width="71" height="18"/>
+                    <size key="intercellSpacing" width="4" height="2"/>
+                    <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="8Ld-Rl-36g">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <cells>
+                        <column>
+                            <buttonCell type="radio" title="minutes" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="dhT-Rj-Rm7">
+                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <buttonCell type="radio" title="hours" imagePosition="left" alignment="left" inset="2" id="KKQ-bP-hff">
+                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <buttonCell type="radio" title="days" imagePosition="left" alignment="left" inset="2" id="tYc-jt-Wds">
+                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                        </column>
+                    </cells>
+                </matrix>
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L4d-6U-Yax">
+                    <rect key="frame" x="20" y="135" width="241" height="22"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="What are you doing?" drawsBackground="YES" id="dqd-GW-Leq">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wmg-YL-rar">
+                    <rect key="frame" x="182" y="7" width="85" height="32"/>
+                    <buttonCell key="cell" type="push" title="Record" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ppz-1h-eAc">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="closePopover:" target="-2" id="52v-f5-e9X"/>
+                    </connections>
+                </button>
+            </subviews>
+            <point key="canvasLocation" x="505.5" y="583.5"/>
+        </customView>
+        <viewController id="uzm-3D-iAW" userLabel="Popover View Controller">
+            <connections>
+                <outlet property="view" destination="g4d-Bs-uiy" id="zl0-L9-OR8"/>
+            </connections>
+        </viewController>
+        <popover id="tSo-8v-hKd">
+            <connections>
+                <outlet property="contentViewController" destination="uzm-3D-iAW" id="Gpc-ee-G4Y"/>
+            </connections>
+        </popover>
     </objects>
 </document>

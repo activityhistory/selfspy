@@ -57,6 +57,7 @@ import mutagen.mp4
 # from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
+from selfspy import bookmark
 
 from urlparse import urlparse
 
@@ -153,10 +154,16 @@ class Sniffer:
 
             def bookmark_(self, notification):
                 self.statusitem.setImage_(self.iconBook)
-                NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
 
+                # change icon back after 3 seconds
                 s = objc.selector(self.changeIcon,signature='v@:')
                 self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, s, None, False)
+
+                NSLog("Showing Bookmark Window...")
+                bookmark.BookmarkController.show()
+
+                # NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
+
 
             def toggleAudioRecording_(self, notification):
                 if self.recordingAudio:

@@ -35,6 +35,8 @@ class PreferencesController(NSWindowController):
     screenshotSizePopup = IBOutlet()
     screenshotSizeMenu = IBOutlet()
     clearDataPopup = IBOutlet()
+    popover = IBOutlet()
+    popButton = IBOutlet()
 
     # notifications sent to Activity Store
     @IBAction
@@ -49,6 +51,15 @@ class PreferencesController(NSWindowController):
     @IBAction
     def clearData_(self,sender):
         NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
+
+    @IBAction
+    def showPopover_(self,sender):
+        self.popover.showRelativeToRect_ofView_preferredEdge_(self.popButton.bounds(), self.popButton, NSMaxYEdge)
+
+
+    @IBAction
+    def closePopover_(self,sender):
+        self.popover.close()
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)

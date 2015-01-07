@@ -19,6 +19,7 @@ DATA_FILES = ['./assets/eye.png',
               './assets/record.png',
               './assets/stop.png',
               './selfspy/Preferences.xib',
+              './selfspy/Bookmark.xib',
               # './selfspy/Debriefer.xib',
               './selfspy/Reviewer.xib']
 

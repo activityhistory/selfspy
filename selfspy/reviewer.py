@@ -221,10 +221,12 @@ class ReviewController(NSWindowController):
             try:
                 result = (r for r in results if r['appName'] == d['appName']).next()
                 result['checked'] = d['checked']
+                # apply settings saved for all windows
                 for w in d['windows']:
                     result_w = (rw for rw in result['windows'] if rw['windowName'] == w['windowName']).next()
                     if result_w:
                         result_w['checked'] = int(w['checked'])
+                # if app is checked or unchecked, apply to all windows
                 if d['checked'] == 0 or d['checked'] == 1:
                     for w in result['windows']:
                         w['checked'] = d['checked']
