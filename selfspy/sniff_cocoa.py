@@ -248,22 +248,22 @@ class Sniffer:
                 self.menu.addItem_(menuitem)
                 self.loggingMenuItem = menuitem
 
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
+                self.menu.addItem_(menuitem)
+
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Audio', 'toggleAudioRecording:', '')
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Audio', 'toggleAudioRecording:', '')
+                # self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.separatorItem()
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.separatorItem()
+                # self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
-                self.menu.addItem_(menuitem)
-
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Define Activity', 'showReview:', '')
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.separatorItem()
