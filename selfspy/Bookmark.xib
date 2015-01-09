@@ -12,7 +12,8 @@
                 <outlet property="existAudioText" destination="qGi-y3-aIY" id="k0c-fo-KXE"/>
                 <outlet property="playAudioButton" destination="R3m-52-dav" id="TU2-MD-Bkx"/>
                 <outlet property="recordButton" destination="3J3-oB-AGp" id="w7B-hk-pAi"/>
-                <outlet property="timeRadioButtons" destination="gDJ-Kg-pW9" id="0YJ-Ip-KHo"/>
+                <outlet property="timeDropdown" destination="onu-2E-8YM" id="0w8-aV-ATF"/>
+                <outlet property="timeRadioButtons" destination="onu-2E-8YM" id="uj3-Vb-7x9"/>
                 <outlet property="window" destination="B1o-sB-XEu" id="S43-tc-aN5"/>
             </connections>
         </customObject>
@@ -21,71 +22,73 @@
         <window title="Selfspy Bookmark" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" animationBehavior="default" id="B1o-sB-XEu" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="136" y="163" width="289" height="223"/>
+            <rect key="contentRect" x="136" y="163" width="289" height="245"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
             <view key="contentView" id="81s-ep-Rtz">
-                <rect key="frame" x="0.0" y="0.0" width="289" height="223"/>
+                <rect key="frame" x="0.0" y="0.0" width="289" height="245"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Kpp-46-m0z">
-                        <rect key="frame" x="18" y="82" width="200" height="17"/>
+                        <rect key="frame" x="18" y="166" width="200" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How long have you been away?" id="FtO-zW-lIY">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autorecalculatesCellSize="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gDJ-Kg-pW9">
-                        <rect key="frame" x="32" y="16" width="91" height="58"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        <size key="cellSize" width="71" height="18"/>
-                        <size key="intercellSpacing" width="4" height="2"/>
-                        <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="Nek-fr-EYD">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gWR-Cu-jlE">
+                        <rect key="frame" x="20" y="203" width="249" height="22"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="What are you doing?" drawsBackground="YES" id="2cr-kr-AxJ">
                             <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <cells>
-                            <column>
-                                <buttonCell type="radio" title="minutes" imagePosition="left" alignment="left" inset="2" id="0uf-rm-AXf">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <buttonCell type="radio" title="hours" imagePosition="left" alignment="left" tag="1" inset="2" id="p8K-Tx-vff">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <buttonCell type="radio" title="days" imagePosition="left" alignment="left" tag="2" inset="2" id="pHE-2a-CLG">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                            </column>
-                        </cells>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
                         <connections>
-                            <outlet property="nextKeyView" destination="W6t-wY-r0a" id="Rzp-iw-FRm"/>
+                            <outlet property="nextKeyView" destination="onu-2E-8YM" id="VsI-Vf-iDy"/>
                         </connections>
-                    </matrix>
+                    </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W6t-wY-r0a">
+                        <rect key="frame" x="145" y="9" width="130" height="32"/>
+                        <buttonCell key="cell" type="push" title="Bookmark" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rsH-At-ktf">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="saveBookmark:" target="-2" id="GAM-HG-8AY"/>
+                        </connections>
+                    </button>
+                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="onu-2E-8YM">
+                        <rect key="frame" x="18" y="134" width="254" height="26"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Dz1-6Y-3XM">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" id="XHe-E1-giD">
+                                <items>
+                                    <menuItem id="xJW-ar-Dv0"/>
+                                    <menuItem title="minutes" id="Khu-mz-rkF"/>
+                                    <menuItem title="hours" id="yt3-tC-Uh6"/>
+                                    <menuItem title="days" id="ql5-f7-Nya"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="3J3-oB-AGp" id="TTI-kK-ZJv"/>
+                        </connections>
+                    </popUpButton>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qGi-y3-aIY">
-                        <rect key="frame" x="18" y="156" width="216" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record audio commentary:" id="MCs-7b-lgo">
+                        <rect key="frame" x="18" y="98" width="216" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record audio:" id="MCs-7b-lgo">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3J3-oB-AGp">
-                        <rect key="frame" x="237" y="138" width="39" height="38"/>
-                        <buttonCell key="cell" type="round" bezelStyle="circular" image="record.png" imagePosition="only" alignment="left" borderStyle="border" imageScaling="proportionallyDown" id="dta-H4-vGV">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="label"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="toggleAudioRecording:" target="-2" id="QJq-lT-Nwv"/>
-                            <outlet property="nextKeyView" destination="gDJ-Kg-pW9" id="Qb0-sU-XRi"/>
-                        </connections>
-                    </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R3m-52-dav">
-                        <rect key="frame" x="14" y="112" width="131" height="32"/>
-                        <buttonCell key="cell" type="push" title="Play Audio" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cgN-0S-n2k">
+                        <rect key="frame" x="14" y="62" width="131" height="32"/>
+                        <buttonCell key="cell" type="push" title="Play ►" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cgN-0S-n2k">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -94,8 +97,8 @@
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ehA-fR-ixX">
-                        <rect key="frame" x="145" y="112" width="130" height="32"/>
-                        <buttonCell key="cell" type="push" title="Delete Audio" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ssu-2w-adR">
+                        <rect key="frame" x="145" y="62" width="130" height="32"/>
+                        <buttonCell key="cell" type="push" title="Delete" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ssu-2w-adR">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -103,34 +106,20 @@
                             <action selector="deleteAudio:" target="-2" id="rIH-kB-ZVr"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gWR-Cu-jlE">
-                        <rect key="frame" x="20" y="181" width="249" height="22"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="What are you doing?" drawsBackground="YES" id="2cr-kr-AxJ">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                        <connections>
-                            <outlet property="nextKeyView" destination="3J3-oB-AGp" id="QzD-8r-uJo"/>
-                        </connections>
-                    </textField>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W6t-wY-r0a">
-                        <rect key="frame" x="137" y="9" width="138" height="32"/>
-                        <buttonCell key="cell" type="push" title="Save Bookmark" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="rsH-At-ktf">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3J3-oB-AGp">
+                        <rect key="frame" x="107" y="84" width="39" height="38"/>
+                        <buttonCell key="cell" type="round" bezelStyle="circular" imagePosition="overlaps" alignment="center" borderStyle="border" id="dta-H4-vGV">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="saveBookmark:" target="-2" id="GAM-HG-8AY"/>
-                            <outlet property="nextKeyView" destination="gWR-Cu-jlE" id="yws-FS-bb8"/>
+                            <action selector="toggleAudioRecording:" target="-2" id="QJq-lT-Nwv"/>
+                            <outlet property="nextKeyView" destination="gWR-Cu-jlE" id="9QZ-lu-aWx"/>
                         </connections>
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="237.5" y="255.5"/>
+            <point key="canvasLocation" x="237.5" y="266.5"/>
         </window>
     </objects>
-    <resources>
-        <image name="record.png" width="128" height="128"/>
-    </resources>
 </document>

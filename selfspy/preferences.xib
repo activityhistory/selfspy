@@ -7,7 +7,6 @@
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesController">
             <connections>
                 <outlet property="clearDataPopup" destination="Q9J-pq-Mhp" id="xat-PC-s4L"/>
-                <outlet property="popButton" destination="hem-dV-dgm" id="Jz2-FQ-mY1"/>
                 <outlet property="popover" destination="tSo-8v-hKd" id="G6f-3t-cel"/>
                 <outlet property="screenshotSizeMenu" destination="Zfc-cP-1Ys" id="cO3-ne-XTx"/>
                 <outlet property="screenshotSizePopup" destination="ImY-8d-57i" id="jGL-9c-OyC"/>
@@ -192,16 +191,6 @@
                         </buttonCell>
                         <connections>
                             <action selector="clearData:" target="-2" id="e99-3m-GU2"/>
-                        </connections>
-                    </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hem-dV-dgm">
-                        <rect key="frame" x="14" y="11" width="92" height="32"/>
-                        <buttonCell key="cell" type="push" title="Popover" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="eZz-51-yeG">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="showPopover:" target="-2" id="GtI-5o-4ym"/>
                         </connections>
                     </button>
                 </subviews>

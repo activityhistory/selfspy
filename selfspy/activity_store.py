@@ -573,7 +573,7 @@ class ActivityStore:
         t = notification.object().t
         doing_report = notification.object().doingText.stringValue()
         audio_file = notification.object().audio_file
-        time_since = notification.object().timeRadioButtons.selectedCell().tag()
+        time_since = notification.object().timeDropdown.titleOfSelectedItem()
 
         self.session.add(Bookmark(t, doing_report, audio_file, time_since))
         self.trycommit()

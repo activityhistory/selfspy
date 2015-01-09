@@ -40,7 +40,7 @@ class BookmarkController(NSWindowController):
     # outlets for UI elements
     doingText = IBOutlet()
     existAudioText = IBOutlet()
-    timeRadioButtons = IBOutlet()
+    timeDropdown = IBOutlet()
     recordButton = IBOutlet()
     playAudioButton = IBOutlet()
     deleteAudioButton = IBOutlet()
@@ -68,7 +68,7 @@ class BookmarkController(NSWindowController):
 
         else:
             self.playingAudio = True
-            self.bookController.playAudioButton.setTitle_("Stop Audio")
+            self.bookController.playAudioButton.setTitle_("Stop " + unichr(9724))
             s = NSAppleScript.alloc().initWithSource_("set filePath to POSIX file \"" + self.audio_file + "\" \n tell application \"QuickTime Player\" \n open filePath \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n play the front document \n end tell")
             s.executeAndReturnError_(None)
 
@@ -79,7 +79,7 @@ class BookmarkController(NSWindowController):
 
     def stopAudioPlay(self):
         self.playingAudio = False
-        self.bookController.playAudioButton.setTitle_("Play Audio")
+        self.bookController.playAudioButton.setTitle_("Play " + unichr(9654))
         s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
         s.executeAndReturnError_(None)
 
@@ -93,7 +93,7 @@ class BookmarkController(NSWindowController):
         # reset controls
         controller = self.bookController
         controller.recordButton.setEnabled_(True)
-        controller.existAudioText.setStringValue_("Record audio commentary:")
+        controller.existAudioText.setStringValue_("Record audio:")
         controller.playAudioButton.setEnabled_(False)
         controller.deleteAudioButton.setEnabled_(False)
 
@@ -117,7 +117,7 @@ class BookmarkController(NSWindowController):
             # reset controls
             controller.recordButton.setImage_(self.recordImage)
             controller.recordButton.setEnabled_(False)
-            controller.existAudioText.setStringValue_("You've recorded commentary:")
+            controller.existAudioText.setStringValue_("Record Audio:")
             controller.playAudioButton.setEnabled_(True)
             controller.deleteAudioButton.setEnabled_(True)
 
@@ -171,5 +171,7 @@ class BookmarkController(NSWindowController):
         self.bookController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalent_("w")
 
         self.bookController.t = datetime.now()
+
+        self.bookController.recordButton.setImage_(self.recordImage)
 
     show = classmethod(show)

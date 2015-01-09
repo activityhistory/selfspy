@@ -153,11 +153,11 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconGray)
 
             def bookmark_(self, notification):
-                self.statusitem.setImage_(self.iconBook)
+                # self.statusitem.setImage_(self.iconBook)
 
                 # change icon back after 3 seconds
-                s = objc.selector(self.changeIcon,signature='v@:')
-                self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, s, None, False)
+                #s = objc.selector(self.changeIcon,signature='v@:')
+                # self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, s, None, False)
 
                 NSLog("Showing Bookmark Window...")
                 bookmark.BookmarkController.show()
@@ -431,6 +431,7 @@ class Sniffer:
                     # these two get a special case because I am unsure of
                     # their unicode value
                     if event.keyCode() is 36:
+                        print "You hit enter"
                         character = "Enter"
                         if modifiers == ['Cmd', 'Shift']:
                             self.delegate.bookmark_(self)
