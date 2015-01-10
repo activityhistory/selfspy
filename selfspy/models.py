@@ -27,17 +27,21 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import Index, Column, Boolean, Integer, Unicode, Binary, ForeignKey, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
+
 ENCRYPTER = None
 Base = declarative_base()
 
 
 def initialize(fname):
+    """ start database session with filename = fname """
+
     engine = create_engine('sqlite:///%s' % fname)
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine)
 
 
 class SpookMixin(object):
+    """ default entry that includes id and date entry was created """
 
     @declared_attr
     def __tablename__(cls):
@@ -47,34 +51,9 @@ class SpookMixin(object):
     created_at = Column(Unicode, default=datetime.datetime.now, index=True)
 
 
-class RecordingEvent(SpookMixin, Base):
-    event_type = Column(Unicode, index=True)
-    time = Column(Unicode, index=True)
-
-    def __init__(self, time, event_type):
-        self.time = time
-        self.event_type = event_type
-
-    def __repr__(self):
-        return "<Recording turned '%s' >" % self.event_type
-
-class Bookmark(SpookMixin, Base):
-    time = Column(Unicode, index=True)
-    text = Column(Unicode, index=True)
-    audio = Column(Unicode, index=True)
-    delay = Column(Integer, index=True)
-
-    def __init__(self, time, text, audio, delay):
-        self.time = time
-        self.text = text
-        self.audio = audio
-        self.delay = delay
-
-    def __repr__(self):
-        return "<Bookmark at '%s' >" % self.time
-
-
 class Process(SpookMixin, Base):
+    """ entry for applications """
+
     name = Column(Unicode, index=True, unique=True)
 
     def __init__(self, name):
@@ -85,6 +64,8 @@ class Process(SpookMixin, Base):
 
 
 class ProcessEvent(SpookMixin, Base):
+    """ entry for application events like open, close, and active """
+
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('processevents'))
 
@@ -99,6 +80,8 @@ class ProcessEvent(SpookMixin, Base):
 
 
 class Window(SpookMixin, Base):
+    """ entry for windows """
+
     title = Column(Unicode, index=True)
     browser_url = Column(Unicode, index=True)
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
@@ -114,6 +97,8 @@ class Window(SpookMixin, Base):
 
 
 class WindowEvent(SpookMixin, Base):
+    """ entry for window events like open, close, and active """
+
     window_id = Column(Integer, ForeignKey('window.id'), nullable=False, index=True)
     window = relationship("Window", backref=backref('windowevents'))
 
@@ -127,6 +112,9 @@ class WindowEvent(SpookMixin, Base):
         return "<Window '%s' '%s' >" % (self.window_id, self.event_type)
 
 class FilteredWindowActivation(SpookMixin, Base):
+    """ entry for window events to be shown in visualization like open, close,
+    and active """
+
     window_id = Column(Integer, ForeignKey('window.id'), nullable=False, index=True)
     window = relationship("Window", backref=backref('filteredwindowactivations'))
 
@@ -147,6 +135,8 @@ class FilteredWindowActivation(SpookMixin, Base):
 
 
 class Geometry(SpookMixin, Base):
+    """ entry for window geometries """
+
     xpos = Column(Integer, nullable=False)
     ypos = Column(Integer, nullable=False)
     width = Column(Integer, nullable=False)
@@ -165,6 +155,8 @@ class Geometry(SpookMixin, Base):
 
 
 class Click(SpookMixin, Base):
+    """ entry for click events """
+
     button = Column(Integer, nullable=False)
     press = Column(Boolean, nullable=False)
     x = Column(Integer, nullable=False)
@@ -202,29 +194,6 @@ class Click(SpookMixin, Base):
         return "<Click (%d, %d), (%d, %d, %d)>" % (self.x, self.y, self.button, self.press, self.nrmoves)
 
 
-# class Debrief(SpookMixin, Base):
-#     experience_id = Column(Integer, ForeignKey('experience.id'), nullable=False, index=True)
-#     experience = relationship("Experience", backref=backref('debrief'))
-#
-#     doing_report = Column(Unicode, index=True)
-#     audio_file = Column(Unicode, index=True)
-#     memory_id = Column(Integer, index=True)
-#
-#     def __init__(self, experience_id, doing_report, audio_file, memory_id):
-#         self.experience_id = experience_id
-#         self.doing_report = doing_report
-#         self.audio_file = audio_file
-#         self.memory_id = memory_id
-#
-#     def __repr__(self):
-#         if(self.audio_file):
-#             return "<Response recorded in: '%s'>" % self.audio_file
-#         elif(self.doing_report):
-#             return "<Participant was: '%s'>" % self.doing_report
-#         else:
-#             return "<No response recorded>"
-
-
 def pad(s, padnum):
     ls = len(s)
     if ls % padnum == 0:
@@ -233,6 +202,8 @@ def pad(s, padnum):
 
 
 def maybe_encrypt(s, other_encrypter=None):
+    """ encrypt data """
+
     if other_encrypter is not None:
         s = pad(s, 8)
         s = other_encrypter.encrypt(s)
@@ -243,6 +214,8 @@ def maybe_encrypt(s, other_encrypter=None):
 
 
 def maybe_decrypt(s, other_encrypter=None):
+    """ decrypt data """
+
     if other_encrypter is not None:
         s = other_encrypter.decrypt(s)
     elif ENCRYPTER:
@@ -251,6 +224,8 @@ def maybe_decrypt(s, other_encrypter=None):
 
 
 class Keys(SpookMixin, Base):
+    """ entry for keypress events """
+
     text = Column(Binary, nullable=False)
     started = Column(Unicode, nullable=False)
 
@@ -303,3 +278,35 @@ class Keys(SpookMixin, Base):
 
     def __repr__(self):
         return "<Keys %s>" % self.nrkeys
+
+
+class RecordingEvent(SpookMixin, Base):
+    """ entry for recording events like on and off """
+
+    event_type = Column(Unicode, index=True)
+    time = Column(Unicode, index=True)
+
+    def __init__(self, time, event_type):
+        self.time = time
+        self.event_type = event_type
+
+    def __repr__(self):
+        return "<Recording turned '%s' >" % self.event_type
+
+
+class Bookmark(SpookMixin, Base):
+    """ entry for bookmark events """
+
+    time = Column(Unicode, index=True)
+    text = Column(Unicode, index=True)
+    audio = Column(Unicode, index=True)
+    delay = Column(Integer, index=True)
+
+    def __init__(self, time, text, audio, delay):
+        self.time = time
+        self.text = text
+        self.audio = audio
+        self.delay = delay
+
+    def __repr__(self):
+        return "<Bookmark at '%s' >" % self.time

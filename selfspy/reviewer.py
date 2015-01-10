@@ -17,17 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
+import os
+from os import listdir
+from os.path import isfile, join
+
+from selfspy import config as cfg
+
 
 import time
 import datetime
 
 from objc import IBAction, IBOutlet
 from AppKit import *
-
-from CBGraphView import CBGraphView
-
-from selfspy.helpers import *
-
 
 SCREENSHOT_WIDTH = 960
 SCREENSHOT_HEIGHT = 600
@@ -67,18 +68,11 @@ class WindowListController(NSArrayController):
 class ReviewController(NSWindowController):
 
     # outlets for UI elements
-    # mainPanel = IBOutlet()
     tableView = IBOutlet()
-    # slider = IBOutlet()
     arrayController = IBOutlet()
     windowListController = IBOutlet()
     appList = IBOutlet()
     windowList = IBOutlet()
-
-    # instance variables
-    # currentScreenshot = -1
-    # dateQuery = ""
-    # processNameQuery = ""
 
     # data for app and window tables
     results = []
@@ -91,17 +85,6 @@ class ReviewController(NSWindowController):
 
     # lists of image files
     list_of_files = []
-
-    # timeline values in UTC seconds
-    # timeline_value = 0
-    # slider_max = 1
-    # slider_min = 0
-    # normalized_max_value = 0
-    #
-    # timeline_view = None
-    # nested_timeline_views = []
-    # nested_timeline_labels = []
-    # current_timeline_process = 7
 
 
     def createWindowListController(self):
@@ -142,71 +125,11 @@ class ReviewController(NSWindowController):
         self.windowList.reloadData()
 
 
-    # @IBAction
-    # def advanceReviewWindow_(self, sender):
-    #     """ move to next screenshot """
-    #
-    #     self.moveReviewWindow(direction=1)
-    #
-    #
-    # @IBAction
-    # def revertReviewWindow_(self, sender):
-    #     """ move to previous screenshot """
-    #
-    #     self.moveReviewWindow(direction=-1)
-    #
-    #
-    # def moveReviewWindow(self, direction):
-    #     """ move to next or previous screenshot """
-    #
-    #     # list_of_files = generateScreenshotList(self)
-    #     screenshot_found = False
-    #
-    #     while (not screenshot_found):
-    #         self.currentScreenshot = self.currentScreenshot + direction # (SCREENSHOT_REVIEW_INTERVAL * direction)
-    #         if (0 <= self.currentScreenshot < len(self.list_of_files)):
-    #             generateDateQuery(self, s=self.list_of_files[self.currentScreenshot])
-    #
-    #             screenshot_found = True
-    #             filename = s=self.list_of_files[self.currentScreenshot]
-    #             self.displayScreenshot(self, s=filename)
-    #             normalized_current_value =  unixTimeFromString(self, mapFilenameDateToNumber(self, s=filename)) - self.slider_min
-    #             self.timeline_value = normalized_current_value
-    #
-    #             self.queryResponse = []
-    #             self.queryResponse2 = []
-    #
-    #         else:
-    #             screenshot_found = True # so that it stops searching
-    #             # self.reviewController.close()
-
-
     @IBAction
     def filterWindowEvents_(self, sender):
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getFilteredWindowEvents',self)
         self.reviewController.close()
-
-
-    # def displayScreenshot(self, self2=None, s=None):
-    #     """ draw screenshot at right size """
-    #
-    #     image = NSImage.alloc().initByReferencingFile_(getScreenshotPath(self) + s)
-    #     width = image.size().width
-    #     height = image.size().height
-    #     ratio = width / height
-    #
-    #     if( width > SCREENSHOT_WIDTH or height > SCREENSHOT_HEIGHT ):
-    #         if (ratio > SCREENSHOT_WIDTH/SCREENSHOT_HEIGHT):
-    #             width = SCREENSHOT_WIDTH
-    #             height = SCREENSHOT_WIDTH / ratio
-    #         else:
-    #             width = SCREENSHOT_HEIGHT * ratio
-    #             height = SCREENSHOT_HEIGHT
-    #
-    #     image.setScalesWhenResized_(True)
-    #     image.setSize_((width, height))
-    #     self.reviewController.mainPanel.setImage_(image)
 
 
     def getApplicationsAndWindowsForTable(self):
@@ -235,57 +158,6 @@ class ReviewController(NSWindowController):
                 pass
 
 
-    # def manageTimeline(self):
-    #     """ get timeline limits and draw elements """
-    #
-    #     bounds_detected = 0
-    #     front_bound = 0
-    #     drawn_textlabels = []
-    #
-    #     NSNotificationCenter.defaultCenter().postNotificationName_object_('getProcessTimes', self)
-    #
-    #     self.slider_min = unixTimeFromString(self, s=str(datetime.datetime.now()))
-    #
-    #     for app in self.processTimesResponse:
-    #         for time in app:
-    #             if unixTimeFromString(self, str(time[2])) < self.slider_min:
-    #                 self.slider_min = unixTimeFromString(self, str(time[2]))
-    #
-    #             if unixTimeFromString(self, str(time[2])) > self.slider_max:
-    #                 self.slider_max = unixTimeFromString(self, str(time[2]))
-    #
-    #     self.normalized_max_value = self.slider_max - self.slider_min
-    #     self.reviewController.slider.setMaxValue_(self.normalized_max_value)
-    #
-    #     reordered_process_times = []
-    #
-    #     for entry in self.processTimesResponse[0]:
-    #         reordered_process_times.append([entry[3], entry[1], unixTimeFromString(self, str(entry[2]))])
-    #
-    #     # reorder list
-    #     reordered_process_times.sort(key=lambda tup: tup[2])
-    #
-    #     first_bound = True
-    #     front_bound = 0
-    #     back_bound = 0
-    #
-    #     for event in reordered_process_times:
-    #         process_id = event[0]
-    #         event_type = event[1]
-    #         time = event[2]
-    #
-    #         if str(event[1]) == "Active":
-    #             if first_bound:
-    #                 front_bound = event[2]
-    #                 first_bound = False
-    #             else:
-    #                 back_bound = event[2]
-    #                 next_front_bound = event[2]
-    #                 addProcessTimelineSegment(self, process_id, front_bound, back_bound, self)
-    #
-    #                 front_bound = next_front_bound
-
-
     def populateElements(self):
         """ get app/window data, list of screenshots, and draw timeline """
 
@@ -295,14 +167,20 @@ class ReviewController(NSWindowController):
         self.applyDefaults(self, defaults, self.reviewController.results)
 
         # get list of image files
-        self.list_of_files = generateScreenshotList(self)
-
-        # prepare timeline
-        # self.manageTimeline(self)
+        self.list_of_files = self.generateScreenshotList(self)
 
         # re-sort list items
         self.reviewController.arrayController.rearrangeObjects()
 
+    def generateScreenshotList(self):
+         path = self.getScreenshotPath(self)
+         list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
+         return list_of_files
+
+    def getScreenshotPath(self, self2=None):
+        path = os.path.join(cfg.CURRENT_DIR, 'screenshots')
+        path = os.path.expanduser(path)
+        return path + '/'
 
     def tableViewSelectionDidChange_(self,sender):
         """ change window list based on app selelction """
@@ -314,9 +192,6 @@ class ReviewController(NSWindowController):
             app_data = selected_view.objectValue()
             self.windowListController.setContent_(app_data['windows'])
             self.windowList.reloadData()
-
-            # self.current_timeline_process = app_index_in_dict # TODO potential future bug because we do not know if the order is always the same
-            # self.manageTimeline() # TODO do not query file list and so on every time
 
 
     def windowWillClose_(self, notification):
@@ -362,21 +237,6 @@ class ReviewController(NSWindowController):
         descriptiorArray = [asc]
         self.reviewController.windowListController.setSortDescriptors_(descriptiorArray)
         self.reviewController.windowListController.rearrangeObjects()
-
-        # generate the timeline view, add background and border
-        # TODO change to scrollable view with different interactions than CBGraphView
-        # frame = NSRect(NSPoint(WINDOW_PADDING, 36), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
-        # self.timeline_view = NSView.alloc().initWithFrame_(frame)
-        #
-        # frame = NSRect(NSPoint(0, 0), NSSize(TIMELINE_WIDTH, TIMELINE_HEIGHT))
-        # timeline_fill = CBGraphView.alloc().initWithFrame_(frame)
-        # timeline_fill.setBackgroundColor_(NSColor.whiteColor())
-        # timeline_fill.setAssignedColor_(NSColor.whiteColor())
-        # timeline_fill.setDrawBorder_(True)
-        # timeline_fill.setWantsLayer_(YES)
-        # self.timeline_view.addSubview_(timeline_fill)
-        #
-        # self.reviewController.window().contentView().addSubview_(self.timeline_view)
 
         # get screenshots and app/window data
         self.populateElements(self)

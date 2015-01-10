@@ -111,7 +111,6 @@ class Sniffer:
                 NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, sc.handler)
 
                 self.createStatusMenu()
-                # self.createStatusButton()
 
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('checkLoops',self)
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('noteRecordingState',self)
@@ -138,10 +137,8 @@ class Sniffer:
                 #change text and enabled status of screenshot menu item
                 if recording:
                   self.loggingMenuItem.setTitle_("Pause Recording")
-                  # self.screenshotMenuItem.setEnabled_(True)
                 else:
                   self.loggingMenuItem.setTitle_("Start Recording")
-                  # self.screenshotMenuItem.setEnabled_(False)
                 self.changeIcon()
 
             def changeIcon(self):
@@ -153,16 +150,9 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconGray)
 
             def bookmark_(self, notification):
-                # self.statusitem.setImage_(self.iconBook)
-
-                # change icon back after 3 seconds
-                #s = objc.selector(self.changeIcon,signature='v@:')
-                # self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, s, None, False)
 
                 NSLog("Showing Bookmark Window...")
                 bookmark.BookmarkController.show()
-
-                # NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
 
 
             def toggleAudioRecording_(self, notification):
@@ -401,8 +391,8 @@ class Sniffer:
                 #     self.mouse_button_hook(1, loc.x, loc.y)
                 elif event.type() == NSRightMouseDown:
                     self.mouse_button_hook(3, loc.x, loc.y)
-    #           elif event.type() == NSRightMouseUp:
-    #               self.mouse_button_hook(2, loc.x, loc.y)
+                # elif event.type() == NSRightMouseUp:
+                    # self.mouse_button_hook(2, loc.x, loc.y)
                 elif event.type() == NSScrollWheel:
                     if event.deltaY() > 0:
                         self.mouse_button_hook(4, loc.x, loc.y)
@@ -412,10 +402,10 @@ class Sniffer:
                         self.mouse_button_hook(6, loc.x, loc.y)
                     elif event.deltaX() < 0:
                         self.mouse_button_hook(7, loc.x, loc.y)
-    #               if event.deltaZ() > 0:
-    #                   self.mouse_button_hook(8, loc.x, loc.y)
-    #               elif event.deltaZ() < 0:
-    #                   self.mouse_button_hook(9, loc.x, loc.y)
+                    # if event.deltaZ() > 0:
+                        # self.mouse_button_hook(8, loc.x, loc.y)
+                    # elif event.deltaZ() < 0:
+                        # self.mouse_button_hook(9, loc.x, loc.y)
                 elif event.type() == NSKeyDown:
                     flags = event.modifierFlags()
                     modifiers = []  # OS X api doesn't care it if is left or right
@@ -431,13 +421,10 @@ class Sniffer:
                     # these two get a special case because I am unsure of
                     # their unicode value
                     if event.keyCode() is 36:
-                        print "You hit enter"
                         character = "Enter"
+                        # global hotkey to bookmark
                         if modifiers == ['Cmd', 'Shift']:
                             self.delegate.bookmark_(self)
-                    elif event.keyCode() is 42:
-                        if modifiers == ['Cmd', 'Shift']:
-                            self.delegate.toggleAudioRecording_(self)
                     elif event.keyCode() is 51:
                         character = "Backspace"
                     self.key_hook(event.keyCode(),

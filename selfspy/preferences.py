@@ -28,8 +28,8 @@ from AppKit import *
 from Cocoa import NSNotificationCenter
 
 
-# Preferences window controller
 class PreferencesController(NSWindowController):
+    """ Preferences window controller """
 
     # outlets for UI elements
     screenshotSizePopup = IBOutlet()
@@ -38,39 +38,32 @@ class PreferencesController(NSWindowController):
     popover = IBOutlet()
     popButton = IBOutlet()
 
-    # notifications sent to Activity Store
-    @IBAction
-    def changedScreenshot_(self,sender):
-        """ asdf """
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedScreenshot',self)
-
     @IBAction
     def changedMaxScreenshot_(self,sender):
+        """ tells Selfspy to restart screnshot loop on preference change """
+
         NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshotPref',self)
 
     @IBAction
     def clearData_(self,sender):
+        """ tells Selfspy to delete recent data based on selected preference """
+
         NSNotificationCenter.defaultCenter().postNotificationName_object_('clearData',self)
 
-    @IBAction
-    def showPopover_(self,sender):
-        self.popover.showRelativeToRect_ofView_preferredEdge_(self.popButton.bounds(), self.popButton, NSMaxYEdge)
-
-
-    @IBAction
-    def closePopover_(self,sender):
-        self.popover.close()
-
     def windowDidLoad(self):
+        """ manage screenshot size preferences when the window opens """
+
+        # do the default behavior
         NSWindowController.windowDidLoad(self)
 
-        # Set screenshot size options based on screen's native height
+        # Set screenshot size preference options based on screen's native height
         self.prefController.screenshotSizeMenu.removeAllItems()
         nativeHeight = int(NSScreen.mainScreen().frame().size.height)
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(str(nativeHeight)+' px', '', '')
         menuitem.setTag_(nativeHeight)
         self.prefController.screenshotSizeMenu.addItem_(menuitem)
 
+        # add standard sizes
         sizes = [1080,720,480]
         for x in sizes:
             if x < nativeHeight:
@@ -89,6 +82,9 @@ class PreferencesController(NSWindowController):
             self.prefController.screenshotSizePopup.selectItemWithTag_(nativeHeight)
 
     def show(self):
+        """ show the new window front and center """
+
+        # destroy any open Preference windows
         try:
             if self.prefController:
                 self.prefController.close()

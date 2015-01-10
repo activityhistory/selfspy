@@ -31,12 +31,10 @@ from lockfile import LockFile
 from selfspy.activity_store import ActivityStore
 from selfspy import config as cfg
 
-# Cryptography is no longer used
-# import hashlib
-# from Crypto.Cipher import Blowfish
-
 
 def parse_config():
+    """ reads config file for parameters """
+
     conf_parser = argparse.ArgumentParser(description=__doc__, add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     conf_parser.add_argument("-c", "--config",
@@ -64,6 +62,8 @@ def parse_config():
 
 
 def main():
+    """ the main loop """
+
     print "Selfspy started. Python version " + sys.version
 
     args = vars(parse_config())
@@ -92,8 +92,8 @@ def main():
     cfg.LOCK  = LockFile(lockname)
     if cfg.LOCK.is_locked():
         print '%s is locked! I am probably already running.' % lockname
-        print 'If you can find no selfspy process running,'\
-        ' it is a stale lock and you can safely remove it.'
+        print 'If you can not find a running selfspy process,'\
+        ' the lock is stale and you can safely remove it.'
         print 'Shutting down.'
         sys.exit(1)
 

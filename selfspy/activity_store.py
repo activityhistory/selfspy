@@ -21,12 +21,14 @@ along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import sys
+
+import re
+import random
+
 import time
 import datetime
 
 import sqlalchemy
-import re
-import random
 
 from Foundation import *
 from AppKit import *
@@ -44,6 +46,7 @@ from selfspy.models import (RecordingEvent, Process, ProcessEvent, Window,
                             FilteredWindowActivation)
 
 from urlparse import urlparse
+
 
 NOW = datetime.datetime.now
 SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R",
@@ -138,31 +141,8 @@ class ActivityStore:
         s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
-        # s = objc.selector(self.checkExperienceOnPrefChange_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedExperiencePref', None)
-
-        # s = objc.selector(self.toggleScreenshotMenuTitle_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedScreenshot', None)
-
         s = objc.selector(self.clearData_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
-
-        # Listen for events from the Experience sampling window
-        # s = objc.selector(self.gotExperience_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'experienceReceived', None)
-        #
-        # s = objc.selector(self.getPriorExperiences_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
-
-        # Listen for events from the Debriefer window
-        # s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
-        #
-        # s = objc.selector(self.recordDebrief_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
-        #
-        # s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
-        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
 
         # Listen for events thrown by the Reviewer
         s = objc.selector(self.queryMetadata_,signature='v@:@')
@@ -514,60 +494,6 @@ class ActivityStore:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
 
-    # removed project
-    # def store_experience(self, message, screenshot, user_initiated, ignored):
-    #     self.session.add(Experience( message, screenshot, user_initiated, ignored))
-    #     self.trycommit()
-    #
-    # def gotExperience_(self, notification):
-    #     # project = notification.object().projectText.stringValue()
-    #     message = notification.object().experienceText.stringValue()
-    #     screenshot = notification.object().currentScreenshot
-    #     user_initiated = notification.object().user_initiated
-    #     ignored = notification.object().ignored
-    #     self.store_experience(message, screenshot, user_initiated, ignored)
-    #
-    # def recordDebrief_(self, notification):
-    #     experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
-    #     doing_report = notification.object().debriefController.doingText.stringValue()
-    #     audio_file = notification.object().debriefController.audio_file
-    #     memory_id = notification.object().debriefController.memoryStrength.intValue()
-    #
-    #     self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
-    #     self.trycommit()
-    #
-    # def populateDebriefWindow_(self, notification):
-    #     controller = notification.object().debriefController
-    #     audio_file = controller.audio_file
-    #     current_id = notification.object().experiences[notification.object().currentExperience]['id']
-    #     controller.memoryStrength.setIntValue_(3)
-    #
-    #     # populate page with responses to last debrief
-    #     q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
-    #
-    #     if q:
-    #         controller.doingText.setStringValue_(q[-1].doing_report)
-    #         controller.audio_file = q[-1].audio_file
-    #         if q[-1].memory_id:
-    #             controller.memoryStrength.setIntValue_(q[-1].memory_id)
-    #
-    #         if (q[-1].audio_file != '') & (q[-1].audio_file != None):
-    #             controller.recordButton.setEnabled_(False)
-    #             controller.existAudioText.setStringValue_("You've recorded an answer:")
-    #             controller.playAudioButton.setHidden_(False)
-    #             controller.deleteAudioButton.setHidden_(False)
-    #         else:
-    #             controller.recordButton.setEnabled_(True)
-    #             controller.existAudioText.setStringValue_("Record your answer:")
-    #             controller.playAudioButton.setHidden_(True)
-    #             controller.deleteAudioButton.setHidden_(True)
-    #     else:
-    #         controller.doingText.setStringValue_('')
-    #         controller.audio_file = ''
-    #         controller.recordButton.setEnabled_(True)
-    #         controller.existAudioText.setStringValue_("Record your answer:")
-    #         controller.playAudioButton.setHidden_(True)
-    #         controller.deleteAudioButton.setHidden_(True)
 
     def recordBookmark_(self, notification):
         t = notification.object().t
@@ -579,6 +505,7 @@ class ActivityStore:
         self.trycommit()
 
         notification.object().close()
+        self.sniffer.app.hide_(notification)
 
 
     def queryMetadata_(self, notification):
@@ -678,6 +605,7 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
+
     def getProcessNameFromID_(self, notification):
         controller = notification.object().reviewController
         try:
@@ -687,57 +615,11 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
-    # def getPriorExperiences_(self, notification):
-    #     prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
-    #     for m in prior_messages:
-    #         if(m.message != ''):
-    #             notification.object().experienceText.addItemWithObjectValue_(m.message)
-
-    # def runExperienceLoop(self):
-    #     experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
-    #     if(experienceLoop):
-    #         NSLog("Showing Experience Sampling Window on Cycle...")
-    #         expController = sniffer.ExperienceController.show()
-    #         expController.user_initiated = False
-    #         self.last_experience = time.time()
-    #
-    #         s = objc.selector(self.runExperienceLoop,signature='v@:')
-    #         self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-    #         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
-
-    # def checkExperienceOnPrefChange_(self, notification):
-    #     if(self.experienceTimer):
-    #         self.experienceTimer.invalidate()
-    #
-    #     self.exp_time = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceTime')
-    #     time_since_last_experience = time.time() - self.last_experience
-    #
-    #     experienceLoop = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('experienceLoop')
-    #     if(experienceLoop):
-    #         if (time_since_last_experience > self.exp_time):
-    #             self.runExperienceLoop()
-    #         else:
-    #             sleep_time = self.exp_time - time_since_last_experience + 0.01
-    #             s = objc.selector(self.runExperienceLoop,signature='v@:')
-    #             self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
-
-    # def getDebriefExperiences_(self, notification):
-    #     today = datetime.datetime.now().strftime("%Y-%m-%d")
-    #     q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
-    #     m = []
-    #     for row in q:
-    #         m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
-    #
-    #     # get a random sample of up to 8 random experiences
-    #     if len(m) > 7:
-    #         e = random.sample(m, 7)
-    #     else:
-    #         e = random.sample(m, len(m))
-    #     notification.object().experiences = e
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()
         self.runMaxScreenshotLoop()
+
 
     def runMaxScreenshotLoop(self):
         self.screenshot_time_max = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMax')
@@ -749,12 +631,6 @@ class ActivityStore:
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
-    # def toggleScreenshotMenuTitle_(self,notification):
-    #     screen = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
-    #     if screen:
-    #         self.sniffer.delegate.menu.itemWithTitle_("Record Screenshots").setTitle_("Pause Screenshots")
-    #     else :
-    #         self.sniffer.delegate.menu.itemWithTitle_("Pause Screenshots").setTitle_("Record Screenshots")
 
     def clearData_(self, notification):
         minutes_to_delete = notification.object().clearDataPopup.selectedItem().tag()

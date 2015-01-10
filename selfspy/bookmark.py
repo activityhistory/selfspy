@@ -161,10 +161,10 @@ class BookmarkController(NSWindowController):
         point = NSPoint(screenWidth - bookmarkWidth - 12, screenHeight - bookmarkHeight - 34)
         self.bookController.window().setFrameOrigin_(point)
 
-        # self.bookController.window().makeKeyAndOrderFront_(None)
+        self.bookController.window().makeKeyAndOrderFront_(None)
         # self.bookController.window().center()
         # self.bookController.retain()
-        # NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('makeAppActive',self)
 
         # make window close on Cmd-w
         self.bookController.window().standardWindowButton_(NSWindowCloseButton).setKeyEquivalentModifierMask_(NSCommandKeyMask)
