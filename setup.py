@@ -12,15 +12,11 @@ OPTIONS = {#'argv_emulation': True,
 
 DATA_FILES = ['./assets/eye.png',
               './assets/eye_grey.png',
-              './assets/eye_mic.png',
-              './assets/eye_photo_gray-48.png',
-              './assets/eye_bookmark.png',
               './assets/cursor.png',
               './assets/record.png',
               './assets/stop.png',
               './selfspy/Preferences.xib',
               './selfspy/Bookmark.xib',
-              # './selfspy/Debriefer.xib',
               './selfspy/Reviewer.xib']
 
 setup(

@@ -44,7 +44,8 @@ from Cocoa import (NSEvent, NSScreen,
 
 import Quartz
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
-                    kCGWindowListOptionAll, kCGWindowListExcludeDesktopElements, kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
+                    kCGWindowListOptionAll, kCGWindowListExcludeDesktopElements,
+                    kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
 import Quartz.CoreGraphics as CG
 
 import config as cfg
@@ -99,11 +100,11 @@ class Sniffer:
                 NSUserDefaultsController.sharedUserDefaultsController().setInitialValues_(prefDictionary)
 
                 mask = (NSKeyDownMask
-                        | NSKeyUpMask
+                        # | NSKeyUpMask
                         | NSLeftMouseDownMask
-                        | NSLeftMouseUpMask
+                        # | NSLeftMouseUpMask
                         | NSRightMouseDownMask
-                        | NSRightMouseUpMask
+                        # | NSRightMouseUpMask
                         | NSMouseMovedMask
                         | NSScrollWheelMask
                         | NSFlagsChangedMask)
@@ -143,47 +144,14 @@ class Sniffer:
 
             def changeIcon(self):
                 record = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
-                screenshots = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
                 if(record):
                     self.statusitem.setImage_(self.icon)
                 else:
                     self.statusitem.setImage_(self.iconGray)
 
             def bookmark_(self, notification):
-
                 NSLog("Showing Bookmark Window...")
                 bookmark.BookmarkController.show()
-
-
-            def toggleAudioRecording_(self, notification):
-                if self.recordingAudio:
-                    self.recordingAudio = False
-                    print "Stop Audio recording"
-
-                    audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-live'
-                    audioName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + audioName + '.m4a'
-                    audioName = string.replace(audioName, "/", ":")
-                    audioName = audioName[1:]
-
-                    s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set numDocuments to count of documents \n set mydocument to document numDocuments \n tell document numDocuments \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n set numDocuments to count of documents \n if (numDocuments = 0) then \n quit \n end if \n end tell")
-                    s.executeAndReturnError_(None)
-
-                    self.changeIcon()
-                    self.menu.itemWithTitle_("Stop Audio Recording").setTitle_("Record Audio")
-
-                else:
-                    self.recordingAudio = True
-                    print "Start Audio Recording"
-
-                    s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n delay 0.1 \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
-                    s.executeAndReturnError_(None)
-
-                    self.statusitem.setImage_(self.iconRecord)
-                    self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
-
-            # def showDebrief_(self, notification):
-            #     NSLog("Showing Daily Debrief Window...")
-            #     debriefer.DebriefController.show()
 
             def showReview_(self, notification):
                 NSLog("Showing Review Window...")
@@ -193,13 +161,15 @@ class Sniffer:
                 NSLog("Showing Preference Window...")
                 preferences.PreferencesController.show()
 
+            def prepVisualization_(self, notification):
+                NSNotificationCenter.defaultCenter().postNotificationName_object_('prepDataForChronoviz',self)
+
             def createStatusMenu(self):
                 NSLog("Creating app menu")
                 statusbar = NSStatusBar.systemStatusBar()
 
                 # Create the statusbar item
                 self.statusitem = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
-                # self.statusitem.setTitle_(u"Selfspy")
 
                 # Load all images
                 self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye.png')
@@ -210,14 +180,6 @@ class Sniffer:
                 self.iconGray = NSImage.alloc().initByReferencingFile_('../Resources/eye_grey.png')
                 self.iconGray.setScalesWhenResized_(True)
                 self.iconGray.setSize_((20, 20))
-
-                self.iconBook = NSImage.alloc().initByReferencingFile_('../Resources/eye_bookmark.png')
-                self.iconBook.setScalesWhenResized_(True)
-                self.iconBook.setSize_((20, 20))
-
-                self.iconRecord = NSImage.alloc().initByReferencingFile_('../Resources/eye_mic.png')
-                self.iconRecord.setScalesWhenResized_(True)
-                self.iconRecord.setSize_((20, 20))
 
                 self.changeIcon()
 
@@ -247,13 +209,10 @@ class Sniffer:
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
                 self.menu.addItem_(menuitem)
 
-                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Record Audio', 'toggleAudioRecording:', '')
-                # self.menu.addItem_(menuitem)
-
-                # menuitem = NSMenuItem.separatorItem()
-                # self.menu.addItem_(menuitem)
-
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Define Activity', 'showReview:', '')
+                self.menu.addItem_(menuitem)
+
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Prepare Visualization', 'prepVisualization:', '')
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.separatorItem()
@@ -289,41 +248,43 @@ class Sniffer:
     def handler(self, event):
         try:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+
             if(recording):
+                regularApps = []
+                regularWindows = []
+                chromeChecked = False
+                safariChecked = False
+                windows_to_ignore = ["Focus Proxy", "Clipboard"]
+
                 # get list of apps with regular activation
                 activeApps = self.workspace.runningApplications()
-                regularApps = []
                 for app in activeApps:
-                    if app.activationPolicy() == 0:
+                    if app.activationPolicy() == 0: # 0 is the normal activation policy
                         regularApps.append(app)
 
                 # get a list of all named windows associated with regular apps
-                # including all tabs in Google Chrome
-                regularWindows = []
-                options = kCGWindowListOptionAll
-                windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
-                chromeChecked = False
-                safariChecked = False
+                # also check Chrome and Safari tabs
+                windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID)
                 for window in windowList:
                     window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                     owner = window['kCGWindowOwnerName']
                     url = 'NO_URL'
                     geometry = window['kCGWindowBounds']
-                    windows_to_ignore = ["Focus Proxy", "Clipboard"]
+
                     for app in regularApps:
                         if app.localizedName() == owner:
                             if (window_name and window_name not in windows_to_ignore):
                                 if owner == 'Google Chrome' and not chromeChecked:
+                                    # get tab info using Applescript
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n set tabs_info to {} \n set window_list to every window \n repeat with win in window_list \n set tab_list to tabs in win \n repeat with t in tab_list \n set the_title to the title of t \n set the_url to the URL of t \n set the_bounds to the bounds of win \n set t_info to {the_title, the_url, the_bounds} \n set end of tabs_info to t_info \n end repeat \n end repeat \n return tabs_info \n end tell")
                                     tabs_info = s.executeAndReturnError_(None)
-                                    # Applescript returns list of lists including title and url in NSAppleEventDescriptors
-                                    # https://developer.apple.com/library/mac/Documentation/Cocoa/Reference/Foundation/Classes/NSAppleEventDescriptor_Class/index.html
+
                                     if tabs_info[0]:
                                         numItems = tabs_info[0].numberOfItems()
-                                        for i in range(1, numItems+1):
+                                        for i in range(1, numItems + 1):
                                             window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
                                             if window_name:
-                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
+                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2).stringValue())
                                             else:
                                                 url = "NO_URL"
                                             x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
@@ -333,11 +294,12 @@ class Sniffer:
                                             regularWindows.append({'process': 'Google Chrome', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
                                         chromeChecked = True
                                 elif owner == 'Safari' and not safariChecked:
+                                    # get tab info using Applescript
                                     s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set tabs_info to {} \n set winlist to every window \n repeat with win in winlist \n set ok to true \n try \n set tablist to every tab of win \n on error errmsg \n set ok to false \n end try \n if ok then \n repeat with t in tablist \n set thetitle to the name of t \n set theurl to the URL of t \n set thebounds to the bounds of win \n set t_info to {thetitle, theurl, thebounds} \n set end of tabs_info to t_info \n end repeat \n end if \n end repeat \n return tabs_info \n end tell")
                                     tabs_info = s.executeAndReturnError_(None)
                                     if tabs_info[0]:
                                         numItems = tabs_info[0].numberOfItems()
-                                        for i in range(1, numItems+1):
+                                        for i in range(1, numItems + 1):
                                             window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
                                             if window_name:
                                                 url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
@@ -348,12 +310,12 @@ class Sniffer:
                                             x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
                                             y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
                                             regularWindows.append({'process': 'Safari', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
+                                        safariChecked = True
                                 else:
                                     regularWindows.append({'process': owner, 'title': window_name, 'url': url, 'geometry': geometry})
 
 
-                # get active app, window, url and geometry
-                # only track for regular apps
+                # get active app, window, url and geometry. only track for regular apps
                 for app in regularApps:
                     if app.isActive():
                         for window in windowList:
@@ -381,6 +343,8 @@ class Sniffer:
                                                  browser_url,
                                                  regularApps,
                                                  regularWindows)
+
+                                # print "Window Name is " + str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                                 break
                         break
 
@@ -445,11 +409,8 @@ class Sniffer:
         self.app.activateIgnoringOtherApps_(True)
 
     def screenshot(self, path, region = None):
-    #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
+    # https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
       try:
-        # record how long it takes to take screenshot
-        start = time.time()
-
         # Set to capture entire screen, including multiple monitors
         if region is None:
           region = CG.CGRectInfinite
@@ -462,6 +423,7 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
+        # get min screen coordinates of multiple screens
         scr = NSScreen.screens()
         xmin = 0
         ymin = 0
@@ -471,16 +433,19 @@ class Sniffer:
             if s.frame().origin.y < ymin:
                 ymin = s.frame().origin.y
 
+        # get screen's native size
         nativeHeight = CGImageGetHeight(image)*1.0
         nativeWidth = CGImageGetWidth(image)*1.0
         nativeRatio = nativeWidth/nativeHeight
 
+        # calculate screenshot size based on user preferences
         prefHeight = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
         height = int(prefHeight/scr[0].frame().size.height*nativeHeight)
         width = int(nativeRatio * height)
         heightScaleFactor = height/nativeHeight
         widthScaleFactor = width/nativeWidth
 
+        # get scaled mouse coordinates
         mouseLoc = NSEvent.mouseLocation()
         x = int(mouseLoc.x)
         y = int(mouseLoc.y)
@@ -527,7 +492,7 @@ class Sniffer:
         imageOut = Quartz.CGBitmapContextCreateImage(bitmapContext)
 
         #Image properties dictionary
-        dpi = 72 # FIXME: Should query this from somewhere, e.g for retina display
+        dpi = 72 # TODO: Should query this from somewhere, e.g for retina display
         properties = {
           Quartz.kCGImagePropertyDPIWidth: dpi,
           Quartz.kCGImagePropertyDPIHeight: dpi,
@@ -553,21 +518,20 @@ class Sniffer:
         # finalize the CGImageDestination object.
         Quartz.CGImageDestinationFinalize(dest)
 
-        #For testing how long it takes to take screenshot
-        stop = time.time()
-        print 'took ' + str(height) + 'px image in ' + str(stop-start)[:5] + ' seconds'
+        # inform of screenshot
+        print 'took ' + str(height) + 'px screenshot'
 
       except KeyboardInterrupt:
-        print "Keyboard interrupt"
-        AppHelper.stopEventLoop()
+          print "Keyboard interrupt"
+          AppHelper.stopEventLoop()
       except errno.ENOSPC:
           NSLog("No space left on storage device. Turning off Selfspy recording.")
           self.delegate.toggleLogging_(self)
       except:
-        NSLog("couldn't save image")
+          NSLog("couldn't save image")
 
 
-# Cocoa does not provide a good api to get the keycodes, therefore we have to provide our own.
+# Cocoa does not provide a good api to get the keycodes, so we provide our own.
 keycodes = {
    u"\u0009": "Tab",
    u"\u001b": "Escape",

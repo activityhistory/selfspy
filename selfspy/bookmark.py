@@ -18,20 +18,22 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+import re
 import string
-import objc, re, os
+
+import objc
 from objc import IBAction, IBOutlet
 
 from Foundation import *
 from AppKit import *
 
-from Cocoa import (NSURL, NSString, NSTimer, NSInvocation, NSNotificationCenter)
+from Cocoa import (NSString, NSTimer, NSNotificationCenter)
 
 import config as cfg
 
-from datetime import datetime
-
 import mutagen.mp4
+from datetime import datetime
 
 
 # Preferences window controller
@@ -63,9 +65,13 @@ class BookmarkController(NSWindowController):
 
     @IBAction
     def toggleAudioPlay_(self, sender):
+        """ play or stop playing recorded audio file on button press """
+
+        # stop if file is playing
         if self.playingAudio:
             self.stopAudioPlay()
 
+        # otherwise, play file using Quicktime and Applescript
         else:
             self.playingAudio = True
             self.bookController.playAudioButton.setTitle_("Stop " + unichr(9724))
@@ -78,6 +84,8 @@ class BookmarkController(NSWindowController):
             self.playbackTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(length, self, s, None, False)
 
     def stopAudioPlay(self):
+        """ stop playing recorded audio file on button press """
+
         self.playingAudio = False
         self.bookController.playAudioButton.setTitle_("Play " + unichr(9654))
         s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n stop the front document \n close the front document \n end tell")
@@ -85,6 +93,8 @@ class BookmarkController(NSWindowController):
 
     @IBAction
     def deleteAudio_(self, sender):
+        """ delete audio file on button press """
+
         if (self.audio_file != '') & (self.audio_file != None) :
             if os.path.exists(self.audio_file):
                 os.remove(self.audio_file)
@@ -99,18 +109,23 @@ class BookmarkController(NSWindowController):
 
     @IBAction
     def toggleAudioRecording_(self, sender):
+        """ start or stop Quicktime audio recording on button press """
+
         controller = self.bookController
 
+        # stop audio recording
         if self.recordingAudio:
             self.recordingAudio = False
             print "Stop Audio recording"
 
+            # generate file name based on current time
             audioName = datetime.now().strftime("%y%m%d-%H%M%S%f") + '-audio'
             audioName = str(os.path.join(cfg.CURRENT_DIR, "audio/")) + audioName + '.m4a'
             self.audio_file = audioName
             audioName = string.replace(audioName, "/", ":")
             audioName = audioName[1:]
 
+            # save file using Applescript
             s = NSAppleScript.alloc().initWithSource_("set filePath to \"" + audioName + "\" \n set placetosaveFile to a reference to file filePath \n tell application \"QuickTime Player\" \n set mydocument to document 1 \n tell document 1 \n stop \n end tell \n set newRecordingDoc to first document whose name = \"untitled\" \n export newRecordingDoc in placetosaveFile using settings preset \"Audio Only\" \n close newRecordingDoc without saving \n quit \n end tell")
             s.executeAndReturnError_(None)
 
@@ -121,25 +136,30 @@ class BookmarkController(NSWindowController):
             controller.playAudioButton.setEnabled_(True)
             controller.deleteAudioButton.setEnabled_(True)
 
+        # otherwise start recroding
         else:
             self.recordingAudio = True
             print "Start Audio Recording"
 
+            # record using Quicktime and Applescript
             s = NSAppleScript.alloc().initWithSource_("tell application \"QuickTime Player\" \n set new_recording to (new audio recording) \n tell new_recording \n start \n end tell \n tell application \"System Events\" \n set visible of process \"QuickTime Player\" to false \n repeat until visible of process \"QuickTime Player\" is false \n end repeat \n end tell \n end tell")
             s.executeAndReturnError_(None)
 
             self.bookController.recordButton.setImage_(self.stopImage)
 
-
     @IBAction
     def saveBookmark_(self, sender):
+        """ save bookmark to database by notifying activity_store """
+
         NSNotificationCenter.defaultCenter().postNotificationName_object_('recordBookmark',self)
 
     def windowDidLoad(self):
         NSWindowController.windowDidLoad(self)
 
-
     def show(self):
+        """ create and position Bookmark window """
+
+        # close any open bookmark windows
         try:
             if self.bookController:
                 self.bookController.close()
@@ -150,6 +170,7 @@ class BookmarkController(NSWindowController):
         self.bookController = BookmarkController.alloc().initWithWindowNibName_("Bookmark")
         self.bookController.showWindow_(None)
 
+        # position window at upper right corner
         bookmarkSize = self.bookController.window().frame().size
         bookmarkWidth = bookmarkSize.width
         bookmarkHeight = bookmarkSize.height

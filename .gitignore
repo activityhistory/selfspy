@@ -1,4 +1,5 @@
 *.pyc
+*.egg
 *.egg-info
 *.key
 build/
@@ -9,22 +10,6 @@ tests/
 bin/
 lib/
 include/
-selfspy.spec
-sept.selfspy/
-
-selfspy/*18942.py
-selfspy/*orig
-*.egg
-
-SimpleXibDemo.xib
-
-selfspy.xcode*
-
-test2.py
-
-test.py
-
-# Created by https://www.gitignore.io
 
 ### OSX ###
 .DS_Store

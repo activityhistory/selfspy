@@ -2,7 +2,7 @@
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
-Modified 2014 by Adam Rule, AurÃ©lien Tabard, and Jonas Keper
+Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Keper
 
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,24 +35,29 @@ SCREENSHOT_HEIGHT = 600
 
 
 class WindowListController(NSArrayController):
+    """ Controller for list of windows """
 
     @IBAction
     def updateAppCheckbox_(self, sender):
         """ update app checkbox when a window checkbox is clicked """
 
+        # find the selected app
         row = self.review_controller.appList.selectedRow()
         view = self.review_controller.appList.viewAtColumn_row_makeIfNecessary_(0,row,False)
 
         if view:
             try:
+                # get the underlying data
                 app_data = view.objectValue()
                 num_rows = len(app_data['windows'])
                 num_checked = 0
 
+                # count the number of checked windows
                 for j in app_data['windows']:
                     if j['checked'] == 1:
                         num_checked += 1
 
+                # udpate the app checkbox based on number of checked windows
                 if num_checked == num_rows:
                     app_data['checked'] = 1
                 elif num_checked == 0:
@@ -74,32 +79,23 @@ class ReviewController(NSWindowController):
     appList = IBOutlet()
     windowList = IBOutlet()
 
-    # data for app and window tables
+    # data for app/window table and list of image files, populated by database query
     results = []
-
-    # let activity_store write query results into those
-    queryResponse = []
-    queryResponse2 = []
-    processTimesResponse = []
-    processNameResponse = []
-
-    # lists of image files
     list_of_files = []
-
 
     def createWindowListController(self):
         return WindowListController
-
 
     @IBAction
     def updateWindowCheckboxes_(self, sender):
         """ update window checboxes when app checkbox clicked """
 
         # TODO select the row of the clicked checkbox if not already selected
-        # TODO determine why window name sometimes goes to '{'
+        # get the underlying data object and state of the checkbox
         app_data = sender.superview().objectValue()
         state = sender.state()
 
+        # if checked, save last mixed state and check all window boxes
         if state == 1:
             app_data['windows_mixed'] = NSMutableArray([])
             for i in app_data['windows']:
@@ -108,10 +104,12 @@ class ReviewController(NSWindowController):
             for w in app_data['windows']:
                 w['checked'] = 1
 
+        # if unchecked, uncheck all window boxes
         elif state == 0:
             for w in app_data['windows']:
                w['checked'] = 0
 
+        # if mixed, load saved mixed state, or leave all windows unchecked
         elif state == -1:
             if app_data['windows_mixed']:
                 app_data['windows'] = NSMutableArray([])
@@ -121,22 +119,21 @@ class ReviewController(NSWindowController):
                 for w in app_data['windows']:
                     w['checked'] = 0
 
+        # reload window list
         self.windowListController.setContent_(app_data['windows'])
         self.windowList.reloadData()
 
-
     @IBAction
     def filterWindowEvents_(self, sender):
+        """ write database table of events for selected app/windows and close"""
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getFilteredWindowEvents',self)
         self.reviewController.close()
 
-
     def getApplicationsAndWindowsForTable(self):
-        """ query database for apps and windows """
+        """ query database for list of recorded apps and windows """
 
         NSNotificationCenter.defaultCenter().postNotificationName_object_('getAppsAndWindows',self)
-
 
     def applyDefaults(self, defaults, results):
         """ restore app and window checkbox states saved in NSUserDefaults """
@@ -145,18 +142,19 @@ class ReviewController(NSWindowController):
             try:
                 result = (r for r in results if r['appName'] == d['appName']).next()
                 result['checked'] = d['checked']
+
                 # apply settings saved for all windows
                 for w in d['windows']:
                     result_w = (rw for rw in result['windows'] if rw['windowName'] == w['windowName']).next()
                     if result_w:
                         result_w['checked'] = int(w['checked'])
+
                 # if app is checked or unchecked, apply to all windows
                 if d['checked'] == 0 or d['checked'] == 1:
                     for w in result['windows']:
                         w['checked'] = d['checked']
             except:
                 pass
-
 
     def populateElements(self):
         """ get app/window data, list of screenshots, and draw timeline """
@@ -173,14 +171,12 @@ class ReviewController(NSWindowController):
         self.reviewController.arrayController.rearrangeObjects()
 
     def generateScreenshotList(self):
-         path = self.getScreenshotPath(self)
-         list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
-         return list_of_files
+        """ get list of all screenshots taken by Selfspy """
 
-    def getScreenshotPath(self, self2=None):
-        path = os.path.join(cfg.CURRENT_DIR, 'screenshots')
+        path = os.path.join(cfg.CURRENT_DIR, 'screenshots/')
         path = os.path.expanduser(path)
-        return path + '/'
+        list_of_files = [ f for f in listdir(path) if isfile(join(path,f)) ]
+        return list_of_files
 
     def tableViewSelectionDidChange_(self,sender):
         """ change window list based on app selelction """
@@ -203,6 +199,7 @@ class ReviewController(NSWindowController):
     def show(self):
         """ create the necessary elements and show the reviewer window """
 
+        # close any open reviewer windows
         try:
             if self.reviewController:
                 self.reviewController.close()
