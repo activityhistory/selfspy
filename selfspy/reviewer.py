@@ -2,7 +2,7 @@
 """
 Selfspy: Track your computer activity
 Copyright (C) 2012 Bjarte Johansen
-Modified 2014 by Adam Rule, Aurélien Tabard, and Jonas Keper
+Modified 2014 by Adam Rule, Aurï¿½lien Tabard, and Jonas Keper
 
 Selfspy is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -125,9 +125,8 @@ class ReviewController(NSWindowController):
 
     @IBAction
     def filterWindowEvents_(self, sender):
-        """ write database table of events for selected app/windows and close"""
+        """ close window """
 
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('getFilteredWindowEvents',self)
         self.reviewController.close()
 
     def getApplicationsAndWindowsForTable(self):

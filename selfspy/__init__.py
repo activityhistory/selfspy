@@ -87,6 +87,12 @@ def main():
     except OSError:
         pass
 
+    viz_directory = os.path.join(args['data_dir'], 'visualization')
+    try:
+        os.makedirs(viz_directory)
+    except OSError:
+        pass
+
     # check if Selfspy is already running
     lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
     cfg.LOCK  = LockFile(lockname)

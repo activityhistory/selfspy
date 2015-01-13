@@ -23,9 +23,7 @@ import os
 import sys
 
 import math
-
 import csv
-import json
 import zlib
 
 import re
@@ -36,10 +34,13 @@ import datetime
 
 import sqlalchemy
 
+from urlparse import urlparse
+
 from Foundation import *
 from AppKit import *
 
 from Cocoa import NSNotificationCenter, NSTimer, NSWorkspace
+
 import Quartz
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
                     kCGNullWindowID)
@@ -48,10 +49,7 @@ from selfspy import sniff_cocoa as sniffer
 from selfspy import config as cfg
 from selfspy import models
 from selfspy.models import (RecordingEvent, Process, ProcessEvent, Window,
-                            WindowEvent, Geometry, Click, Keys, Bookmark,
-                            FilteredWindowActivation)
-
-from urlparse import urlparse
+                            WindowEvent, Geometry, Click, Keys, Bookmark)
 
 
 NOW = datetime.datetime.now
@@ -62,6 +60,8 @@ SCROLL_COOLOFF = 10  # seconds
 
 
 class Display:
+    """ stores information about the current active window """
+
     def __init__(self):
         self.proc_id = None
         self.win_id = None
@@ -69,6 +69,8 @@ class Display:
 
 
 class KeyPress:
+    """ store information about keypresses """
+
     def __init__(self, key, time, is_repeat):
         self.key = key
         self.time = time
@@ -76,6 +78,8 @@ class KeyPress:
 
 
 class MouseMove:
+    """ stores mouse coordinates at specific timepoint """
+
     def __init__(self, xy, time):
         self.xy = xy
         self.time = time
@@ -83,11 +87,13 @@ class MouseMove:
 
 class ActivityStore:
     def __init__(self, db_name):
+
         # check if a selfspy thumbdrive is plugged in and available
         # if so, store screenshots and DB there, otherwise store locally
         self.lookupThumbdrive()
         self.defineCurrentDrive()
 
+        # create folders for data if they don't already exist
         screenshot_directory = os.path.join(cfg.CURRENT_DIR, 'screenshots')
         try:
             os.makedirs(screenshot_directory)
@@ -100,14 +106,21 @@ class ActivityStore:
         except OSError:
             pass
 
+        viz_directory = os.path.join(cfg.CURRENT_DIR, 'visualization')
+        try:
+            os.makedirs(viz_directory)
+        except OSError:
+            pass
+
+        # initialize database
         db_name = os.path.join(cfg.CURRENT_DIR, db_name)
         try:
             self.session_maker = models.initialize(db_name)
         except sqlalchemy.exc.OperationalError:
             self.show_alert("Database operational error. Your storage device may be full. Exiting Selfspy...")
-
             sys.exit()
 
+        # create instance variables for tracking
         self.key_presses = []
         self.mouse_path = []
 
@@ -125,18 +138,22 @@ class ActivityStore:
         self.last_commit = time.time()
         self.last_screenshot = time.time()
 
+        # create local variables to store preference information
         self.screenshots_active = True
         self.screenshot_time_min = 0.2
         self.screenshot_time_max = 60
         self.thumbdrive_time = 10
 
+        # listen for message from other parts of the app
         self.addObservers()
 
         self.started = NOW()
 
     def run(self):
+        # start database session
         self.session = self.session_maker()
 
+        # hook up the platform-dependent sniffer
         self.sniffer = sniffer.Sniffer()
         self.sniffer.screen_hook = self.got_screen_change
         self.sniffer.key_hook = self.got_key
@@ -146,7 +163,9 @@ class ActivityStore:
         self.sniffer.run()
 
     def addObservers(self):
-        # Listen for events from the Preferences window
+        """ Listen for events from other parts of the app """
+
+        # Preferences window
         s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
 
@@ -156,17 +175,17 @@ class ActivityStore:
         s = objc.selector(self.getAppsAndWindows_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndWindows', None)
 
-        s = objc.selector(self.getFilteredWindowEvents_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getFilteredWindowEvents', None)
-
-        # Listen for events thrown by the Status bar menu
+        # Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'checkLoops', None)
 
         s = objc.selector(self.noteRecordingState_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'noteRecordingState', None)
 
-        # Listen for events from Bookmark window
+        s = objc.selector(self.prepDataForChronoviz_,signature='v@:')
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'prepDataForChronoviz', None)
+
+        # Bookmark window
         s = objc.selector(self.recordBookmark_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordBookmark', None)
 
@@ -174,12 +193,10 @@ class ActivityStore:
         s = objc.selector(self.gotCloseNotification_,signature='v@:')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'closeNotification', None)
 
-        # Listen for data requests
-        s = objc.selector(self.prepDataForChronoviz_,signature='v@:')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'prepDataForChronoviz', None)
-
     ### Loop Functions ###
     def checkLoops_(self, notification):
+        """ toggle any loops based on recrording status """
+
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
         if(recording):
             self.startLoops()
@@ -197,6 +214,8 @@ class ActivityStore:
         self.thumbdriveTimer.fire() # get location immediately
 
     def stopLoops(self):
+
+        # stop any open loops
         try:
             if self.screenshotTimer:
                 self.screenshotTimer.invalidate()
@@ -347,6 +366,8 @@ class ActivityStore:
                             print("Error: Can not remove window_id from list. It does not seem to exist.")
 
     def filter_many(self):
+        """ filter out multiple presses of the same key """
+
         specials_in_row = 0
         lastpress = None
         newpresses = []
@@ -374,6 +395,7 @@ class ActivityStore:
 
     def store_keys(self):
         """ Stores the current queued key-presses """
+
         self.filter_many()
 
         if self.key_presses:
@@ -410,8 +432,10 @@ class ActivityStore:
                   specifier, i.e: SHIFT or SHIFT_L/SHIFT_R, ALT, CTRL
             string is the string representation of the key press
             repeat is True if the current key is a repeat sent by the keyboard """
+
         now = time.time()
 
+        # skip recording certain key combinations, like single modifier keys
         if string in SKIP_MODIFIERS:
             return
 
@@ -449,6 +473,7 @@ class ActivityStore:
             Mouse buttons: left: 1, middle: 2, right: 3, scroll up: 4, down:5, left:6, right:7
             x,y are the coordinates of the keypress
             press is True if it pressed down, False if released"""
+
         if button in [4, 5, 6, 7]:
             if time.time() - self.last_scroll[button] < SCROLL_COOLOFF:
                 return
@@ -461,6 +486,8 @@ class ActivityStore:
     def got_mouse_move(self, x, y):
         """ Queues mouse movements at 10Hz.
             x,y are the new coordinates on moving the mouse"""
+
+        # only check mouse moves every 1/10th of a second
         frequency = 10.0
         now = time.time()
 
@@ -470,6 +497,8 @@ class ActivityStore:
 
     ### Misc Functions ###
     def trycommit(self):
+        """ add queued db entries to the database """
+
         self.last_commit = time.time()
         for _ in xrange(1000):
             try:
@@ -488,6 +517,8 @@ class ActivityStore:
                 self.session.rollback()
 
     def show_alert(self, message):
+        """ show alert window with the specified message """
+
         print message
 
         alert = NSAlert.alloc().init()
@@ -511,17 +542,22 @@ class ActivityStore:
         self.sniffer.app.hide_(notification)
 
     def getAppsAndWindows_(self, notification):
+        """ returns a list of apps and windows to be shown in Reviewer window """
+
         controller = notification.object().reviewController
         controller.results = NSMutableArray([])
 
         try:
+            # get apps and windows from database
             q_apps = self.session.query(Process).all()
             q_windows = self.session.query(Window).all()
 
+            # add app entries
             for a in q_apps:
                 app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appId':NSMutableArray([a.id]), 'appName': a.name, 'windows':NSMutableArray([]), 'windows_mixed':NSMutableArray([])})
                 controller.results.append(app_dict)
 
+            # add window entries
             for w in q_windows:
                 if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
                     windowName = w.title if w.title else 'NO_TITLE'
@@ -539,65 +575,29 @@ class ActivityStore:
         except UnicodeEncodeError:
                 pass
 
-    def getFilteredWindowEvents_(self, notification):
-
-        controller = notification.object().reviewController
-        windows_to_watch = []
-        filtered_events = []
-        past_event = None
-
-        # clear the contents of the FilteredWindowActivations table
-        self.session.query(FilteredWindowActivation).delete()
-
-        # get list of selected windows
-        for app in controller.results:
-            for wind in app['windows']:
-                if wind['checked']:
-                    for i in wind['windowId']:
-                        windows_to_watch.append(i)
-
-        # filter window events from db down to only selected windows
-        q = self.session.query(WindowEvent).join(WindowEvent.window).all()
-
-        for e in q:
-            if e.event_type == 'Active':
-                if past_event:
-                    filtered_events.append([past_event.window_id,
-                                            "No_name",
-                                            past_event.window.title,
-                                            past_event.created_at,
-                                            e.created_at])
-                past_event = e
-            elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
-                filtered_events.append([past_event.window_id,
-                                        "No_name",
-                                        past_event.window.title,
-                                        past_event.created_at,
-                                        e.created_at])
-                past_event = None
-
-        # add events from watched windows to the table
-        for e in filtered_events:
-            if e[0] in windows_to_watch:
-                event = FilteredWindowActivation(e[0], e[1], e[2], e[3], e[4])
-                self.session.add(event)
-            self.trycommit()
-
     def checkMaxScreenshotOnPrefChange_(self, notification):
+        """ restart idle-time screenshot loop on preference change """
+
         self.screenshotTimer.invalidate()
         self.runMaxScreenshotLoop()
 
     def runMaxScreenshotLoop(self):
+        """ takes periodic screenshots when no events are detected such as when
+        watching a movie """
+
         self.screenshot_time_max = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMax')
         time_since_last_screenshot = time.time() - self.last_screenshot
         if (time_since_last_screenshot > self.screenshot_time_max):
             self.take_screenshot()
             time_since_last_screenshot = 0.0
+
         sleep_time = self.screenshot_time_max - time_since_last_screenshot + 0.01
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def clearData_(self, notification):
+        """ delete all data from the last X minutes """
+
         # get time to delete from
         minutes_to_delete = notification.object().clearDataPopup.selectedItem().tag()
         text = notification.object().clearDataPopup.selectedItem().title()
@@ -610,16 +610,15 @@ class ActivityStore:
             delete_from_time = now - delta
 
         # delete data from all tables
-        q = self.session.query(Click).filter(Bookmark.created_at > delete_from_time).delete()
+        q = self.session.query(Bookmark).filter(Bookmark.created_at > delete_from_time).delete()
         q = self.session.query(Click).filter(Click.created_at > delete_from_time).delete()
-        q = self.session.query(Debrief).filter(FilteredWindowActivation.created_at > delete_from_time).delete()
         q = self.session.query(Geometry).filter(Geometry.created_at > delete_from_time).delete()
         q = self.session.query(Keys).filter(Keys.created_at > delete_from_time).delete()
         q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
-        q = self.session.query(Process).filter(ProcessEvent.created_at > delete_from_time).delete()
-        q = self.session.query(Process).filter(RecordingEvent.created_at > delete_from_time).delete()
+        q = self.session.query(ProcessEvent).filter(ProcessEvent.created_at > delete_from_time).delete()
+        q = self.session.query(RecordingEvent).filter(RecordingEvent.created_at > delete_from_time).delete()
         q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
-        q = self.session.query(Window).filter(WindowEvent.created_at > delete_from_time).delete()
+        q = self.session.query(WindowEvent).filter(WindowEvent.created_at > delete_from_time).delete()
 
         # delete screenshots
         screenshot_directory = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots"))
@@ -658,6 +657,8 @@ class ActivityStore:
 
     ### Thumbdrive Functions ###
     def lookupThumbdrive(self, namefilter=""):
+        """ find if there is an attached volume ready to receive data """
+
         for dir in os.listdir('/Volumes') :
             if namefilter in dir :
                 volume = os.path.join('/Volumes', dir)
@@ -671,6 +672,8 @@ class ActivityStore:
         return None
 
     def defineCurrentDrive(self):
+        """ change the current data folder to an attached drive """
+
         if (self.isThumbdrivePlugged()) :
             cfg.CURRENT_DIR = cfg.THUMBDRIVE_DIR
         else :
@@ -690,13 +693,16 @@ class ActivityStore:
 
     ### Closing Functions ###
     def close(self):
-        """ stops the sniffer and stores the latest keys and close of programs. To be used on shutdown of program"""
+        """ stops the sniffer and stores the latest keys and close of programs.
+        To be used on shutdown of program"""
+
         self.sniffer.cancel()
         self.store_keys()
 
     def gotCloseNotification_(self, notification):
         """ adds "Close" entry to DB for each app open at the close of Selfspy """
 
+        # for each app
         for app in self.current_apps:
             db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
             process_id = 0
@@ -705,6 +711,7 @@ class ActivityStore:
             process_event = ProcessEvent(process_id, "Close")
             self.session.add(process_event)
 
+        # for each window
         for window_id in self.current_windows:
             db_window = self.session.query(Window).filter_by(id=window_id).scalar()
             window_id = db_window.id if db_window else 0
@@ -712,6 +719,7 @@ class ActivityStore:
             window_event = WindowEvent(window_id, "Close")
             self.session.add(window_event)
 
+        # note that we've stopped recording
         recording_event = RecordingEvent(NOW(), "Off")
         self.session.add(recording_event)
         self.trycommit()
@@ -735,13 +743,15 @@ class ActivityStore:
         self.getAppWindowEvents_(start_time)
 
     def getBookmarks_(self, start_time):
+        # query database
         q = self.session.query(Bookmark).all()
-        file = os.path.join(cfg.CURRENT_DIR, 'bookmark.csv')
+        file = os.path.join(cfg.CURRENT_DIR, 'visualization', 'bookmark.csv')
 
         # remove file if already exists
         if os.path.isfile(file):
             os.remove(file)
 
+        # write csv
         with open(file, 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(['time'] + ['text'] + ['audio'] + ['delay'])
@@ -752,149 +762,159 @@ class ActivityStore:
                 writer.writerow([time_diff.total_seconds()] + [row.text] + [row.audio] + [row.delay])
 
     def getClicksPerMinute_(self, start_time):
-        q = self.session.query(Click).all()
-        file = os.path.join(cfg.CURRENT_DIR, 'clicks_per_minute.csv')
+        try:
+            # query database
+            q = self.session.query(Click).all()
+            file = os.path.join(cfg.CURRENT_DIR, 'visualization', 'clicks_per_minute.csv')
 
-        # remove file if already exists
-        if os.path.isfile(file):
-            os.remove(file)
+            # remove file if already exists
+            if os.path.isfile(file):
+                os.remove(file)
 
-        click_start_time = q[0].created_at[0:16]
-        end_time = q[-1].created_at[0:16]
-        ref_time = datetime.datetime.strptime(click_start_time, '%Y-%m-%d %H:%M')
+            # prepare time variables to convert times from absolute to relative
+            click_start_time = q[0].created_at[0:16]
+            end_time = q[-1].created_at[0:16]
+            ref_time = datetime.datetime.strptime(click_start_time, '%Y-%m-%d %H:%M')
 
-        clicks_per_minute = []
-        counter = 0
-        i = 0
+            clicks_per_minute = []
+            counter = 0
+            i = 0
 
-        while i < len(q):
-            current_time = datetime.datetime.strptime(q[i].created_at[0:16], '%Y-%m-%d %H:%M')
+            while i < len(q):
+                current_time = datetime.datetime.strptime(q[i].created_at[0:16], '%Y-%m-%d %H:%M')
 
-            if current_time <= ref_time:
-                counter += 1
-                i += 1
-            else:
-                time_since_start = ref_time - start_time
-                clicks_per_minute.append([time_since_start.total_seconds(), counter])
-                counter = 0
-                ref_time = ref_time + datetime.timedelta(minutes=1)
+                if current_time <= ref_time:
+                    counter += 1
+                    i += 1
+                else:
+                    time_since_start = ref_time - start_time
+                    clicks_per_minute.append([time_since_start.total_seconds(), counter])
+                    counter = 0
+                    ref_time = ref_time + datetime.timedelta(minutes=1)
 
-        with open(file, 'wb') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['time'] + ['clicks'])
+            # write csv
+            with open(file, 'wb') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['time'] + ['clicks'])
 
-            for row in clicks_per_minute:
-                writer.writerow([row[0]] + [row[1]])
+                for row in clicks_per_minute:
+                    writer.writerow([row[0]] + [row[1]])
+        except:
+            print "Could not parse click data for visualization"
 
     def getKeystrokesPerMinute_(self, start_time):
-        file = os.path.join(cfg.CURRENT_DIR, 'keys_per_minute.csv')
-        rec_index = 0
-        current_time = None
-        relative_times = []
+        try:
+            file = os.path.join(cfg.CURRENT_DIR, 'visualization', 'keys_per_minute.csv')
+            rec_index = 0
+            current_time = None
+            relative_times = []
 
-        q = self.session.query(RecordingEvent).filter_by(event_type="On").all()
-        recording_times = [[datetime.datetime.strptime(r.time, "%Y-%m-%d %H:%M:%S.%f"), False] for r in q]
+            # get recording event times
+            q = self.session.query(RecordingEvent).filter_by(event_type="On").all()
+            recording_times = [[datetime.datetime.strptime(r.time, "%Y-%m-%d %H:%M:%S.%f"), False] for r in q]
 
-        q = self.session.query(Keys).all()
-        for r in q:
-            row_time = datetime.datetime.strptime(r.created_at, "%Y-%m-%d %H:%M:%S.%f")
+            # get all keystrokes
+            q = self.session.query(Keys).all()
+            for r in q:
+                row_time = datetime.datetime.strptime(r.created_at, "%Y-%m-%d %H:%M:%S.%f")
 
-            while(rec_index < len(recording_times)-2 and row_time > recording_times[rec_index + 1][0]):
-                rec_index += 1
+                # find most recent time recording was started
+                # the time of the first keystroke is relative to recording start
+                while(rec_index < len(recording_times)-2 and row_time > recording_times[rec_index + 1][0]):
+                    rec_index += 1
 
-            key_timings = zlib.decompress(r.timings)
-            key_timings = map(float, key_timings[1:-2].split(','))
-            for key_time in key_timings:
-                if recording_times[rec_index][1]:
-                    current_time = current_time + key_time
-                else:
-                    diff_time = recording_times[rec_index][0] - start_time
-                    diff_time = diff_time.total_seconds()
-                    current_time = diff_time + key_time
-                    recording_times[rec_index][1] = True
-                relative_times.append(current_time)
+                key_timings = zlib.decompress(r.timings)
+                key_timings = map(float, key_timings[1:-2].split(','))
+                for key_time in key_timings:
+                    if recording_times[rec_index][1]:
+                        current_time = current_time + key_time
+                    else:
+                        diff_time = recording_times[rec_index][0] - start_time
+                        diff_time = diff_time.total_seconds()
+                        current_time = diff_time + key_time
+                        recording_times[rec_index][1] = True
+                    relative_times.append(current_time)
 
-        keys_per_minute = []
+            keys_per_minute = []
 
-        for i in range(int(math.ceil(relative_times[-1]/60))):
-            keys_per_minute.append([0,0])
+            # convert array of keys and times to keys per minute
+            for i in range(int(math.ceil(relative_times[-1]/60))):
+                keys_per_minute.append([0,0])
 
-        # print keys_per_minute
-        for i, val in enumerate(keys_per_minute):
-            val[0] = 60 * i
+            # print keys_per_minute
+            for i, val in enumerate(keys_per_minute):
+                val[0] = 60 * i
 
-        for t in relative_times:
-            keys_per_minute[int(t/60)][1] += 1
+            for t in relative_times:
+                keys_per_minute[int(t/60)][1] += 1
 
-        # remove file if already exists
-        if os.path.isfile(file):
-            os.remove(file)
+            # remove csv file if already exists
+            if os.path.isfile(file):
+                os.remove(file)
 
-        with open(file, 'wb') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['time'] + ['keys'])
+            # write csv file
+            with open(file, 'wb') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['time'] + ['keys'])
 
-            for row in keys_per_minute:
-                writer.writerow([row[0]] + [row[1]])
+                for row in keys_per_minute:
+                    writer.writerow([row[0]] + [row[1]])
+        except:
+            print "Could not parse keystroke data for visualization"
 
     def getAppWindowEvents_(self, start_time):
-        app_window_list = defaults = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
-        file = os.path.join(cfg.CURRENT_DIR, 'activity_events.csv')
-        # controller = notification.object().reviewController
-        windows_to_watch = []
-        filtered_events = []
-        past_event = None
+        try:
+            app_window_list = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
+            file = os.path.join(cfg.CURRENT_DIR, 'visualization' ,'activity_events.csv')
+            windows_to_watch = []
+            filtered_events = []
+            past_event = None
 
-        # clear the contents of the FilteredWindowActivations table
-        self.session.query(FilteredWindowActivation).delete()
+            # get list of selected windows
+            for app in app_window_list:
+                for wind in app['windows']:
+                    if wind['checked']:
+                        for i in wind['windowId']:
+                            windows_to_watch.append(i)
 
-        # get list of selected windows
-        for app in app_window_list:
-            for wind in app['windows']:
-                if wind['checked']:
-                    for i in wind['windowId']:
-                        windows_to_watch.append(i)
+            # filter window events from db down to only selected windows
+            q = self.session.query(WindowEvent).join(WindowEvent.window).all()
 
-        # filter window events from db down to only selected windows
-        q = self.session.query(WindowEvent).join(WindowEvent.window).all()
-
-        for e in q:
-            if e.event_type == 'Active':
-                if past_event:
+            # convert Active and Close events to to since Active event
+            for e in q:
+                if e.event_type == 'Active':
+                    if past_event:
+                        filtered_events.append([past_event.window_id,
+                                                past_event.window.process_id,
+                                                past_event.window.title,
+                                                past_event.created_at,
+                                                e.created_at])
+                    past_event = e
+                elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
                     filtered_events.append([past_event.window_id,
                                             past_event.window.process_id,
                                             past_event.window.title,
                                             past_event.created_at,
                                             e.created_at])
-                past_event = e
-            elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
-                filtered_events.append([past_event.window_id,
-                                        past_event.window.process_id,
-                                        past_event.window.title,
-                                        past_event.created_at,
-                                        e.created_at])
-                past_event = None
+                    past_event = None
 
-        # remove file if already exists
-        if os.path.isfile(file):
-            os.remove(file)
+            # remove file if already exists
+            if os.path.isfile(file):
+                os.remove(file)
 
-        with open(file, 'wb') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['window_id'] + ['process_id'] + ['window_name'] + ['open_time'] + ['close_time'])
+            # write csv
+            with open(file, 'wb') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['window_id'] + ['process_id'] + ['window_name'] + ['open_time'] + ['close_time'])
 
-            for row in filtered_events:
-                time_diff = datetime.datetime.strptime(row[3][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
-                open_time = time_diff.total_seconds()
+                for row in filtered_events:
+                    if row[0] in windows_to_watch:
+                        time_diff = datetime.datetime.strptime(row[3][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
+                        open_time = time_diff.total_seconds()
 
-                time_diff = datetime.datetime.strptime(row[4][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
-                close_time = time_diff.total_seconds()
+                        time_diff = datetime.datetime.strptime(row[4][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
+                        close_time = time_diff.total_seconds()
 
-                writer.writerow([row[0]] + [row[1]]  + [row[2]]  + [open_time]  + [close_time])
-
-        # add events from watched windows to the table
-        # for e in filtered_events:
-        #     if e[0] in windows_to_watch:
-        #         event = FilteredWindowActivation(e[0], e[1], e[2], e[3], e[4])
-        #         self.session.add(event)
-        #     self.trycommit()
+                        writer.writerow([row[0]] + [row[1]]  + [row[2]]  + [open_time]  + [close_time])
+        except:
+            print "Could not parse App/Window data for visualization"

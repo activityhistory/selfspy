@@ -111,28 +111,6 @@ class WindowEvent(SpookMixin, Base):
     def __repr__(self):
         return "<Window '%s' '%s' >" % (self.window_id, self.event_type)
 
-class FilteredWindowActivation(SpookMixin, Base):
-    """ entry for window events to be shown in visualization like open, close,
-    and active """
-
-    window_id = Column(Integer, ForeignKey('window.id'), nullable=False, index=True)
-    window = relationship("Window", backref=backref('filteredwindowactivations'))
-
-    process_name = Column(Unicode, index=True)
-    window_name = Column(Unicode, index=True)
-    start_time = Column(Unicode, index=True)
-    end_time = Column(Unicode, index=True)
-
-    def __init__(self, window_id, process_name, window_name, start_time, end_time):
-        self.window_id = window_id
-        self.process_name = process_name
-        self.window_name = window_name
-        self.start_time = start_time
-        self.end_time = end_time
-
-    def __repr__(self):
-        return "<WindowActivation '%s' '%s' '%s' >" % (self.window_id, self.start_time, self.end_time)
-
 
 class Geometry(SpookMixin, Base):
     """ entry for window geometries """

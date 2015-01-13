@@ -18,11 +18,12 @@ You should have received a copy of the GNU General Public License
 along with Selfspy. If not, see <http://www.gnu.org/licenses/>.
 """
 
-
+import os
+import re
 import string
-import objc, re, os
 import errno
 
+import objc
 from objc import IBAction, IBOutlet
 
 from Foundation import *
@@ -48,17 +49,14 @@ from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
                     kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
 import Quartz.CoreGraphics as CG
 
-import config as cfg
-
 import time
 from datetime import datetime
-
 import mutagen.mp4
 
-# from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
 from selfspy import bookmark
+import config as cfg
 
 from urlparse import urlparse
 
@@ -209,7 +207,7 @@ class Sniffer:
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Define Activity', 'showReview:', '')
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Select Activity', 'showReview:', '')
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Prepare Visualization', 'prepVisualization:', '')
