@@ -148,6 +148,7 @@ class ActivityStore:
         self.addObservers()
 
         self.started = NOW()
+        self.started_clicks = NOW()
 
     def run(self):
         # start database session
@@ -444,7 +445,7 @@ class ActivityStore:
         elif len(string) > 1:
             string = '<[%s]>' % string
 
-        self.key_presses.append(KeyPress(string, now - self.last_key_time, is_repeat))
+        self.key_presses.append(KeyPress(string, (NOW() - self.started).total_seconds(), is_repeat))
         self.last_key_time = now
 
         self.take_screenshot()
@@ -459,6 +460,7 @@ class ActivityStore:
         self.session.add(Click(button,
                                True,
                                x, y,
+                               self.started_clicks,
                                len(self.mouse_path),
                                locs,
                                timings,
@@ -466,6 +468,7 @@ class ActivityStore:
                                self.current_window.win_id,
                                self.current_window.geo_id))
         self.mouse_path = []
+        self.started_clicks = NOW()
         self.trycommit()
 
     def got_mouse_click(self, button, x, y):
@@ -492,7 +495,7 @@ class ActivityStore:
         now = time.time()
 
         if now-self.last_move_time > 1/frequency:
-            self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
+            self.mouse_path.append(MouseMove([x,y], (NOW() - self.started_clicks).total_seconds()))
             self.last_move_time = now
 
     ### Misc Functions ###
@@ -740,6 +743,7 @@ class ActivityStore:
         self.getBookmarks_(start_time)
         self.getClicksPerMinute_(start_time)
         self.getKeystrokesPerMinute_(start_time)
+        self.getMouseMovementPerMinute_(start_time)
         self.getAppWindowEvents_(start_time)
 
     def getBookmarks_(self, start_time):
@@ -805,34 +809,23 @@ class ActivityStore:
     def getKeystrokesPerMinute_(self, start_time):
         try:
             file = os.path.join(cfg.CURRENT_DIR, 'visualization', 'keys_per_minute.csv')
-            rec_index = 0
             current_time = None
             relative_times = []
 
-            # get recording event times
-            q = self.session.query(RecordingEvent).filter_by(event_type="On").all()
-            recording_times = [[datetime.datetime.strptime(r.time, "%Y-%m-%d %H:%M:%S.%f"), False] for r in q]
-
-            # get all keystrokes
+            # get all keystrokes from db
             q = self.session.query(Keys).all()
             for r in q:
-                row_time = datetime.datetime.strptime(r.created_at, "%Y-%m-%d %H:%M:%S.%f")
+                row_time = datetime.datetime.strptime(r.started, "%Y-%m-%d %H:%M:%S.%f")
+                relative_row_time = (row_time-start_time).total_seconds()
 
-                # find most recent time recording was started
-                # the time of the first keystroke is relative to recording start
-                while(rec_index < len(recording_times)-2 and row_time > recording_times[rec_index + 1][0]):
-                    rec_index += 1
-
+                # get values in array of floats
                 key_timings = zlib.decompress(r.timings)
+                if key_timings == "[]":
+                    continue
                 key_timings = map(float, key_timings[1:-2].split(','))
+
                 for key_time in key_timings:
-                    if recording_times[rec_index][1]:
-                        current_time = current_time + key_time
-                    else:
-                        diff_time = recording_times[rec_index][0] - start_time
-                        diff_time = diff_time.total_seconds()
-                        current_time = diff_time + key_time
-                        recording_times[rec_index][1] = True
+                    current_time = relative_row_time + key_time
                     relative_times.append(current_time)
 
             keys_per_minute = []
@@ -861,6 +854,75 @@ class ActivityStore:
                     writer.writerow([row[0]] + [row[1]])
         except:
             print "Could not parse keystroke data for visualization"
+
+    def getMouseMovementPerMinute_(self, start_time):
+        try:
+            file = os.path.join(cfg.CURRENT_DIR, 'visualization', 'mouse_movement_per_minute.csv')
+            current_time = None
+            relative_time_movements = []
+
+            # get all movements
+            q = self.session.query(Click).all()
+            for r in q:
+                row_time = datetime.datetime.strptime(r.started, "%Y-%m-%d %H:%M:%S.%f")
+                relative_row_time = (row_time - start_time).total_seconds()
+
+                # get data into array of floats with time relative to first screenshot
+                mouse_timings = zlib.decompress(r.timings)
+                # if no mouse movements between clicks, just continue to the next query row
+                if mouse_timings == "[]":
+                    continue
+                mouse_timings = map(float, mouse_timings[1:-2].split(','))
+
+                mouse_path = zlib.decompress(r.path)
+                mouse_path = mouse_path[2:-3].split('], [')
+
+                for i, mouse_time in enumerate(mouse_timings):
+                    current_time = relative_row_time + mouse_time
+                    relative_time_movements.append([current_time, map(float, mouse_path[i].split(', '))])  #
+
+            moves_per_minute = []
+
+            # convert array of locations and times to movement per minute
+            for i in range(int(math.ceil(relative_time_movements[-1][0]/60))):
+                moves_per_minute.append([0,0])
+
+            # print keys_per_minute
+            for i, val in enumerate(moves_per_minute):
+                val[0] = 60 * i
+
+            # get total euclidian distance between mouse positions this minute
+            j = 0
+            distance = 0.0
+            moves_this_minute = []
+            for m in moves_per_minute:
+                while (relative_time_movements[j][0] < m[0] + 60 and j < len(relative_time_movements)-1):
+                    moves_this_minute.append(relative_time_movements[j])
+                    j += 1
+                if len(moves_this_minute) >= 2:
+                    for k in range(len(moves_this_minute)-1):
+                        x1 = moves_this_minute[k][1][0]
+                        x2 = moves_this_minute[k][1][1]
+                        y1 = moves_this_minute[k+1][1][0]
+                        y2 = moves_this_minute[k+1][1][1]
+                        distance = distance + math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) )
+                    m[1] = distance
+                    moves_this_minute = []
+                    distance = 0.0
+
+            # remove csv file if already exists
+            if os.path.isfile(file):
+                os.remove(file)
+
+            # write csv file
+            with open(file, 'wb') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['time'] + ['distance'])
+
+                for row in moves_per_minute:
+                    writer.writerow([row[0]] + [row[1]])
+        except:
+            print "Could not parse mouse movement data for visualization"
 
     def getAppWindowEvents_(self, start_time):
         try:
