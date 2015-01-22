@@ -42,7 +42,7 @@ class PreferencesController(NSWindowController):
     def changedMaxScreenshot_(self,sender):
         """ tells Selfspy to restart screnshot loop on preference change """
 
-        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshotPref',self)
+        NSNotificationCenter.defaultCenter().postNotificationName_object_('changedMaxScreenshot',self)
 
     @IBAction
     def clearData_(self,sender):

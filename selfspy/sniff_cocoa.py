@@ -70,6 +70,12 @@ class Sniffer:
         self.mouse_move_hook = lambda x: True
         self.screen_hook = lambda x: True
 
+        self.regularApps = []
+        self.regularWindows = []
+        self.last_app_window_check = time.time()
+        self.app_window_check_interval = 1.0
+        self.windows_to_ignore = ["Focus Proxy", "Clipboard"]
+
         self.screenSize = [NSScreen.mainScreen().frame().size.width, NSScreen.mainScreen().frame().size.height]
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
 
@@ -169,7 +175,7 @@ class Sniffer:
                 # Create the statusbar item
                 self.statusitem = statusbar.statusItemWithLength_(NSVariableStatusItemLength)
 
-                # Load all images
+                # Load all icon images
                 self.icon = NSImage.alloc().initByReferencingFile_('../Resources/eye.png')
                 self.icon.setScalesWhenResized_(True)
                 self.size_ = self.icon.setSize_((20, 20))
@@ -194,17 +200,16 @@ class Sniffer:
                     menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Pause Recording', 'toggleLogging:', '')
                 else:
                     menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Start Recording', 'toggleLogging:', '')
-                #menuitem.setEnabled_(False)
                 self.menu.addItem_(menuitem)
                 self.loggingMenuItem = menuitem
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.separatorItem()
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Bookmark', 'bookmark:', '')
+                menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Select Activity', 'showReview:', '')
@@ -243,116 +248,122 @@ class Sniffer:
     def cancel(self):
         AppHelper.stopEventLoop()
 
+    def update_apps_and_windows_(self, event):
+
+        if (time.time() - self.last_app_window_check > self.app_window_check_interval):
+
+            self.regularApps = []
+            self.regularWindows = []
+            chromeChecked = False
+            safariChecked = False
+
+            # get list of apps with regular activation
+            activeApps = self.workspace.runningApplications()
+            for app in activeApps:
+                if app.activationPolicy() == 0: # 0 is the normal activation policy
+                    self.regularApps.append(app)
+
+            # get a list of all named windows associated with regular apps
+            # also check Chrome and Safari tabs
+            windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID)
+            for window in windowList:
+                window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+                owner = window['kCGWindowOwnerName']
+                url = 'NO_URL'
+                geometry = window['kCGWindowBounds']
+
+                for app in self.regularApps:
+                    if app.localizedName() == owner:
+                        if (window_name and window_name not in self.windows_to_ignore):
+                            if owner == 'Google Chrome' and not chromeChecked:
+                                # get tab info using Applescript
+                                s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n set tabs_info to {} \n set window_list to every window \n repeat with win in window_list \n set tab_list to tabs in win \n repeat with t in tab_list \n set the_title to the title of t \n set the_url to the URL of t \n set the_bounds to the bounds of win \n set t_info to {the_title, the_url, the_bounds} \n set end of tabs_info to t_info \n end repeat \n end repeat \n return tabs_info \n end tell")
+                                tabs_info = s.executeAndReturnError_(None)
+
+                                if tabs_info[0]:
+                                    numItems = tabs_info[0].numberOfItems()
+                                    for i in range(1, numItems + 1):
+                                        window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                        if window_name:
+                                            url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2).stringValue())
+                                        else:
+                                            url = "NO_URL"
+                                        x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
+                                        y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
+                                        x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
+                                        y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
+                                        self.regularWindows.append({'process': 'Google Chrome', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
+                                    chromeChecked = True
+                            elif owner == 'Safari' and not safariChecked:
+                                # get tab info using Applescript
+                                s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set tabs_info to {} \n set winlist to every window \n repeat with win in winlist \n set ok to true \n try \n set tablist to every tab of win \n on error errmsg \n set ok to false \n end try \n if ok then \n repeat with t in tablist \n set thetitle to the name of t \n set theurl to the URL of t \n set thebounds to the bounds of win \n set t_info to {thetitle, theurl, thebounds} \n set end of tabs_info to t_info \n end repeat \n end if \n end repeat \n return tabs_info \n end tell")
+                                tabs_info = s.executeAndReturnError_(None)
+                                if tabs_info[0]:
+                                    numItems = tabs_info[0].numberOfItems()
+                                    for i in range(1, numItems + 1):
+                                        window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                        if window_name:
+                                            url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
+                                        else:
+                                            url = "NO_URL"
+                                        x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
+                                        y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
+                                        x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
+                                        y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
+                                        self.regularWindows.append({'process': 'Safari', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
+                                    safariChecked = True
+                            else:
+                                self.regularWindows.append({'process': owner, 'title': window_name, 'url': url, 'geometry': geometry})
+
+
+            # get active app, window, url and geometry. only track for regular apps
+            for app in self.regularApps:
+                if app.isActive():
+                    for window in windowList:
+                        if (window['kCGWindowNumber'] == event.windowNumber() or (not event.windowNumber() and window['kCGWindowOwnerName'] == app.localizedName())):
+                            geometry = window['kCGWindowBounds']
+
+                            # get browser_url
+                            browser_url = 'NO_URL'
+                            if len(window.get('kCGWindowName', u'').encode('ascii', 'replace')) > 0:
+                                if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+                                    browser_url = str(browser_url[0])[33:-3]
+                                if (window.get('kCGWindowOwnerName') == 'Safari'):
+                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
+                                    browser_url = s.executeAndReturnError_(None)
+                                    browser_url = str(browser_url[0])[33:-3]
+
+                            self.screen_hook(window['kCGWindowOwnerName'],
+                                             window.get('kCGWindowName', u'').encode('ascii', 'replace'),
+                                             geometry['X'],
+                                             geometry['Y'],
+                                             geometry['Width'],
+                                             geometry['Height'],
+                                             browser_url,
+                                             self.regularApps,
+                                             self.regularWindows)
+
+                            # print "Window Name is " + str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+                            break
+                    break
+
+
     def handler(self, event):
         try:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
 
             if(recording):
-                regularApps = []
-                regularWindows = []
-                chromeChecked = False
-                safariChecked = False
-                windows_to_ignore = ["Focus Proxy", "Clipboard"]
-
-                # get list of apps with regular activation
-                activeApps = self.workspace.runningApplications()
-                for app in activeApps:
-                    if app.activationPolicy() == 0: # 0 is the normal activation policy
-                        regularApps.append(app)
-
-                # get a list of all named windows associated with regular apps
-                # also check Chrome and Safari tabs
-                windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID)
-                for window in windowList:
-                    window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
-                    owner = window['kCGWindowOwnerName']
-                    url = 'NO_URL'
-                    geometry = window['kCGWindowBounds']
-
-                    for app in regularApps:
-                        if app.localizedName() == owner:
-                            if (window_name and window_name not in windows_to_ignore):
-                                if owner == 'Google Chrome' and not chromeChecked:
-                                    # get tab info using Applescript
-                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n set tabs_info to {} \n set window_list to every window \n repeat with win in window_list \n set tab_list to tabs in win \n repeat with t in tab_list \n set the_title to the title of t \n set the_url to the URL of t \n set the_bounds to the bounds of win \n set t_info to {the_title, the_url, the_bounds} \n set end of tabs_info to t_info \n end repeat \n end repeat \n return tabs_info \n end tell")
-                                    tabs_info = s.executeAndReturnError_(None)
-
-                                    if tabs_info[0]:
-                                        numItems = tabs_info[0].numberOfItems()
-                                        for i in range(1, numItems + 1):
-                                            window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
-                                            if window_name:
-                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2).stringValue())
-                                            else:
-                                                url = "NO_URL"
-                                            x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
-                                            y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
-                                            x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
-                                            y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
-                                            regularWindows.append({'process': 'Google Chrome', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
-                                        chromeChecked = True
-                                elif owner == 'Safari' and not safariChecked:
-                                    # get tab info using Applescript
-                                    s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set tabs_info to {} \n set winlist to every window \n repeat with win in winlist \n set ok to true \n try \n set tablist to every tab of win \n on error errmsg \n set ok to false \n end try \n if ok then \n repeat with t in tablist \n set thetitle to the name of t \n set theurl to the URL of t \n set thebounds to the bounds of win \n set t_info to {thetitle, theurl, thebounds} \n set end of tabs_info to t_info \n end repeat \n end if \n end repeat \n return tabs_info \n end tell")
-                                    tabs_info = s.executeAndReturnError_(None)
-                                    if tabs_info[0]:
-                                        numItems = tabs_info[0].numberOfItems()
-                                        for i in range(1, numItems + 1):
-                                            window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
-                                            if window_name:
-                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
-                                            else:
-                                                url = "NO_URL"
-                                            x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
-                                            y1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(2).stringValue())
-                                            x2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(3).stringValue())
-                                            y2 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(4).stringValue())
-                                            regularWindows.append({'process': 'Safari', 'title': window_name, 'url': url, 'geometry': {'X':x1,'Y':y1,'Width':x2-x1,'Height':y2-y1} })
-                                        safariChecked = True
-                                else:
-                                    regularWindows.append({'process': owner, 'title': window_name, 'url': url, 'geometry': geometry})
-
-
-                # get active app, window, url and geometry. only track for regular apps
-                for app in regularApps:
-                    if app.isActive():
-                        for window in windowList:
-                            if (window['kCGWindowNumber'] == event.windowNumber() or (not event.windowNumber() and window['kCGWindowOwnerName'] == app.localizedName())):
-                                geometry = window['kCGWindowBounds']
-
-                                # get browser_url
-                                browser_url = 'NO_URL'
-                                if len(window.get('kCGWindowName', u'').encode('ascii', 'replace')) > 0:
-                                    if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
-                                        s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
-                                        browser_url = s.executeAndReturnError_(None)
-                                        browser_url = str(browser_url[0])[33:-3]
-                                    if (window.get('kCGWindowOwnerName') == 'Safari'):
-                                        s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
-                                        browser_url = s.executeAndReturnError_(None)
-                                        browser_url = str(browser_url[0])[33:-3]
-
-                                self.screen_hook(window['kCGWindowOwnerName'],
-                                                 window.get('kCGWindowName', u'').encode('ascii', 'replace'),
-                                                 geometry['X'],
-                                                 geometry['Y'],
-                                                 geometry['Width'],
-                                                 geometry['Height'],
-                                                 browser_url,
-                                                 regularApps,
-                                                 regularWindows)
-
-                                # print "Window Name is " + str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
-                                break
-                        break
-
                 loc = NSEvent.mouseLocation()
                 if event.type() == NSLeftMouseDown:
                     self.mouse_button_hook(1, loc.x, loc.y)
+                    self.update_apps_and_windows_(event)
                 # elif event.type() == NSLeftMouseUp:
                 #     self.mouse_button_hook(1, loc.x, loc.y)
                 elif event.type() == NSRightMouseDown:
                     self.mouse_button_hook(3, loc.x, loc.y)
+                    self.update_apps_and_windows_(event)
                 # elif event.type() == NSRightMouseUp:
                     # self.mouse_button_hook(2, loc.x, loc.y)
                 elif event.type() == NSScrollWheel:
@@ -369,6 +380,7 @@ class Sniffer:
                     # elif event.deltaZ() < 0:
                         # self.mouse_button_hook(9, loc.x, loc.y)
                 elif event.type() == NSKeyDown:
+                    self.update_apps_and_windows_(event)
                     flags = event.modifierFlags()
                     modifiers = []  # OS X api doesn't care it if is left or right
                     if flags & NSControlKeyMask:

@@ -117,7 +117,7 @@ class ActivityStore:
         try:
             self.session_maker = models.initialize(db_name)
         except sqlalchemy.exc.OperationalError:
-            self.show_alert("Database operational error. Your storage device may be full. Exiting Selfspy...")
+            self.show_alert("Oops! We could not record that. Your storage device may be full. Exiting Selfspy...")
             sys.exit()
 
         # create instance variables for tracking
@@ -168,7 +168,7 @@ class ActivityStore:
 
         # Preferences window
         s = objc.selector(self.checkMaxScreenshotOnPrefChange_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshotPref', None)
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'changedMaxScreenshot', None)
 
         s = objc.selector(self.clearData_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'clearData', None)
@@ -512,7 +512,7 @@ class ActivityStore:
                     self.sniffer.delegate.toggleLogging_(self)
                 self.session.rollback()
 
-                self.show_alert("Database operational error. Your storage device may be full. Turning off Selfspy recording.")
+                self.show_alert("Oops! We could not record that. \n\n You may have removed your storage device or your storage device may be full. \n \n Pausing Selfspy recording.")
 
                 break
             except:
@@ -562,12 +562,14 @@ class ActivityStore:
 
             # add window entries
             for w in q_windows:
-                if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
+                if not w.browser_url or w.browser_url == 'NO_URL' or w.browser_url == '':
                     windowName = w.title if w.title else 'NO_TITLE'
                     window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':windowName, 'image':''})
                     controller.results[w.process_id-1]['windows'].append(window_dict)
                 else:
                     short_url = urlparse(w.browser_url).hostname
+                    if not short_url:
+                        short_url = "NO_URL"
                     try:
                         window_dict = (d for d in controller.results[w.process_id-1]['windows'] if d['windowName'] == short_url).next()
                         window_dict['windowId'].append(w.id)
@@ -580,8 +582,8 @@ class ActivityStore:
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         """ restart idle-time screenshot loop on preference change """
-
-        self.screenshotTimer.invalidate()
+        if self.screenshotTimer:
+            self.screenshotTimer.invalidate()
         self.runMaxScreenshotLoop()
 
     def runMaxScreenshotLoop(self):
@@ -643,6 +645,7 @@ class ActivityStore:
 
     def take_screenshot(self):
       # We check whether the screenshot option is on and then limit the screenshot taking rate to user defined rate
+
       self.screenshots_active = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('screenshots')
       self.screenshot_time_min = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageTimeMin') / 1000.0
 
@@ -700,32 +703,38 @@ class ActivityStore:
         To be used on shutdown of program"""
 
         self.sniffer.cancel()
-        self.store_keys()
+        try:
+            self.store_keys()
+        except:
+            pass
 
     def gotCloseNotification_(self, notification):
         """ adds "Close" entry to DB for each app open at the close of Selfspy """
 
-        # for each app
-        for app in self.current_apps:
-            db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
-            process_id = 0
-            if db_process:
-                process_id = db_process.id
-            process_event = ProcessEvent(process_id, "Close")
-            self.session.add(process_event)
+        try:
+            # for each app
+            for app in self.current_apps:
+                db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
+                process_id = 0
+                if db_process:
+                    process_id = db_process.id
+                process_event = ProcessEvent(process_id, "Close")
+                self.session.add(process_event)
 
-        # for each window
-        for window_id in self.current_windows:
-            db_window = self.session.query(Window).filter_by(id=window_id).scalar()
-            window_id = db_window.id if db_window else 0
-            pid = db_window.process_id if db_window else 0
-            window_event = WindowEvent(window_id, "Close")
-            self.session.add(window_event)
+            # for each window
+            for window_id in self.current_windows:
+                db_window = self.session.query(Window).filter_by(id=window_id).scalar()
+                window_id = db_window.id if db_window else 0
+                pid = db_window.process_id if db_window else 0
+                window_event = WindowEvent(window_id, "Close")
+                self.session.add(window_event)
 
-        # note that we've stopped recording
-        recording_event = RecordingEvent(NOW(), "Off")
-        self.session.add(recording_event)
-        self.trycommit()
+            # note that we've stopped recording
+            recording_event = RecordingEvent(NOW(), "Off")
+            self.session.add(recording_event)
+            self.trycommit()
+        except:
+            pass
 
     def noteRecordingState_(self, notification):
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
@@ -745,6 +754,10 @@ class ActivityStore:
         self.getKeystrokesPerMinute_(start_time)
         self.getMouseMovementPerMinute_(start_time)
         self.getAppWindowEvents_(start_time)
+        # self.createBlankImages()
+        self.show_alert("You've sucessfully prepared your data for visualization.\n\nYou can find the relevant csv files in the Visualization folder of your Selfspy data directory.")
+
+
 
     def getBookmarks_(self, start_time):
         # query database
@@ -924,59 +937,25 @@ class ActivityStore:
         except:
             print "Could not parse mouse movement data for visualization"
 
-    def getAppWindowEvents_(self, start_time):
-        try:
-            app_window_list = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
-            file = os.path.join(cfg.CURRENT_DIR, 'visualization' ,'activity_events.csv')
-            windows_to_watch = []
-            filtered_events = []
-            past_event = None
+    def createBlankImages(self):
+        screenshot_directory = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots"))
+        screenshot_files = os.listdir(screenshot_directory)
 
-            # get list of selected windows
-            for app in app_window_list:
-                for wind in app['windows']:
-                    if wind['checked']:
-                        for i in wind['windowId']:
-                            windows_to_watch.append(i)
+        for i in range(len(screenshot_files)-1):
+            img1_time = datetime.datetime.strptime(screenshot_files[i][0:19], "%y%m%d-%H%M%S%f")
+            img2_time = datetime.datetime.strptime(screenshot_files[i+1][0:19], "%y%m%d-%H%M%S%f")
+            if (img2_time - img1_time).total_seconds() > 15*60.0:
+                file_time = img1_time + datetime.timedelta(minutes=15.0)
+                file_name = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots", file_time.strftime("%y%m%d-%H%M%S%f") + ".jpg"))
 
-            # filter window events from db down to only selected windows
-            q = self.session.query(WindowEvent).join(WindowEvent.window).all()
-
-            # convert Active and Close events to to since Active event
-            for e in q:
-                if e.event_type == 'Active':
-                    if past_event:
-                        filtered_events.append([past_event.window_id,
-                                                past_event.window.process_id,
-                                                past_event.window.title,
-                                                past_event.created_at,
-                                                e.created_at])
-                    past_event = e
-                elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
-                    filtered_events.append([past_event.window_id,
-                                            past_event.window.process_id,
-                                            past_event.window.title,
-                                            past_event.created_at,
-                                            e.created_at])
-                    past_event = None
-
-            # remove file if already exists
-            if os.path.isfile(file):
-                os.remove(file)
-
-            # write csv
-            with open(file, 'wb') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(['window_id'] + ['process_id'] + ['window_name'] + ['open_time'] + ['close_time'])
-
-                for row in filtered_events:
-                    if row[0] in windows_to_watch:
-                        time_diff = datetime.datetime.strptime(row[3][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
-                        open_time = time_diff.total_seconds()
-
-                        time_diff = datetime.datetime.strptime(row[4][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
-                        close_time = time_diff.total_seconds()
-
-                        writer.writerow([row[0]] + [row[1]]  + [row[2]]  + [open_time]  + [close_time])
-        except:
-            print "Could not parse App/Window data for visualization"
+                size = NSSize(160,100)
+                black = NSColor.blackColor()
+                image = NSImage.alloc().initWithSize_(size)
+                image.lockFocus()
+                black.drawSwatchInRect_(NSMakeRect(0,0,160,100))
+                rep = NSBitmapImageRep.alloc().initWithFocusedViewRect_(NSMakeRect(0,0,160,100))
+                data = rep.representationUsingType_properties_(NSJPEGFileType,None)
+                data.writeToFile_atomically_(file_name,False)
+                image.unlockFocus()
+                print file_name
+                print "Created Image"

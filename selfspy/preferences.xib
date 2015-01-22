@@ -7,7 +7,6 @@
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesController">
             <connections>
                 <outlet property="clearDataPopup" destination="Q9J-pq-Mhp" id="xat-PC-s4L"/>
-                <outlet property="popover" destination="tSo-8v-hKd" id="G6f-3t-cel"/>
                 <outlet property="screenshotSizeMenu" destination="Zfc-cP-1Ys" id="cO3-ne-XTx"/>
                 <outlet property="screenshotSizePopup" destination="ImY-8d-57i" id="jGL-9c-OyC"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="k2w-Wa-h0P"/>
@@ -145,7 +144,6 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="changedScreenshot:" target="-2" id="Svy-Ka-uf9"/>
                             <binding destination="bq4-b7-72c" name="value" keyPath="values.screenshots" id="p13-56-0m2"/>
                         </connections>
                     </button>
@@ -251,22 +249,9 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
-                    <connections>
-                        <action selector="closePopover:" target="-2" id="52v-f5-e9X"/>
-                    </connections>
                 </button>
             </subviews>
             <point key="canvasLocation" x="505.5" y="583.5"/>
         </customView>
-        <viewController id="uzm-3D-iAW" userLabel="Popover View Controller">
-            <connections>
-                <outlet property="view" destination="g4d-Bs-uiy" id="zl0-L9-OR8"/>
-            </connections>
-        </viewController>
-        <popover id="tSo-8v-hKd">
-            <connections>
-                <outlet property="contentViewController" destination="uzm-3D-iAW" id="Gpc-ee-G4Y"/>
-            </connections>
-        </popover>
     </objects>
 </document>
