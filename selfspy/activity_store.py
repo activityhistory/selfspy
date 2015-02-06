@@ -757,8 +757,6 @@ class ActivityStore:
         # self.createBlankImages()
         self.show_alert("You've sucessfully prepared your data for visualization.\n\nYou can find the relevant csv files in the Visualization folder of your Selfspy data directory.")
 
-
-
     def getBookmarks_(self, start_time):
         # query database
         q = self.session.query(Bookmark).all()
@@ -936,6 +934,63 @@ class ActivityStore:
                     writer.writerow([row[0]] + [row[1]])
         except:
             print "Could not parse mouse movement data for visualization"
+
+
+    def getAppWindowEvents_(self, start_time):
+        try:
+            app_window_list = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('appWindowList')
+            file = os.path.join(cfg.CURRENT_DIR, 'visualization' ,'activity_events.csv')
+            windows_to_watch = []
+            filtered_events = []
+            past_event = None
+
+            # get list of selected windows
+            for app in app_window_list:
+                for wind in app['windows']:
+                    if wind['checked']:
+                        for i in wind['windowId']:
+                            windows_to_watch.append(i)
+
+            # filter window events from db down to only selected windows
+            q = self.session.query(WindowEvent).join(WindowEvent.window).all()
+
+            # convert Active and Close events to to since Active event
+            for e in q:
+                if e.event_type == 'Active':
+                    if past_event:
+                        filtered_events.append([past_event.window_id,
+                                                past_event.window.process_id,
+                                                past_event.window.title,
+                                                past_event.created_at,
+                                                e.created_at])
+                    past_event = e
+                elif past_event and e.window_id == past_event.window_id and e.event_type == 'Close':
+                    filtered_events.append([past_event.window_id,
+                                            past_event.window.process_id,
+                                            past_event.window.title,
+                                            past_event.created_at,
+                                            e.created_at])
+                    past_event = None
+
+            # remove file if already exists
+            if os.path.isfile(file):
+                os.remove(file)
+
+            # write csv
+            with open(file, 'wb') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['window_id'] + ['process_id'] + ['window_name'] + ['open_time'] + ['close_time'])
+
+                for row in filtered_events:
+                    if row[0] in windows_to_watch:
+                        time_diff = datetime.datetime.strptime(row[3][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
+                        open_time = time_diff.total_seconds()
+
+                        time_diff = datetime.datetime.strptime(row[4][0:26], "%Y-%m-%d %H:%M:%S.%f") - start_time
+                        close_time = time_diff.total_seconds()
+                        writer.writerow([row[0]] + [row[1]]  + [row[2]]  + [open_time]  + [close_time])
+        except:
+            print "Could not parse App/Window data for visualization"
 
     def createBlankImages(self):
         screenshot_directory = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots"))
