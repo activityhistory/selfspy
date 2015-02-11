@@ -1,13 +1,11 @@
 *.pyc
 *.egg-info
 *.key
-build/
-dist/selfspy.app*
-
 .Python
 tests/
 bin/
 lib/
+build/
 include/
 selfspy.spec
 sept.selfspy/
@@ -19,9 +17,7 @@ selfspy/*orig
 SimpleXibDemo.xib
 
 selfspy.xcode*
-
 test2.py
-
 test.py
 
 # Created by https://www.gitignore.io
