@@ -31,3 +31,4 @@ test.py
 
 ## Directory-based project format:
 .idea/
+dist

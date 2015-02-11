@@ -54,7 +54,7 @@ from datetime import datetime
 
 import mutagen.mp4
 
-#from selfspy import locationTracking
+from selfspy import locationTracking
 from selfspy import debriefer
 from selfspy import reviewer
 from selfspy import preferences
@@ -164,9 +164,10 @@ class Sniffer:
         self.screenRatio = self.screenSize[0]/self.screenSize[1]
 
         self.location_hook = lambda x: True
-        #self.geo = locationTracking.LocationTracking()
-        #self.geo.startTracking()
-        #self.geo.locationchange_hook = self.got_location_change
+        
+        self.geo = locationTracking.LocationTracking()
+        self.geo.startTracking()
+        self.geo.locationchange_hook = self.got_location_change
 
         self.delegate = None
 
@@ -281,6 +282,10 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconRecord)
                     self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
 
+            def checkLocation_(self,notification):
+                print "checkLocation"
+                currentLocation = sc.geo.getLocation()
+
             def showDebrief_(self, notification):
                 NSLog("Showing Daily Debrief Window...")
                 debriefer.DebriefController.show()
@@ -366,11 +371,15 @@ class Sniffer:
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
+                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Check Location', 'checkLocation:', '')
+                self.menu.addItem_(menuitem)
+
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit Selfspy', 'terminate:', '')
                 self.menu.addItem_(menuitem)
+
 
                 # Bind it to the status item
                 self.statusitem.setMenu_(self.menu)

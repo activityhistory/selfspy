@@ -752,13 +752,18 @@ class ActivityStore:
         for dir in os.listdir('/Volumes') :
             if namefilter in dir :
                 volume = os.path.join('/Volumes', dir)
-                if (os.path.ismount(volume)) :
-                    subDirs = os.listdir(volume)
-                    for filename in subDirs:
-                        if "selfspy.cfg" == filename :
-                            print "backup drive found ", volume
-                            cfg.THUMBDRIVE_DIR = volume
-                            return cfg.THUMBDRIVE_DIR
+                try :
+                    if (os.path.ismount(volume)) :
+                        subDirs = os.listdir(volume)
+                        for filename in subDirs:
+                            if "selfspy.cfg" == filename :
+                                print "backup drive found ", volume
+                                cfg.THUMBDRIVE_DIR = volume
+                                return cfg.THUMBDRIVE_DIR
+                except OSError:
+                    print "Couldn't read drive ", volume
+                    # raise
+
         return None
 
     def defineCurrentDrive(self):
