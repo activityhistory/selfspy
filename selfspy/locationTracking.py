@@ -70,7 +70,7 @@ class LocationTracking:
     def locationManager_didUpdateToLocation_fromLocation_(self,
             manager, newLocation, oldLocation):
 
-        print "location update : "
+        # print "location update : "
 
         # Ignore updates where nothing we care about changed
         if newLocation is None:
@@ -79,7 +79,7 @@ class LocationTracking:
             pass
         else:
             dist = self.distanceMeter(newLocation.coordinate().latitude, newLocation.coordinate().longitude, oldLocation.coordinate().latitude, oldLocation.coordinate().longitude)
-            print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, dist
+            # print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, dist
             if (dist > 50) :
                 self.locationchange_hook(newLocation.coordinate().latitude,
                     newLocation.coordinate().longitude)

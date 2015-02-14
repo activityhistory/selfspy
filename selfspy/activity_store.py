@@ -517,12 +517,12 @@ class ActivityStore:
 
     def store_location(self, lat, lon):
         # now = time.time()
-        print "adding location to DB"
+        # print "adding location to DB"
         self.session.add(Location(lat, lon))
         self.trycommit()
 
     def got_location_change(self, lat, lon):
-        print "location change"
+        # print "location change"
         self.store_location(lat, lon)
 
     # removed project

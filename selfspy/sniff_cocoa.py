@@ -732,7 +732,7 @@ class Sniffer:
 
         #For testing how long it takes to take screenshot
         stop = time.time()
-        print 'took ' + str(height) + 'px image in ' + str(stop-start)[:5] + ' seconds'
+        # print 'took ' + str(height) + 'px image in ' + str(stop-start)[:5] + ' seconds'
 
       except KeyboardInterrupt:
         print "Keyboard interrupt"
