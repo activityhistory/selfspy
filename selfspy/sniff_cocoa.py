@@ -743,8 +743,8 @@ class Sniffer:
       except:
         NSLog("couldn't save image")
 
-    def got_location_change(self, latitude, longitude, latitudeRange, longitudeRange):
-        print "location_change", latitude, longitude, latitudeRange, longitudeRange
+    def got_location_change(self, latitude, longitude):
+        print "location_change", latitude, longitude
         self.location_hook(latitude,longitude)
 
 

@@ -60,6 +60,13 @@ class LocationTracking:
 
         return latitudeRange * math.cos(aLocation.coordinate().latitude * math.pi / 180.0)
 
+    def distanceMeter(self, lat1, lon1, lat2, lon2):
+        R = 6371000  # radius of the earth in m
+        x = (lon2 - lon1) * math.cos( 0.5*(lat2+lat1) )
+        y = lat2 - lat1
+        d = R * math.sqrt( x*x + y*y )
+        return d
+
     def locationManager_didUpdateToLocation_fromLocation_(self,
             manager, newLocation, oldLocation):
 
@@ -70,17 +77,12 @@ class LocationTracking:
             return
         if oldLocation is None:
             pass
-        elif (newLocation.coordinate().longitude == oldLocation.coordinate().longitude and
-                newLocation.coordinate().latitude == oldLocation.coordinate().latitude and
-                newLocation.horizontalAccuracy() == oldLocation.horizontalAccuracy()):
-            return
-
-        print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude
-
-        self.locationchange_hook(newLocation.coordinate().latitude,
-            newLocation.coordinate().longitude,
-            LocationTracking.latitudeRangeForLocation_(newLocation),
-            LocationTracking.longitudeRangeForLocation_(newLocation))
+        else:
+            dist = self.distanceMeter(newLocation.coordinate().latitude, newLocation.coordinate().longitude, oldLocation.coordinate().latitude, oldLocation.coordinate().longitude)
+            print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, dist
+            if (dist > 50) :
+                self.locationchange_hook(newLocation.coordinate().latitude,
+                    newLocation.coordinate().longitude)
 
         # TODO what happens in case of new location.
         # newLocation.coordinate().latitude,
