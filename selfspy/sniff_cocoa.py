@@ -282,9 +282,9 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconRecord)
                     self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
 
-            def checkLocation_(self,notification):
-                print "checkLocation"
-                currentLocation = sc.geo.getLocation()
+            # def checkLocation_(self,notification):
+            #     print "checkLocation"
+            #     currentLocation = sc.geo.getLocation()
 
             def showDebrief_(self, notification):
                 NSLog("Showing Daily Debrief Window...")
@@ -371,8 +371,8 @@ class Sniffer:
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Check Location', 'checkLocation:', '')
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Check Location', 'checkLocation:', '')
+                # self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.separatorItem()
                 self.menu.addItem_(menuitem)
@@ -744,7 +744,8 @@ class Sniffer:
         NSLog("couldn't save image")
 
     def got_location_change(self, latitude, longitude, latitudeRange, longitudeRange):
-        print "location_change", latitude, longitude
+        print "location_change", latitude, longitude, latitudeRange, longitudeRange
+        self.location_hook(latitude,longitude)
 
 
 # Cocoa does not provide a good api to get the keycodes, therefore we have to provide our own.

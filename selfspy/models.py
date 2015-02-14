@@ -220,13 +220,22 @@ class Debrief(SpookMixin, Base):
 
 
 class Location(SpookMixin, Base):
-    location = Column(Unicode, index=True, unique=True)
+    # location = Column(Unicode, index=True, unique=True)
+    lat = Column(Integer, nullable=False)
+    lon = Column(Integer, nullable=False)
+    time = Column(Binary)
 
-    def __init__(self, location):
-        self.location = location
+    def __init__(self, lat, lon):
+        # ztimings = zlib.compress(json.dumps(timings))
+
+        # self.location = location
+        self.lat = lat
+        self.lon = lon
+        # self.timings = ztimings
 
     def __repr__(self):
-        return "<Location is '%s'>" % self.location
+        return "<Location is '%d','%d'>" % (self.lat, self.lon)
+
 
 
 def pad(s, padnum):

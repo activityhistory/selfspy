@@ -202,6 +202,7 @@ class ActivityStore:
         self.sniffer.key_hook = self.got_key
         self.sniffer.mouse_button_hook = self.got_mouse_click
         self.sniffer.mouse_move_hook = self.got_mouse_move
+        self.sniffer.location_hook = self.got_location_change
 
         self.sniffer.run()
 
@@ -513,6 +514,16 @@ class ActivityStore:
         if now-self.last_move_time > 1/frequency:
             self.mouse_path.append(MouseMove([x,y], now - self.last_move_time))
             self.last_move_time = now
+
+    def store_location(self, lat, lon):
+        # now = time.time()
+        print "adding location to DB"
+        self.session.add(Location(lat, lon))
+        self.trycommit()
+
+    def got_location_change(self, lat, lon):
+        print "location change"
+        self.store_location(lat, lon)
 
     # removed project
     def store_experience(self, message, screenshot, user_initiated, ignored):
