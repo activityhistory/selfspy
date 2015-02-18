@@ -162,10 +162,13 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="jEX-yb-UJI">
                                 <items>
+                                    <menuItem title="5 min" tag="5" id="ffS-3U-JPV">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
                                     <menuItem title="15 min" tag="15" id="c7C-D3-odu"/>
-                                    <menuItem title="hour" tag="60" id="Kvh-zB-ULz"/>
-                                    <menuItem title="day" tag="1440" id="dSu-5Q-nA4"/>
-                                    <menuItem title="week" tag="7980" id="adH-ZM-9eb">
+                                    <menuItem title="1 hour" tag="60" id="Kvh-zB-ULz"/>
+                                    <menuItem title="1 day" tag="1440" id="dSu-5Q-nA4"/>
+                                    <menuItem title="1 week" tag="7980" id="adH-ZM-9eb">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="forever" tag="-1" id="I1H-f7-pDQ">

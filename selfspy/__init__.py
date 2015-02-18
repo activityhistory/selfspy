@@ -93,19 +93,20 @@ def main():
     except OSError:
         pass
 
-    # check if Selfspy is already running
-    lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
-    cfg.LOCK  = LockFile(lockname)
-    if cfg.LOCK.is_locked():
-        print '%s is locked! I am probably already running.' % lockname
-        print 'If you can not find a running selfspy process,'\
-        ' the lock is stale and you can safely remove it.'
-        print 'Shutting down.'
-        sys.exit(1)
+    # Can we just get rid of the lockfile
+    # # check if Selfspy is already running
+    # lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
+    # cfg.LOCK  = LockFile(lockname)
+    # if cfg.LOCK.is_locked():
+    #     print '%s is locked! I am probably already running.' % lockname
+    #     print 'If you can not find a running selfspy process,'\
+    #     ' the lock is stale and you can safely remove it.'
+    #     print 'Shutting down.'
+    #     sys.exit(1)
 
     # start activity tracker
     astore = ActivityStore(cfg.DBNAME)
-    cfg.LOCK.acquire()
+    # cfg.LOCK.acquire()
     try:
         astore.run()
     except SystemExit:

@@ -125,8 +125,9 @@ class Sniffer:
                 # original main, only the code that has crossed the pyobc bridge.
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('closeNotification',self)
 
-                if cfg.LOCK.is_locked():
-                    cfg.LOCK.release()
+                # Can we just get rid of the lockfile
+                # if cfg.LOCK.is_locked():
+                #     cfg.LOCK.release()
                 NSLog("Exiting Selfspy...")
 
             def toggleLogging_(self, notification):
