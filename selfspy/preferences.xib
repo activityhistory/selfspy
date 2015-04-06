@@ -162,6 +162,9 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="jEX-yb-UJI">
                                 <items>
+                                    <menuItem title="1 min" tag="1" id="VjT-pc-Lp0">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
                                     <menuItem title="5 min" tag="5" id="ffS-3U-JPV">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
