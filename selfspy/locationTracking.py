@@ -81,6 +81,7 @@ class LocationTracking:
             dist = self.distanceMeter(newLocation.coordinate().latitude, newLocation.coordinate().longitude, oldLocation.coordinate().latitude, oldLocation.coordinate().longitude)
             # print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, dist
             if (dist > 50) :
+                # print "new location distance : ", dist
                 self.locationchange_hook(newLocation.coordinate().latitude,
                     newLocation.coordinate().longitude)
 

@@ -42,7 +42,7 @@ from Cocoa import (NSEvent, NSScreen,
                    NSAlphaShiftKeyMask, NSApplicationActivationPolicyProhibited,
                    NSURL, NSString, NSTimer,NSInvocation, NSNotificationCenter)
 
-import Quartz
+import Quartz 
 from Quartz import (CGWindowListCopyWindowInfo, kCGWindowListOptionOnScreenOnly,
                     kCGWindowListOptionAll, kCGWindowListExcludeDesktopElements, kCGNullWindowID, CGImageGetHeight, CGImageGetWidth)
 import Quartz.CoreGraphics as CG
@@ -627,6 +627,12 @@ class Sniffer:
         # record how long it takes to take screenshot
         start = time.time()
 
+        scr = NSScreen.screens()
+
+        # Trying to capture mouse cursor
+        # Quartz.CGDisplayShowCursor(Quartz.CGMainDisplayID())
+        # Quartz.CGAssociateMouseAndMouseCursorPosition(True)
+
         # Set to capture entire screen, including multiple monitors
         if region is None:
           region = CG.CGRectInfinite
@@ -639,7 +645,7 @@ class Sniffer:
           CG.kCGWindowImageDefault
         )
 
-        scr = NSScreen.screens()
+
         xmin = 0
         ymin = 0
         for s in scr:
@@ -653,21 +659,24 @@ class Sniffer:
         nativeRatio = nativeWidth/nativeHeight
 
         prefHeight = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('imageSize')
-        height = int(prefHeight/scr[0].frame().size.height*nativeHeight)
+        height = int(prefHeight) #int(prefHeight/scr[0].frame().size.height*nativeHeight)
         width = int(nativeRatio * height)
-        heightScaleFactor = height/nativeHeight
-        widthScaleFactor = width/nativeWidth
+
+        # Computes the scale factor between the user resolution and the native screen resolution
+        resolutionScaleFactor = scr[0].frame().size.height / nativeHeight
+        # Computes the scale factor between the image size in the preferences and the user resolution
+        prefScaleFactor = height / scr[0].frame().size.height
 
         mouseLoc = NSEvent.mouseLocation()
-        x = int(mouseLoc.x)
+        x = int(mouseLoc.x) 
         y = int(mouseLoc.y)
         w = 16
         h = 24
-        scale_x = int((x-xmin) * widthScaleFactor)
-        scale_y = int((y-h+5-ymin) * heightScaleFactor)
-        scale_w = w*widthScaleFactor
-        scale_h = h*heightScaleFactor
-
+        scale_x = int((x-xmin) * prefScaleFactor)
+        scale_y = int((y-h+5-ymin) * prefScaleFactor) #int((y-h+5-ymin) * heightScaleFactor)
+        scale_w = w*prefScaleFactor
+        scale_h = h*prefScaleFactor
+        
         #Allocate image data and create context for drawing image
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
         bitmapContext = Quartz.CGBitmapContextCreate(
@@ -744,7 +753,7 @@ class Sniffer:
         NSLog("couldn't save image")
 
     def got_location_change(self, latitude, longitude):
-        print "location_change", latitude, longitude
+        # print "location_change", latitude, longitude
         self.location_hook(latitude,longitude)
 
 
