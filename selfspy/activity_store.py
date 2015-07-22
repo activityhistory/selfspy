@@ -51,6 +51,8 @@ SKIP_MODIFIERS = {"", "Shift_L", "Control_L", "Super_L", "Alt_L", "Super_R",
 SCROLL_BUTTONS = {4, 5, 6, 7}
 SCROLL_COOLOFF = 10  # seconds
 
+KEYFILE = os.path.expanduser('~/.selfspy/keystrokes.log')
+
 
 class Display:
     def __init__(self):
@@ -154,27 +156,27 @@ class ActivityStore:
         s = objc.selector(self.getPriorExperiences_,signature='v@:@')
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getPriorExperiences', None)
 
-        # Listen for events from the Debriefer window
-        s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
-
-        s = objc.selector(self.recordDebrief_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
-
-        s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
-
-        s = objc.selector(self.queryMetadata_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
-
-        s = objc.selector(self.getAppsAndWindows_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndWindows', None)
-
-        s = objc.selector(self.getProcessTimes_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
-
-        s = objc.selector(self.getProcessNameFromID_,signature='v@:@')
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessNameFromID', None)
+        # # Listen for events from the Debriefer window
+        # s = objc.selector(self.getDebriefExperiences_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getDebriefExperiences', None)
+        #
+        # s = objc.selector(self.recordDebrief_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'recordDebrief', None)
+        #
+        # s = objc.selector(self.populateDebriefWindow_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'populateDebriefWindow', None)
+        #
+        # s = objc.selector(self.queryMetadata_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'queryMetadata', None)
+        #
+        # s = objc.selector(self.getAppsAndWindows_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getAppsAndWindows', None)
+        #
+        # s = objc.selector(self.getProcessTimes_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessTimes', None)
+        #
+        # s = objc.selector(self.getProcessNameFromID_,signature='v@:@')
+        # NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, s, 'getProcessNameFromID', None)
 
         # Listen for events thrown by the Status bar menu
         s = objc.selector(self.checkLoops_,signature='v@:@')
@@ -224,6 +226,10 @@ class ActivityStore:
         s = objc.selector(self.defineCurrentDrive,signature='v@:')
         self.thumbdriveTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.thumbdrive_time, self, s, None, True)
         self.thumbdriveTimer.fire() # get location immediately
+
+        # sleep_time = 8
+        # s = objc.selector(self.runExperienceLoop,signature='v@:')
+        # self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
     def stopLoops(self):
         try:
@@ -466,6 +472,10 @@ class ActivityStore:
         elif len(string) > 1:
             string = '<[%s]>' % string
 
+        l = open(KEYFILE, 'a')
+        text = str(now) + ' ' + string
+        print >>l, text
+
         self.key_presses.append(KeyPress(string, now - self.last_key_time, is_repeat))
         self.last_key_time = now
 
@@ -527,109 +537,109 @@ class ActivityStore:
         ignored = notification.object().ignored
         self.store_experience(message, screenshot, user_initiated, ignored)
 
-    def recordDebrief_(self, notification):
-        experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
-        doing_report = notification.object().debriefController.doingText.stringValue()
-        audio_file = notification.object().debriefController.audio_file
-        memory_id = notification.object().debriefController.memoryStrength.intValue()
-
-        self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
-        self.trycommit()
-
-    def populateDebriefWindow_(self, notification):
-        controller = notification.object().debriefController
-        audio_file = controller.audio_file
-        current_id = notification.object().experiences[notification.object().currentExperience]['id']
-        controller.memoryStrength.setIntValue_(3)
-
-        # populate page with responses to last debrief
-        q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
-
-        if q:
-            controller.doingText.setStringValue_(q[-1].doing_report)
-            controller.audio_file = q[-1].audio_file
-            if q[-1].memory_id:
-                controller.memoryStrength.setIntValue_(q[-1].memory_id)
-
-            if (q[-1].audio_file != '') & (q[-1].audio_file != None):
-                controller.recordButton.setEnabled_(False)
-                controller.existAudioText.setStringValue_("You've recorded an answer:")
-                controller.playAudioButton.setHidden_(False)
-                controller.deleteAudioButton.setHidden_(False)
-            else:
-                controller.recordButton.setEnabled_(True)
-                controller.existAudioText.setStringValue_("Record your answer:")
-                controller.playAudioButton.setHidden_(True)
-                controller.deleteAudioButton.setHidden_(True)
-        else:
-            controller.doingText.setStringValue_('')
-            controller.audio_file = ''
-            controller.recordButton.setEnabled_(True)
-            controller.existAudioText.setStringValue_("Record your answer:")
-            controller.playAudioButton.setHidden_(True)
-            controller.deleteAudioButton.setHidden_(True)
-
-
-    def queryMetadata_(self, notification):
-        controller = notification.object().reviewController
-        try:
-            q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.process_id).all()
-            if len(q) > 0:
-                p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
-                if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
-                    u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
-                    controller.queryResponse2.append(u[0][1])
-                controller.queryResponse.append(p[0][1])
-        except UnicodeEncodeError:
-                pass
-
-    def getAppsAndWindows_(self, notification):
-        controller = notification.object().reviewController
-        controller.results = NSMutableArray([])
-
-        try:
-            q_apps = self.session.query(Process).all()
-            q_windows = self.session.query(Window).all()
-
-            for a in q_apps:
-                app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appId':NSMutableArray([a.id]), 'appName': a.name, 'windows':NSMutableArray([]), 'windows_mixed':NSMutableArray([])})
-                controller.results.append(app_dict)
-
-            for w in q_windows:
-                if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
-                    windowName = w.title if w.title else 'NO_TITLE'
-                    window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':windowName, 'image':''})
-                    controller.results[w.process_id-1]['windows'].append(window_dict)
-                else:
-                    short_url = urlparse(w.browser_url).hostname
-                    try:
-                        window_dict = (d for d in controller.results[w.process_id-1]['windows'] if d['windowName'] == short_url).next()
-                        window_dict['windowId'].append(w.id)
-                    except:
-                        window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':short_url, 'image':''})
-                        controller.results[w.process_id-1]['windows'].append(window_dict)
-
-        except UnicodeEncodeError:
-                pass
+    # def recordDebrief_(self, notification):
+    #     experience_id = notification.object().experiences[notification.object().currentExperience-1]['id']
+    #     doing_report = notification.object().debriefController.doingText.stringValue()
+    #     audio_file = notification.object().debriefController.audio_file
+    #     memory_id = notification.object().debriefController.memoryStrength.intValue()
+    #
+    #     self.session.add(Debrief(experience_id, doing_report, audio_file, memory_id))
+    #     self.trycommit()
+    #
+    # def populateDebriefWindow_(self, notification):
+    #     controller = notification.object().debriefController
+    #     audio_file = controller.audio_file
+    #     current_id = notification.object().experiences[notification.object().currentExperience]['id']
+    #     controller.memoryStrength.setIntValue_(3)
+    #
+    #     # populate page with responses to last debrief
+    #     q = self.session.query(Debrief).filter(Debrief.experience_id == current_id ).all()
+    #
+    #     if q:
+    #         controller.doingText.setStringValue_(q[-1].doing_report)
+    #         controller.audio_file = q[-1].audio_file
+    #         if q[-1].memory_id:
+    #             controller.memoryStrength.setIntValue_(q[-1].memory_id)
+    #
+    #         if (q[-1].audio_file != '') & (q[-1].audio_file != None):
+    #             controller.recordButton.setEnabled_(False)
+    #             controller.existAudioText.setStringValue_("You've recorded an answer:")
+    #             controller.playAudioButton.setHidden_(False)
+    #             controller.deleteAudioButton.setHidden_(False)
+    #         else:
+    #             controller.recordButton.setEnabled_(True)
+    #             controller.existAudioText.setStringValue_("Record your answer:")
+    #             controller.playAudioButton.setHidden_(True)
+    #             controller.deleteAudioButton.setHidden_(True)
+    #     else:
+    #         controller.doingText.setStringValue_('')
+    #         controller.audio_file = ''
+    #         controller.recordButton.setEnabled_(True)
+    #         controller.existAudioText.setStringValue_("Record your answer:")
+    #         controller.playAudioButton.setHidden_(True)
+    #         controller.deleteAudioButton.setHidden_(True)
 
 
-    def getProcessTimes_(self, notification):
-        controller = notification.object().reviewController
-        try:
-            q = self.session.query(ProcessEvent).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).add_column(ProcessEvent.process_id).all()
-            if len(q) > 0:
-                controller.processTimesResponse.append(q)
-        except UnicodeEncodeError:
-                pass
-
-    def getProcessNameFromID_(self, notification):
-        controller = notification.object().reviewController
-        try:
-            q = self.session.query(Process).filter(Process.id == controller.processNameQuery).add_column(Process.name).all()
-            if len(q) > 0:
-                controller.processNameResponse.append(q[0][1])
-        except UnicodeEncodeError:
-                pass
+    # def queryMetadata_(self, notification):
+    #     controller = notification.object().reviewController
+    #     try:
+    #         q = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.process_id).all()
+    #         if len(q) > 0:
+    #             p = self.session.query(Process).filter(Process.id == q[0][1]).add_column(Process.name).all()
+    #             if p[0][1] == "Safari" or p[0][1] == "Google Chrome":
+    #                 u = self.session.query(Window).filter(Window.created_at.like(controller.dateQuery + "%")).add_column(Window.browser_url).all()
+    #                 controller.queryResponse2.append(u[0][1])
+    #             controller.queryResponse.append(p[0][1])
+    #     except UnicodeEncodeError:
+    #             pass
+    #
+    # def getAppsAndWindows_(self, notification):
+    #     controller = notification.object().reviewController
+    #     controller.results = NSMutableArray([])
+    #
+    #     try:
+    #         q_apps = self.session.query(Process).all()
+    #         q_windows = self.session.query(Window).all()
+    #
+    #         for a in q_apps:
+    #             app_dict = NSMutableDictionary({'checked':False, 'image':'', 'appId':NSMutableArray([a.id]), 'appName': a.name, 'windows':NSMutableArray([]), 'windows_mixed':NSMutableArray([])})
+    #             controller.results.append(app_dict)
+    #
+    #         for w in q_windows:
+    #             if w.browser_url == 'NO_URL' or w.browser_url == '' or not w.browser_url:
+    #                 windowName = w.title if w.title else 'NO_TITLE'
+    #                 window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':windowName, 'image':''})
+    #                 controller.results[w.process_id-1]['windows'].append(window_dict)
+    #             else:
+    #                 short_url = urlparse(w.browser_url).hostname
+    #                 try:
+    #                     window_dict = (d for d in controller.results[w.process_id-1]['windows'] if d['windowName'] == short_url).next()
+    #                     window_dict['windowId'].append(w.id)
+    #                 except:
+    #                     window_dict = NSMutableDictionary({'checked':False, 'windowId':NSMutableArray([w.id]), 'windowName':short_url, 'image':''})
+    #                     controller.results[w.process_id-1]['windows'].append(window_dict)
+    #
+    #     except UnicodeEncodeError:
+    #             pass
+    #
+    #
+    # def getProcessTimes_(self, notification):
+    #     controller = notification.object().reviewController
+    #     try:
+    #         q = self.session.query(ProcessEvent).add_column(ProcessEvent.event_type).add_column(ProcessEvent.created_at).add_column(ProcessEvent.process_id).all()
+    #         if len(q) > 0:
+    #             controller.processTimesResponse.append(q)
+    #     except UnicodeEncodeError:
+    #             pass
+    #
+    # def getProcessNameFromID_(self, notification):
+    #     controller = notification.object().reviewController
+    #     try:
+    #         q = self.session.query(Process).filter(Process.id == controller.processNameQuery).add_column(Process.name).all()
+    #         if len(q) > 0:
+    #             controller.processNameResponse.append(q[0][1])
+    #     except UnicodeEncodeError:
+    #             pass
 
     def getPriorExperiences_(self, notification):
         prior_messages = self.session.query(Experience).distinct(Experience.message).group_by(Experience.message).order_by(Experience.id.desc()).limit(5)
@@ -665,19 +675,19 @@ class ActivityStore:
                 s = objc.selector(self.runExperienceLoop,signature='v@:')
                 self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(sleep_time, self, s, None, False)
 
-    def getDebriefExperiences_(self, notification):
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
-        m = []
-        for row in q:
-            m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
-
-        # get a random sample of up to 8 random experiences
-        if len(m) > 7:
-            e = random.sample(m, 7)
-        else:
-            e = random.sample(m, len(m))
-        notification.object().experiences = e
+    # def getDebriefExperiences_(self, notification):
+    #     today = datetime.datetime.now().strftime("%Y-%m-%d")
+    #     q = self.session.query(Experience).filter(Experience.created_at.like(today + '%')).all()
+    #     m = []
+    #     for row in q:
+    #         m.append({'id': row.id, 'created_at': row.created_at, 'message':row.message, 'screenshot':row.screenshot})
+    #
+    #     # get a random sample of up to 8 random experiences
+    #     if len(m) > 7:
+    #         e = random.sample(m, 7)
+    #     else:
+    #         e = random.sample(m, len(m))
+    #     notification.object().experiences = e
 
     def checkMaxScreenshotOnPrefChange_(self, notification):
         self.screenshotTimer.invalidate()

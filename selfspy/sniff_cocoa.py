@@ -55,8 +55,8 @@ from datetime import datetime
 import mutagen.mp4
 
 #from selfspy import locationTracking
-from selfspy import debriefer
-from selfspy import reviewer
+# from selfspy import debriefer
+# from selfspy import reviewer
 from selfspy import preferences
 
 from urlparse import urlparse
@@ -217,8 +217,8 @@ class Sniffer:
                 # original main, only the code that has crossed the pyobc bridge.
                 NSNotificationCenter.defaultCenter().postNotificationName_object_('closeNotification',self)
 
-                if cfg.LOCK.is_locked():
-                    cfg.LOCK.release()
+                # if cfg.LOCK.is_locked():
+                #     cfg.LOCK.release()
                 NSLog("Exiting Selfspy...")
 
             def toggleLogging_(self, notification):
@@ -281,13 +281,13 @@ class Sniffer:
                     self.statusitem.setImage_(self.iconRecord)
                     self.menu.itemWithTitle_("Record Audio").setTitle_("Stop Audio Recording")
 
-            def showDebrief_(self, notification):
-                NSLog("Showing Daily Debrief Window...")
-                debriefer.DebriefController.show()
-
-            def showReview_(self, notification):
-                NSLog("Showing Review Window...")
-                reviewer.ReviewController.show()
+            # def showDebrief_(self, notification):
+            #     NSLog("Showing Daily Debrief Window...")
+            #     debriefer.DebriefController.show()
+            #
+            # def showReview_(self, notification):
+            #     NSLog("Showing Review Window...")
+            #     reviewer.ReviewController.show()
 
             def showExperience_(self, notification):
                 NSLog("Showing Experience Sampling Window on Request...")
@@ -360,8 +360,8 @@ class Sniffer:
                 # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Daily Debrief', 'showDebrief:', '')
                 # self.menu.addItem_(menuitem)
 
-                menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
-                self.menu.addItem_(menuitem)
+                # menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Review', 'showReview:', '')
+                # self.menu.addItem_(menuitem)
 
                 menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Preferences...', 'showPreferences:', '')
                 self.menu.addItem_(menuitem)

@@ -31,7 +31,7 @@ from lockfile import LockFile
 from selfspy.activity_store import ActivityStore
 from selfspy import config as cfg
 
-# Cryptography is no longer used
+# Since we don't store keys, Cryptography is no longer used
 # import hashlib
 # from Crypto.Cipher import Blowfish
 
@@ -64,7 +64,7 @@ def parse_config():
 
 
 def main():
-    print "Selfspy started. Python version " + sys.version
+    print "Selfspy started."
 
     args = vars(parse_config())
 
@@ -88,18 +88,19 @@ def main():
         pass
 
     # check if Selfspy is already running
-    lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
-    cfg.LOCK  = LockFile(lockname)
-    if cfg.LOCK.is_locked():
-        print '%s is locked! I am probably already running.' % lockname
-        print 'If you can find no selfspy process running,'\
-        ' it is a stale lock and you can safely remove it.'
-        print 'Shutting down.'
-        sys.exit(1)
+    # can we just get rid of the lockfile?
+    # lockname = os.path.join(args['data_dir'], cfg.LOCK_FILE)
+    # cfg.LOCK  = LockFile(lockname)
+    # if cfg.LOCK.is_locked():
+    #     print '%s is locked! I am probably already running.' % lockname
+    #     print 'If you can find no selfspy process running,'\
+    #     ' it is a stale lock and you can safely remove it.'
+    #     print 'Shutting down.'
+    #     sys.exit(1)
 
     # start activity tracker
     astore = ActivityStore(cfg.DBNAME)
-    cfg.LOCK.acquire()
+    # cfg.LOCK.acquire()
     try:
         astore.run()
     except SystemExit:
