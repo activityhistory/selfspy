@@ -750,7 +750,7 @@ class Sniffer:
           NSLog("No space left on storage device. Turning off Selfspy recording.")
           self.delegate.toggleLogging_(self)
       except:
-        NSLog("couldn't save image")
+          NSLog("couldn't save image")
 
     def got_location_change(self, latitude, longitude):
         # print "location_change", latitude, longitude

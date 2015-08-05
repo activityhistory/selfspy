@@ -110,10 +110,10 @@ class ActivityStore:
 
         self.current_window = Display()
         self.current_apps = []
-        self.active_app = ''
+        self.active_app = {'id': '', 'name': ''}
         self.current_windows = []
         self.regularWindowsIds = []
-        self.active_window = {'title': '', 'process': '', 'url': ''}
+        self.active_window = {'id': '', 'title': '', 'process': '', 'url': ''}
 
         self.last_scroll = {button: 0 for button in SCROLL_BUTTONS}
 
@@ -359,10 +359,16 @@ class ActivityStore:
                 self.trycommit()
                 cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
 
-            if cur_process.name != self.active_app:
+            if cur_process.name != self.active_app['name']:
+
+            	if self.active_app['id'] != '' :
+	                process_event = ProcessEvent(self.active_app['id'], "Inactive")
+	                self.session.add(process_event)
+	                self.trycommit()
+
                 process_event = ProcessEvent(cur_process.id, "Active")
                 self.session.add(process_event)
-                self.active_app = cur_process.name
+                self.active_app = {'id' : cur_process.id, 'name': cur_process.name}
 
             if browser_url == "NO_URL":
                 cur_window = self.session.query(Window).filter_by(title=window_name, process_id=cur_process.id).scalar()
@@ -372,10 +378,21 @@ class ActivityStore:
                 cur_window = Window(window_name, cur_process.id, browser_url)
                 self.session.add(cur_window)
             if (cur_window.title != self.active_window['title'] or cur_window.process_id != self.active_window['process'] or cur_window.browser_url != self.active_window['url']):
+
+                # We record that the old window is now inactive 
+                if self.active_window :
+                    if (self.active_window['id'] != '') :
+                        window_event = WindowEvent(self.active_window['id'], "Inactive")
+                        self.session.add(window_event)
+                        self.trycommit()
+	                # else :
+	                	# We should make sure no Open or Active window is left without a closing one.
+
+                # We add the new window to the DB as Active
                 window_event = WindowEvent(cur_window.id, "Active")
                 self.session.add(window_event)
                 self.trycommit()
-                self.active_window = {'title': window_name, 'process': cur_process.id, 'url': browser_url}
+                self.active_window = {'id': cur_window.id, 'title': window_name, 'process': cur_process.id, 'url': browser_url}
 
 
             cur_geometry = self.session.query(Geometry).filter_by(xpos=win_x, ypos=win_y, width=win_width, height=win_height).scalar()
