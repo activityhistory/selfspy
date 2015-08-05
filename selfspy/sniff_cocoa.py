@@ -423,6 +423,8 @@ class Sniffer:
                 # including all tabs in Google Chrome
                 regularWindows = []
                 options = kCGWindowListOptionAll
+                # Alternative options that should only list visible windows
+                # options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
                 windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
                 chromeChecked = False
                 safariChecked = False
@@ -699,10 +701,12 @@ class Sniffer:
         cursorURL = NSURL.fileURLWithPath_(cursorPathStr)
 
         # Create a CGImageSource object from 'url'.
+        cursorImageSource = None
         cursorImageSource = Quartz.CGImageSourceCreateWithURL(cursorURL, None)
 
         # Create a CGImage object from the first image in the file. Image
         # indexes are 0 based.
+        cursorOverlay = None
         cursorOverlay = Quartz.CGImageSourceCreateImageAtIndex(cursorImageSource, 0, None)
 
         Quartz.CGContextDrawImage(bitmapContext,
@@ -720,8 +724,36 @@ class Sniffer:
           Quartz.kCGImageDestinationLossyCompressionQuality: 0.6,
         }
 
+
+        # Getting id of current window and application
+        try:
+            activeAppName = self.workspace.activeApplication()['NSApplicationName']
+        except:
+            activeAppName = ""
+            print "failed NSApplicationName"
+        active_app_id = self.getProcessIDFromName(activeAppName)
+
+        options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
+        windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+        for window in windowList:
+            window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+            owner = window['kCGWindowOwnerName']
+            if (activeAppName == owner and window_name != ''):
+                break
+        active_window_id = self.getWindowIDFromName(window_name)
+        # Done with getting id of current window and application
+
+
         #Convert path to url for saving image
-        pathWithCursor = path[0:-4] + "_" + str(x) + "_" + str(y) + '.jpg'
+        pathWithCursor = path[0:-4] + "_" + str(x) + "_" + str(y) 
+        if (active_app_id != None and active_app_id != '') :
+            pathWithCursor = pathWithCursor + "_app" + str(active_app_id)
+        if (active_window_id != None and active_window_id != '') :
+            pathWithCursor = pathWithCursor + "_win" + str(active_window_id)
+        pathWithCursor = pathWithCursor + '.jpg'
+        print pathWithCursor
+
+
         pathStr = NSString.stringByExpandingTildeInPath(pathWithCursor)
         url = NSURL.fileURLWithPath_(pathStr)
 

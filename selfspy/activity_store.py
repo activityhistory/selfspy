@@ -204,6 +204,9 @@ class ActivityStore:
         self.sniffer.mouse_move_hook = self.got_mouse_move
         self.sniffer.location_hook = self.got_location_change
 
+        self.sniffer.getProcessIDFromName = self.getProcessIDFromName
+        self.sniffer.getWindowIDFromName = self.getWindowIDFromName
+
         self.sniffer.run()
 
     def checkLoops_(self, notification):
@@ -649,6 +652,25 @@ class ActivityStore:
                 controller.processTimesResponse.append(q)
         except UnicodeEncodeError:
                 pass
+
+    def getProcessIDFromName(self, name):
+        try:
+            q = self.session.query(Process).filter(Process.name == name).add_column(Process.id).all()
+            if len(q) > 0:
+                return q[0][1]
+        except UnicodeEncodeError:
+                pass
+        return None
+
+
+    def getWindowIDFromName(self, name):
+        try:
+            q = self.session.query(Window).filter(Window.title == name).add_column(Window.id).all()
+            if len(q) > 0:
+                return q[0][1]
+        except UnicodeEncodeError:
+                pass
+        return None
 
     def getProcessNameFromID_(self, notification):
         controller = notification.object().reviewController
