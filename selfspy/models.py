@@ -70,18 +70,19 @@ class Bookmark(SpookMixin, Base):
 
 class Process(SpookMixin, Base):
     name = Column(Unicode, index=True, unique=True)
+    authorized_recording = Column(Boolean, nullable=False)
 
-    def __init__(self, name):
+    def __init__(self, name, authorized_recording = True):
         self.name = name
+        self.authorized_recording = authorized_recording
 
     def __repr__(self):
-        return "<Process '%s'>" % self.name
+        return "<Process '%s'  '%s' >" % (self.name, self.authorized_recording)
 
 
 class ProcessEvent(SpookMixin, Base):
     process_id = Column(Integer, ForeignKey('process.id'), nullable=False, index=True)
     process = relationship("Process", backref=backref('processevents'))
-
     event_type = Column(Unicode, index=True)
 
     def __init__(self, process_id, event_type):
@@ -89,7 +90,7 @@ class ProcessEvent(SpookMixin, Base):
         self.event_type = event_type
 
     def __repr__(self):
-        return "<Process '%s' '%s' >" % (self.process_id, self.event_type)
+        return "<Process '%s' '%s'>" % (self.process_id, self.event_type)
 
 class Window(SpookMixin, Base):
     title = Column(Unicode, index=True)
@@ -236,7 +237,42 @@ class Location(SpookMixin, Base):
     def __repr__(self):
         return "<Location is '%d','%d'>" % (self.lat, self.lon)
 
+class PrivacyLocation(SpookMixin, Base):
+    address = Column(Unicode, nullable=False)
+    lat = Column(Integer, nullable=False)
+    lon = Column(Integer, nullable=False)
 
+
+    def __init__(self, address, lat, lon):
+        self.address = address
+        self.lat = lat
+        self.lon = lon
+
+    def __repr__(self):
+        return "<PrivacyLocation is '%s', '%d','%d'>" % (self.address, self.lat, self.lon)
+
+class PrivacyTimeInterval(SpookMixin, Base):
+    # CREATE TABLE "privacy_time" (
+    #   "fromHour" INTEGER NOT NULL  DEFAULT (null) ,
+    #   "fromMinute" INTEGER NOT NULL  DEFAULT (null) ,
+    #   "toHour" INTEGER NOT NULL  DEFAULT (null) ,
+    #   "toMinute" INTEGER NOT NULL  DEFAULT (null) ,
+    #   "WE" BOOL NOT NULL );
+    fromHour = Column(Integer, nullable=False, default=None)
+    fromMinute = Column(Integer, nullable=False, default=None)
+    toHour = Column(Integer, nullable=False, default=None)
+    toMinute = Column(Integer, nullable=False, default=None)
+    weekend = Column(Boolean, nullable=False)
+    
+    def __init__(self, fromHour, fromMinute, toHour, toMinute, weekend):
+        self.fromHour = fromHour
+        self.fromMinute =  fromMinute
+        self.toHour = toHour
+        self.toMinute = toMinute
+        self.weekend = weekend
+
+    def __repr__(self):
+        return "<PrivacyTimeInterval is '%d', '%d', '%d', '%d', '%s'>" % (self.fromHour, self.fromMinute, self.toHour, self.toMinute, self.weekend)
 
 def pad(s, padnum):
     ls = len(s)
