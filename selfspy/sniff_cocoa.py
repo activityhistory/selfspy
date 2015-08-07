@@ -431,10 +431,10 @@ class Sniffer:
                 for window in windowList:
                     window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                     owner = window['kCGWindowOwnerName']
-                    url = 'NO_URL'
                     geometry = window['kCGWindowBounds']
                     windows_to_ignore = ["Focus Proxy", "Clipboard"]
                     for app in regularApps:
+                    	url = 'NO_URL'
                         if app.localizedName() == owner:
                             if (window_name and window_name not in windows_to_ignore):
                                 if owner == 'Google Chrome' and not chromeChecked:
@@ -447,7 +447,7 @@ class Sniffer:
                                         for i in range(1, numItems+1):
                                             window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
                                             if window_name:
-                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
+                                                url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2).stringValue())
                                             else:
                                                 url = "NO_URL"
                                             x1 = int(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(3).descriptorAtIndex_(1).stringValue())
@@ -494,6 +494,9 @@ class Sniffer:
                                         s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                         browser_url = s.executeAndReturnError_(None)
                                     browser_url = str(browser_url[0])[33:-3]
+
+                                if (browser_url == ""):
+                                	browser_url = 'NO_URL'
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u'').encode('ascii', 'replace'),
@@ -640,6 +643,7 @@ class Sniffer:
           region = CG.CGRectInfinite
 
         # Create CGImage, composite image of windows in region
+        image = None
         image = CG.CGWindowListCreateImage(
           region,
           CG.kCGWindowListOptionOnScreenOnly,
@@ -680,7 +684,11 @@ class Sniffer:
         scale_h = h*prefScaleFactor
         
         #Allocate image data and create context for drawing image
+        imageData = None
+        imageData = LaunchServices.objc.allocateBuffer(int(100))
         imageData = LaunchServices.objc.allocateBuffer(int(4 * width * height))
+        
+        bitmapContext = None
         bitmapContext = Quartz.CGBitmapContextCreate(
           imageData, # image data we just allocated...
           width,
