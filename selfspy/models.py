@@ -67,6 +67,15 @@ class Bookmark(SpookMixin, Base):
     def __repr__(self):
         return "<Bookmark at '%s' >" % self.time
 
+class Snapshot(SpookMixin, Base):
+    state = Column(Unicode, index=True, unique=True)
+
+    def __init__(self, state, authorized_recording = True):
+        self.state = state
+
+    def __repr__(self):
+        return "<Snapshot '%s'>" % (self.state)
+
 
 class Process(SpookMixin, Base):
     name = Column(Unicode, index=True, unique=True)

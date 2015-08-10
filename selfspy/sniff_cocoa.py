@@ -498,6 +498,8 @@ class Sniffer:
                                 if (browser_url == ""):
                                 	browser_url = 'NO_URL'
 
+                                print "––––––––––––––––"
+                                print "self.screen_hook"
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u'').encode('ascii', 'replace'),
                                                  geometry['X'],
@@ -571,6 +573,15 @@ class Sniffer:
 
     def makeAppActive_(self, notification):
         self.app.activateIgnoringOtherApps_(True)
+        
+    def getProcessList(self):
+      options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
+      windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+      processList = []
+      for window in windowList:
+        processList.append(window['kCGWindowOwnerName'])
+      return processList
+
 
     def takeExperienceScreenshot_(self, notification):
         try:

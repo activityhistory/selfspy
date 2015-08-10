@@ -41,7 +41,7 @@ from selfspy import config as cfg
 from selfspy import models
 from selfspy.models import (RecordingEvent, Process, ProcessEvent, Window,
                             WindowEvent, Geometry, Click, Keys, Experience,
-                            Location, Debrief, Bookmark)
+                            Location, Debrief, Bookmark, Snapshot)
 
 from urlparse import urlparse
 
@@ -128,6 +128,7 @@ class ActivityStore:
         self.screenshot_time_max = 60
         self.exp_time = 120         # time before first experience sample shows
         self.thumbdrive_time = 10
+        self.snapshot_time = 1
 
         self.addObservers()
 
@@ -217,12 +218,15 @@ class ActivityStore:
             self.stopLoops()
 
     def startLoops(self):
-        # Timers for taking screenshots when idle, and showing experience-sample window
+        # Timers for taking screenshots when idle, capturing a snapshot of the current application state, and showing experience-sample window
         s = objc.selector(self.runMaxScreenshotLoop,signature='v@:')
         self.screenshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.screenshot_time_max, self, s, None, False)
 
         s = objc.selector(self.runExperienceLoop,signature='v@:')
         self.experienceTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.exp_time, self, s, None, False)
+
+        s = objc.selector(self.runStateSnapshotLoop,signature='v@:')
+        self.stateSnapshotTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(self.snapshot_time, self, s, None, False)
 
         # Timer for checking if thumbdrive/memory card is available
         s = objc.selector(self.defineCurrentDrive,signature='v@:')
@@ -235,6 +239,8 @@ class ActivityStore:
                 self.screenshotTimer.invalidate()
             if self.experienceTimer:
                 self.experienceTimer.invalidate()
+            if self.stateSnapshotTimer:
+                self.stateSnapshotTimer.invalidate()
             if self.thumbdriveTimer:
                 self.thumbdriveTimer.invalidate()
         except(AttributeError):
@@ -278,6 +284,7 @@ class ActivityStore:
             win_y is the y position of the window
             win_width is the width of the window
             win_height is the height of the window """
+        
         # find apps that have opened or become active since the last check
         for app in regularApps:
             db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
@@ -354,6 +361,7 @@ class ActivityStore:
         #TODO this part is still buggy for newtabs and window events
         # may need to rename variables and not overwrite
         windows_to_ignore = ["Focus Proxy", "Clipboard"]
+        print "–––––––––––––––– if –––––––"
         if window_name not in windows_to_ignore:
             cur_process = self.session.query(Process).filter_by(name=process_name).scalar()
             if not cur_process:
@@ -769,6 +777,7 @@ class ActivityStore:
         q = self.session.query(Keys).filter(Keys.created_at > delete_from_time).delete()
         q = self.session.query(Location).filter(Location.created_at > delete_from_time).delete()
         q = self.session.query(Process).filter(Process.created_at > delete_from_time).delete()
+        q = self.session.query(Snapshot).filter(Process.created_at > delete_from_time).delete()
         q = self.session.query(Window).filter(Window.created_at > delete_from_time).delete()
 
         screenshot_directory = os.path.expanduser(os.path.join(cfg.CURRENT_DIR,"screenshots"))
@@ -837,6 +846,13 @@ class ActivityStore:
                 return False
         else :
             return False
+
+
+    def runStateSnapshotLoop(self):
+      processList = self.sniffer.getProcessList()
+      snapshot = Snapshot(processList)
+      self.session.add(snapshot)
+      
 
     # Method to add "Close" entry to DB for each app open at the close of Selfspy, not yet working
     def gotCloseNotification_(self, notification):
