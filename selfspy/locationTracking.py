@@ -16,6 +16,7 @@ import objc
 import CoreLocation
 import WebKit
 from CoreLocation import *
+from AppKit import NSLog
 import math
 
 class LocationTracking:
@@ -92,8 +93,7 @@ class LocationTracking:
         # LocationTracking.longitudeRangeForLocation_(newLocation))
 
     def locationManager_didFailWithError_(self, manager, error):
-        print "location error"
-        print error.localizedDescription()
+        NSLog("location error" + str(error.localizedDescription()))
 
     def stopTracking(self, aNotification):
         self.locationManager.stopUpdatingLocation()

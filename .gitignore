@@ -32,3 +32,5 @@ test.py
 ## Directory-based project format:
 .idea/
 dist
+
+buffer.txt
