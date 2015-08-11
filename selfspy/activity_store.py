@@ -286,6 +286,14 @@ class ActivityStore:
             win_width is the width of the window
             win_height is the height of the window """
 
+        value = window_name
+        if isinstance(value, str):
+            # print "isinstance of str"
+            window_name = value.decode('utf-8')
+        elif type(value) == objc.pyobjc_unicode :
+            # print "type is objc.pyobjc_unicode"
+            window_name = unicode(value)
+
         # find apps that have opened or become active since the last check
         for app in regularApps:
             db_process = self.session.query(Process).filter_by(name=app.localizedName()).scalar()
@@ -389,7 +397,6 @@ class ActivityStore:
                 cur_window = Window(window_name, cur_process.id, browser_url)
                 self.session.add(cur_window)
             if (cur_window.title != self.active_window['title'] or cur_window.process_id != self.active_window['process'] or cur_window.browser_url != self.active_window['url']):
-
                 # We record that the old window is now inactive 
                 if self.active_window :
                     if (self.active_window['id'] != '') :
