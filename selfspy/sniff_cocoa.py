@@ -498,10 +498,9 @@ class Sniffer:
                                 if (browser_url == ""):
                                 	browser_url = 'NO_URL'
 
-                                print "––––––––––––––––"
-                                print "self.screen_hook"
                                 self.screen_hook(window['kCGWindowOwnerName'],
                                                  window.get('kCGWindowName', u'').encode('ascii', 'replace'),
+                                                 # window.get('kCGWindowName', u''), #.encode('utf-8', 'replace'),
                                                  geometry['X'],
                                                  geometry['Y'],
                                                  geometry['Width'],
@@ -575,7 +574,7 @@ class Sniffer:
         self.app.activateIgnoringOtherApps_(True)
         
     def getProcessList(self):
-      options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
+      options = kCGWindowListOptionAll | kCGWindowListExcludeDesktopElements
       windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
       processList = []
       for window in windowList:
@@ -770,7 +769,7 @@ class Sniffer:
         if (active_window_id != None and active_window_id != '') :
             pathWithCursor = pathWithCursor + "_win" + str(active_window_id)
         pathWithCursor = pathWithCursor + '.jpg'
-        print pathWithCursor
+        # print pathWithCursor
 
 
         pathStr = NSString.stringByExpandingTildeInPath(pathWithCursor)
