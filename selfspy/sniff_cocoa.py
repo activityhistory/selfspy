@@ -408,24 +408,6 @@ class Sniffer:
     def cancel(self):
         AppHelper.stopEventLoop()
 
-    def castToUnicode(self, value):
-        # print "castToUnicode", type(value)
-        if isinstance(value, str):
-            # print "isinstance of str"
-            casted = value.decode('utf-8')
-        elif type(value) == objc.pyobjc_unicode :
-            # print "type is objc.pyobjc_unicode"
-            casted = unicode(value)
-        else : 
-            casted = value
-
-        return casted
-
-    def getWindowName(self, window):
-        # windowName = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
-        window_name = window.get('kCGWindowName', u'')
-        return self.castToUnicode(window_name)
-
     def handler(self, event):
         try:
             recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
@@ -447,7 +429,7 @@ class Sniffer:
                 chromeChecked = False
                 safariChecked = False
                 for window in windowList:
-                    window_name = self.getWindowName(window)
+                    window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
                     owner = window['kCGWindowOwnerName']
                     geometry = window['kCGWindowBounds']
                     windows_to_ignore = ["Focus Proxy", "Clipboard"]
@@ -504,7 +486,7 @@ class Sniffer:
 
                                 # get browser_url
                                 browser_url = 'NO_URL'
-                                if len(self.getWindowName(window)) > 0:
+                                if len(window.get('kCGWindowName', u'').encode('ascii', 'replace')) > 0:
                                     if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
                                         s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
                                         browser_url = s.executeAndReturnError_(None)
@@ -517,7 +499,7 @@ class Sniffer:
                                 	browser_url = 'NO_URL'
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
-                                                 window.get('kCGWindowName', u''), #.encode('ascii', 'replace'),
+                                                 window.get('kCGWindowName', u'').encode('ascii', 'replace'),
                                                  # window.get('kCGWindowName', u''), #.encode('utf-8', 'replace'),
                                                  geometry['X'],
                                                  geometry['Y'],
@@ -772,8 +754,7 @@ class Sniffer:
         options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
         windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
         for window in windowList:
-            # window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
-            window_name = self.getWindowName(window)
+            window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
             owner = window['kCGWindowOwnerName']
             if (activeAppName == owner and window_name != ''):
                 break

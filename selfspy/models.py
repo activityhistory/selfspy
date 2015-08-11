@@ -108,10 +108,6 @@ class Window(SpookMixin, Base):
     process = relationship("Process", backref=backref('windows'))
 
     def __init__(self, title, process_id, browser_url):
-        if isinstance(title, str):
-          # print "isinstance of str"
-          title = title.decode('utf-8')
-        
         self.title = title
         self.process_id = process_id
         self.browser_url = browser_url
