@@ -122,6 +122,7 @@ class ActivityStore:
         self.last_commit = time.time()
         self.last_screenshot = time.time()
         self.last_experience = time.time()
+        self.last_active = NOW()
 
         self.screenshots_active = True
         # times below are in seconds
@@ -130,6 +131,7 @@ class ActivityStore:
         self.exp_time = 120         # time before first experience sample shows
         self.thumbdrive_time = 10
         self.snapshot_time = 60
+        self.inactivity_time = 120 # after two minutes of inactivity we write this is the database
 
         self.addObservers()
 
@@ -862,6 +864,17 @@ class ActivityStore:
       snapshot = Snapshot(str(cleanProcessListIDs))
       self.session.add(snapshot)
       
+      now = NOW()
+      if ((now - self.last_active).total_seconds() > 120) :
+        recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
+        NSLog("Computer paused and resumed")
+        if recording:
+          recording_event = RecordingEvent(self.last_active, "Off")
+          self.session.add(recording_event)
+          recording_event = RecordingEvent(now, "On")
+          self.session.add(recording_event)          
+          self.trycommit()
+      self.last_active = NOW()
 
     # Method to add "Close" entry to DB for each app open at the close of Selfspy, not yet working
     def gotCloseNotification_(self, notification):
@@ -889,6 +902,7 @@ class ActivityStore:
         recording = NSUserDefaultsController.sharedUserDefaultsController().values().valueForKey_('recording')
         if not recording:
             value = "Off"
+        self.last_active = NOW()
         recording_event = RecordingEvent(NOW(), value)
         self.session.add(recording_event)
 
