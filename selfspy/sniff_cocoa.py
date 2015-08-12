@@ -492,7 +492,11 @@ class Sniffer:
                                 if len(window.get('kCGWindowName', u'').encode('ascii', 'replace')) > 0:
                                     if (window.get('kCGWindowOwnerName') == 'Google Chrome'):
                                         s = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return URL of active tab of front window as string \n end tell")
+                                        # t = NSAppleScript.alloc().initWithSource_("tell application \"Google Chrome\" \n return title of active tab of front window as string \n end tell")
                                         browser_url = s.executeAndReturnError_(None)
+                                        # title = t.executeAndReturnError_(None)
+                                        # print browser_url[0]
+                                        # print str(title[0])
                                     if (window.get('kCGWindowOwnerName') == 'Safari'):
                                         s = NSAppleScript.alloc().initWithSource_("tell application \"Safari\" \n set theURL to URL of current tab of window 1 \n end tell")
                                         browser_url = s.executeAndReturnError_(None)
@@ -502,7 +506,7 @@ class Sniffer:
                                 	browser_url = 'NO_URL'
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
-                                                 window.get('kCGWindowName'),
+                                                 window.get('kCGWindowName',u''),
                                                  # window.get('kCGWindowName', u''), #.encode('ascii', 'replace'),
                                                  # window.get('kCGWindowName', u''), #.encode('utf-8', 'replace'),
                                                  geometry['X'],
