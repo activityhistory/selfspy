@@ -429,7 +429,8 @@ class Sniffer:
                 chromeChecked = False
                 safariChecked = False
                 for window in windowList:
-                    window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+                    # window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+                    window_name = self.getWindowName(window)
                     owner = window['kCGWindowOwnerName']
                     geometry = window['kCGWindowBounds']
                     windows_to_ignore = ["Focus Proxy", "Clipboard"]
@@ -445,7 +446,8 @@ class Sniffer:
                                     if tabs_info[0]:
                                         numItems = tabs_info[0].numberOfItems()
                                         for i in range(1, numItems+1):
-                                            window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                            # window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                            window_name = tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue()
                                             if window_name:
                                                 url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2).stringValue())
                                             else:
@@ -462,7 +464,8 @@ class Sniffer:
                                     if tabs_info[0]:
                                         numItems = tabs_info[0].numberOfItems()
                                         for i in range(1, numItems+1):
-                                            window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                            # window_name = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue().encode('ascii', 'replace'))
+                                            window_name = tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(1).stringValue()
                                             if window_name:
                                                 url = str(tabs_info[0].descriptorAtIndex_(i).descriptorAtIndex_(2 ).stringValue())
                                             else:
@@ -499,7 +502,8 @@ class Sniffer:
                                 	browser_url = 'NO_URL'
 
                                 self.screen_hook(window['kCGWindowOwnerName'],
-                                                 window.get('kCGWindowName', u'').encode('ascii', 'replace'),
+                                                 window.get('kCGWindowName'),
+                                                 # window.get('kCGWindowName', u''), #.encode('ascii', 'replace'),
                                                  # window.get('kCGWindowName', u''), #.encode('utf-8', 'replace'),
                                                  geometry['X'],
                                                  geometry['Y'],
@@ -636,6 +640,16 @@ class Sniffer:
         except:
             NSLog("Could not save image")
 
+
+    def getWindowName(self, window) :
+    	# str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+    	# unicode can be a pain here is some information on encoding
+    	# https://docs.python.org/2/library/functions.html#unicode
+    	# https://docs.python.org/2/howto/unicode.html
+    	window_name = window.get('kCGWindowName', u'')
+    	# print type(window_name)
+    	return window_name
+
     def screenshot(self, path, region = None):
     #https://pythonhosted.org/pyobjc/examples/Quartz/Core%20Graphics/CGRotation/index.html
       try:
@@ -754,7 +768,8 @@ class Sniffer:
         options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
         windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
         for window in windowList:
-            window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+            # window_name = str(window.get('kCGWindowName', u'').encode('ascii', 'replace'))
+            window_name = self.getWindowName(window)
             owner = window['kCGWindowOwnerName']
             if (activeAppName == owner and window_name != ''):
                 break
