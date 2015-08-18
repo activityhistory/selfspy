@@ -17,10 +17,14 @@ import CoreLocation
 import WebKit
 from CoreLocation import *
 from AppKit import NSLog
+
 import math
+import datetime
 
 class LocationTracking:
     locationManager = objc.ivar()
+    lastSave = datetime.datetime.now()
+
 
     def __init__(self):
         self.locationchange_hook = lambda x: True
@@ -71,8 +75,8 @@ class LocationTracking:
     def locationManager_didUpdateToLocation_fromLocation_(self,
             manager, newLocation, oldLocation):
 
-        # print "location update : "
-
+        now = datetime.datetime.now()
+        
         # Ignore updates where nothing we care about changed
         if newLocation is None:
             return
@@ -81,10 +85,12 @@ class LocationTracking:
         else:
             dist = self.distanceMeter(newLocation.coordinate().latitude, newLocation.coordinate().longitude, oldLocation.coordinate().latitude, oldLocation.coordinate().longitude)
             # print "location ", newLocation.coordinate().latitude, newLocation.coordinate().longitude, dist
-            if (dist > 50) :
+            if (dist > 50 or ((now - self.lastSave).total_seconds() > 900) ) :
                 # print "new location distance : ", dist
                 self.locationchange_hook(newLocation.coordinate().latitude,
                     newLocation.coordinate().longitude)
+                self.lastSave = now
+                # print "record location"
 
         # TODO what happens in case of new location.
         # newLocation.coordinate().latitude,
