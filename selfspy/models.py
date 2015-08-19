@@ -94,10 +94,13 @@ class ProcessEvent(SpookMixin, Base):
     process = relationship("Process", backref=backref('processevents'))
     event_type = Column(Unicode, index=True)
 
-    def __init__(self, process_id, event_type, created_at=datetime.datetime.now()):
+    def __init__(self, process_id, event_type, created_at=None):
         self.process_id = process_id
         self.event_type = event_type
-        self.created_at = created_at
+        if (created_at is None):
+          created_at=datetime.datetime.now()
+        else :
+          self.created_at = created_at
 
     def __repr__(self):
         return "<Process '%s' '%s'>" % (self.process_id, self.event_type)
@@ -122,10 +125,13 @@ class WindowEvent(SpookMixin, Base):
     window = relationship("Window", backref=backref('windowevents'))
     event_type = Column(Unicode, index=True)
 
-    def __init__(self, window_id, event_type, created_at=datetime.datetime.now()):
+    def __init__(self, window_id, event_type, created_at=None):
         self.window_id = window_id
         self.event_type = event_type
-        self.created_at = created_at
+        if (created_at is None) :
+          self.created_at = datetime.datetime.now()
+        else :
+          self.created_at = created_at
 
     def __repr__(self):
         return "<Window '%s' '%s' >" % (self.window_id, self.event_type)
